@@ -14,7 +14,7 @@ public class BlizzardClient {
 
     public String getItem(int id) {
         return this.restClient.get()
-            .uri("https://eu.api.blizzard.com/data/wow/item/{id}", id)
+            .uri("/data/wow/item/{id}", id)
             .retrieve()
             .body(String.class);
     }

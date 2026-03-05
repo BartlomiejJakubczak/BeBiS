@@ -10,6 +10,7 @@ public class RestClientConfig {
     @Bean
     RestClient restClient(RestClient.Builder builder) {
         return builder
+                .baseUrl("https://eu.api.blizzard.com")
                 .defaultHeader("Battlenet-Namespace", "static-classic1x-eu")
                 .build();
     }

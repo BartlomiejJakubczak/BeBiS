@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: BeBiS
+
+  security:
+    oauth2:
+      client:
+        registration:
+          blizzard:
+            client-id: ${BLIZZARD_CLIENT_ID}
+            client-secret: ${BLIZZARD_CLIENT_SECRET}
+            authorization-grant-type: client_credentials
+
+        provider:
+          blizzard:
+            token-uri: https://oauth.battle.net/token
