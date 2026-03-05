@@ -22,6 +22,7 @@ public class ItemsServiceTest {
 
     @Test
     void shouldGetItemFromBlizzard() {
+        // given
         int id = 2137;
         String expectedResponse = "papaj";
         // when

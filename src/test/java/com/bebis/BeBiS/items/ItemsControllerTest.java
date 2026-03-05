@@ -23,9 +23,10 @@ public class ItemsControllerTest {
 
     @Test
     void shouldReturnItem() throws Exception {
-        // when
+        // given
         int id = 2137;
         String expectedResponse = "papaj";
+        // when
         when(itemsService.getItem(id)).thenReturn(expectedResponse);
         // then
         mockMvc.perform(get("/api/items/{id}", id))
