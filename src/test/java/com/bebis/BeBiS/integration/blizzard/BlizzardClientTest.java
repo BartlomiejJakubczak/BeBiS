@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -30,9 +29,9 @@ class BlizzardClientTest {
     }
 
     @Test
-    void shouldGetItem() {
+    void shouldGetItemWithCorrectPath() {
         // when
-        server.expect(requestTo("/data/wow/item/2137"))
+        server.expect(requestTo("/data/wow/item/2137?locale=en_GB"))
                 .andRespond(withSuccess("item-data", MediaType.APPLICATION_JSON));
 
         // then
