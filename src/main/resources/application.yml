@@ -14,3 +14,7 @@ spring:
         provider:
           blizzard:
             token-uri: https://oauth.battle.net/token
+
+blizzard:
+  api:
+    base-url: https://eu.api.blizzard.com

@@ -1,15 +1,20 @@
 package com.bebis.BeBiS.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
+import static org.springframework.security.oauth2.client.web.client.RequestAttributeClientRegistrationIdResolver.clientRegistrationId;
 import org.springframework.web.client.RestClient;
 
 @Configuration
 public class RestClientConfig {
+
+    @Value("${blizzard.api.base-url}")
+    private String baseUrl;
 
     @Bean
     RestClient restClient(RestClient.Builder builder, OAuth2AuthorizedClientManager authorizedClientManager) {
@@ -30,9 +35,10 @@ public class RestClientConfig {
                 new OAuth2ClientHttpRequestInterceptor(authorizedClientManager);
 
         return builder
-                .baseUrl("https://eu.api.blizzard.com")
+                .baseUrl(baseUrl)
                 .requestInterceptor(oauthInterceptor)
                 .requestInterceptor(loggingInterceptor)
+                .defaultRequest(request -> request.attributes(clientRegistrationId("blizzard")))
                 .defaultHeader("Battlenet-Namespace", "static-classic1x-eu")
                 .build();
     }
