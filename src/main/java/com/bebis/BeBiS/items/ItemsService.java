@@ -13,7 +13,7 @@ public class ItemsService {
         this.blizzardClient = blizzardClient;
     }
 
-    public String getItem(int itemId) {
+    public Item getItem(int itemId) {
         return blizzardClient.getItem(itemId);
     }
     

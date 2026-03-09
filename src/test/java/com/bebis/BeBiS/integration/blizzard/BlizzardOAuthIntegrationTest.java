@@ -37,10 +37,10 @@ class BlizzardOAuthIntegrationTest {
                 """)));
 
         // when
-        var response = blizzardClient.getItem(19019);
+        var item = blizzardClient.getItem(19019);
 
         // then
-        assertTrue(response.contains("Thunderfury"));
+        assertTrue(item.name().contains("Thunderfury"));
         // Verify the OAuth interceptor actually sent the token
         verify(getRequestedFor(urlPathEqualTo("/data/wow/item/19019"))
                 .withHeader("Authorization", equalTo("Bearer fake-token")));

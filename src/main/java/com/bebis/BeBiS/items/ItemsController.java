@@ -18,7 +18,7 @@ public class ItemsController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<String> getItem(@PathVariable int itemId) {
+    public ResponseEntity<Item> getItem(@PathVariable int itemId) {
         return new ResponseEntity<>(itemsService.getItem(itemId), HttpStatus.OK);
     }
     

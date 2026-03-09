@@ -23,14 +23,13 @@ public class ItemsServiceTest {
     @Test
     void shouldGetItemFromBlizzard() {
         // given
-        int id = 2137;
-        String expectedResponse = "papaj";
+        Item thunderfury = ItemTestData.thunderfury();
         // when
-        when(blizzardClient.getItem(id)).thenReturn(expectedResponse);
-        String response = itemsService.getItem(id);
+        when(blizzardClient.getItem(thunderfury.id())).thenReturn(thunderfury);
+        Item response = itemsService.getItem(thunderfury.id());
         // then
-        assertEquals(expectedResponse, response);
-        verify(blizzardClient).getItem(id);
+        assertEquals(thunderfury, response);
+        verify(blizzardClient).getItem(thunderfury.id());
     }
 
 }

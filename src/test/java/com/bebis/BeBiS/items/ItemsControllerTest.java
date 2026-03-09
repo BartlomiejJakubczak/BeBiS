@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @WebMvcTest(ItemsController.class) // loads MVC layer, controllers and security filters
 @AutoConfigureMockMvc(addFilters = false) // disable SecurityFilterChain for controller unit tests
 public class ItemsControllerTest {
@@ -21,17 +23,19 @@ public class ItemsControllerTest {
     @MockitoBean
     private ItemsService itemsService;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Test
     void shouldReturnItem() throws Exception {
         // given
-        int id = 2137;
-        String expectedResponse = "papaj";
+        Item thunderfury = ItemTestData.thunderfury();
         // when
-        when(itemsService.getItem(id)).thenReturn(expectedResponse);
+        when(itemsService.getItem(thunderfury.id())).thenReturn(thunderfury);
         // then
-        mockMvc.perform(get("/api/items/{id}", id))
+        mockMvc.perform(get("/api/items/{id}", thunderfury.id()))
             .andExpect(status().isOk())
-            .andExpect(content().string(expectedResponse)); 
+            .andExpect(content().json(objectMapper.writeValueAsString(thunderfury))); 
     }
     
 }
