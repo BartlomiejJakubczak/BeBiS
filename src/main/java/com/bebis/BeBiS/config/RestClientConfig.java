@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.config;
 
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,20 +14,21 @@ import org.springframework.web.client.RestClient;
 @Configuration
 public class RestClientConfig {
 
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(RestClientConfig.class);
+
     @Value("${blizzard.api.base-url}")
     private String baseUrl;
 
     @Bean
     RestClient restClient(RestClient.Builder builder, OAuth2AuthorizedClientManager authorizedClientManager) {
-        // Logging interceptor
         ClientHttpRequestInterceptor loggingInterceptor = (request, body, execution) -> {
-            System.out.println("---------- REQUEST INTERCEPTED ----------");
-            System.out.println("Request method: " + request.getMethod());
-            System.out.println("Request URI: " + request.getURI());
-            request.getHeaders().forEach((k,v) -> System.out.println(k + "=" + v));
+            log.debug("---------- REQUEST INTERCEPTED ----------");
+            log.debug("Request Method : {}", request.getMethod());
+            log.debug("Request URI    : {}", request.getURI());
+            request.getHeaders().forEach((headerName, headerValues) -> 
+                log.debug("Header '{}' : {}", headerName, headerValues));
             ClientHttpResponse response = execution.execute(request, body);
-            System.out.println(response.getStatusText());
-            System.out.println(response.getHeaders());
+            log.debug("Response Status: {}", response.getStatusCode());
             return response;
         };
 

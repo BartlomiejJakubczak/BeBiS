@@ -18,3 +18,7 @@ spring:
 blizzard:
   api:
     base-url: https://eu.api.blizzard.com
+
+logging:
+  level:
+    com.bebis.BeBiS: DEBUG
