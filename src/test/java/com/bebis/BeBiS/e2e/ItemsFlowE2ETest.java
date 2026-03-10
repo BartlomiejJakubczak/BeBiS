@@ -3,12 +3,12 @@ package com.bebis.BeBiS.e2e;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 
+import com.bebis.BeBiS.BaseIntegrationTest;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class ItemsFlowE2ETest {
+
+public class ItemsFlowE2ETest extends BaseIntegrationTest {
 
     @Autowired
     TestRestTemplate restTemplate;
