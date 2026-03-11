@@ -13,7 +13,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.bebis.BeBiS.config.RestClientConfig;
-import com.bebis.BeBiS.items.Item;
+import com.bebis.BeBiS.item.Item;
 import com.bebis.BeBiS.items.ItemTestData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -11,9 +11,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bebis.BeBiS.item.Item;
+import com.bebis.BeBiS.item.ItemController;
+import com.bebis.BeBiS.item.ItemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(ItemsController.class) // loads MVC layer, controllers and security filters
+@WebMvcTest(ItemController.class) // loads MVC layer, controllers and security filters
 @AutoConfigureMockMvc(addFilters = false) // disable SecurityFilterChain for controller unit tests
 public class ItemsControllerTest {
 
@@ -21,7 +24,7 @@ public class ItemsControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ItemsService itemsService;
+    private ItemService itemsService;
 
     @Autowired
     private ObjectMapper objectMapper;

@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.items;
+package com.bebis.BeBiS.item;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/items")
-public class ItemsController {
+public class ItemController {
 
-    private final ItemsService itemsService;
+    private final ItemService itemsService;
 
-    public ItemsController(ItemsService itemsService) {
+    public ItemController(ItemService itemsService) {
         this.itemsService = itemsService;
     }
 

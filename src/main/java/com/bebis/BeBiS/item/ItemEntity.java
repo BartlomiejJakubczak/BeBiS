@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.items;
+package com.bebis.BeBiS.item;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

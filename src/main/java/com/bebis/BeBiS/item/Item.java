@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.items;
+package com.bebis.BeBiS.item;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 

@@ -1,15 +1,15 @@
-package com.bebis.BeBiS.items;
+package com.bebis.BeBiS.item;
 
 import org.springframework.stereotype.Service;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardClient;
 
 @Service
-public class ItemsService {
+public class ItemService {
 
     private final BlizzardClient blizzardClient;
 
-    public ItemsService(BlizzardClient blizzardClient) {
+    public ItemService(BlizzardClient blizzardClient) {
         this.blizzardClient = blizzardClient;
     }
 

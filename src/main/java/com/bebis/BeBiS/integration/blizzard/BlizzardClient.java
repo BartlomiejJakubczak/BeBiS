@@ -3,7 +3,7 @@ package com.bebis.BeBiS.integration.blizzard;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import com.bebis.BeBiS.items.Item;
+import com.bebis.BeBiS.item.Item;
 
 @Component
 public class BlizzardClient {

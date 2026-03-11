@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardClient;
+import com.bebis.BeBiS.item.Item;
+import com.bebis.BeBiS.item.ItemService;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemsServiceTest {
@@ -18,7 +20,7 @@ public class ItemsServiceTest {
     private BlizzardClient blizzardClient;
 
     @InjectMocks
-    private ItemsService itemsService;
+    private ItemService itemsService;
 
     @Test
     void shouldGetItemFromBlizzard() {
