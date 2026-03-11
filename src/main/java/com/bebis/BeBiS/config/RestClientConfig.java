@@ -51,7 +51,7 @@ public class RestClientConfig {
                 .baseUrl(baseUrl)
                 .requestInterceptor(oauthInterceptor)
                 .requestInterceptor(loggingInterceptor)
-                .defaultRequest(request -> request.attributes(clientRegistrationId("blizzard")))
+                .defaultRequest(request -> request.attributes(clientRegistrationId("blizzard-service")))
                 .defaultHeader("Battlenet-Namespace", "static-classic1x-eu")
                 .build();
     }

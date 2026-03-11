@@ -6,14 +6,24 @@ spring:
     oauth2:
       client:
         registration:
-          blizzard:
+          blizzard-service: # Client Credentials Flow
+            provider: blizzard
             client-id: ${BLIZZARD_CLIENT_ID}
             client-secret: ${BLIZZARD_CLIENT_SECRET}
             authorization-grant-type: client_credentials
+          blizzard-client: # Authorization Code Flow
+            provider: blizzard
+            client-id: ${BLIZZARD_CLIENT_ID}
+            client-secret: ${BLIZZARD_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: wow.profile
 
         provider:
           blizzard:
+            authorization-uri: https://oauth.battle.net/authorize
             token-uri: https://oauth.battle.net/token
+            user-info-uri: https://openid-connect.onboard.battle.net/userinfo
 
 blizzard:
   api:
