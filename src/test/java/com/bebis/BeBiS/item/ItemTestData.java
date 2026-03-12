@@ -1,6 +1,4 @@
-package com.bebis.BeBiS.items;
-
-import com.bebis.BeBiS.item.Item;
+package com.bebis.BeBiS.item;
 
 public class ItemTestData {
     public static final int THUNDERFURY_ID = 19019;

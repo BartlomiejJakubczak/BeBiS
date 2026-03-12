@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.items;
+package com.bebis.BeBiS.item;
 
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.when;
@@ -11,14 +11,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.bebis.BeBiS.item.Item;
-import com.bebis.BeBiS.item.ItemController;
-import com.bebis.BeBiS.item.ItemService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @WebMvcTest(ItemController.class) // loads MVC layer, controllers and security filters
 @AutoConfigureMockMvc(addFilters = false) // disable SecurityFilterChain for controller unit tests
-public class ItemsControllerTest {
+public class ItemControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

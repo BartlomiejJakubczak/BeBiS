@@ -26,7 +26,7 @@ import org.springframework.web.client.RestClient;
 
 import com.bebis.BeBiS.config.RestClientConfig;
 import com.bebis.BeBiS.item.Item;
-import com.bebis.BeBiS.items.ItemTestData;
+import com.bebis.BeBiS.item.ItemTestData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestClientTest(BlizzardServiceClient.class)
