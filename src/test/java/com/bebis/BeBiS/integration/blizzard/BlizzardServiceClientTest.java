@@ -36,7 +36,8 @@ class BlizzardServiceClientTest {
     private BlizzardServiceClient blizzardClient;
 
     @Autowired
-    @Qualifier("blizzardServiceRestClient")
+    @Qualifier("blizzardServiceRestClient") // no web requests needed here as this RestClient is a background service
+    // that doesnt look at web browser based security contexts, so we can just mock the manager to return a pre-baked token
     private RestClient serviceRestClient;
 
     @Autowired

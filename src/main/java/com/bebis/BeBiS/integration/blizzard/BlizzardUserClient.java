@@ -7,6 +7,8 @@ import org.springframework.web.client.RestClient;
 @Component
 public class BlizzardUserClient {
 
+    public static final String LOCALE_QUERY_PARAM = "?locale=en_GB";
+
     private final RestClient restClient;
 
     public BlizzardUserClient(@Qualifier("blizzardUserRestClient") RestClient restClient) {
@@ -15,7 +17,7 @@ public class BlizzardUserClient {
 
     public String getProfileSummary() {
         return this.restClient.get()
-            .uri("/profile/user/wow")
+            .uri("/profile/user/wow" + LOCALE_QUERY_PARAM)
             .retrieve()
             .body(String.class);
     }
