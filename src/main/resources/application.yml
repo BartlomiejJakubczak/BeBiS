@@ -11,7 +11,7 @@ spring:
             client-id: ${BLIZZARD_CLIENT_ID}
             client-secret: ${BLIZZARD_CLIENT_SECRET}
             authorization-grant-type: client_credentials
-          blizzard-client: # Authorization Code Flow
+          blizzard-user: # Authorization Code Flow
             provider: blizzard
             client-id: ${BLIZZARD_CLIENT_ID}
             client-secret: ${BLIZZARD_CLIENT_SECRET}

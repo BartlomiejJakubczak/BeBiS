@@ -1,18 +1,19 @@
 package com.bebis.BeBiS.integration.blizzard;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import com.bebis.BeBiS.item.Item;
 
 @Component
-public class BlizzardClient {
+public class BlizzardServiceClient {
 
     public static final String LOCALE_QUERY_PARAM = "?locale=en_GB";
 
     private final RestClient restClient;
 
-    public BlizzardClient(RestClient restClient) {
+    public BlizzardServiceClient(@Qualifier("blizzardServiceRestClient") RestClient restClient) {
         this.restClient = restClient;
     }
 

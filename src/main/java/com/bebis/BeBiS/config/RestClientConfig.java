@@ -10,6 +10,8 @@ import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2A
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
 import static org.springframework.security.oauth2.client.web.client.RequestAttributeClientRegistrationIdResolver.clientRegistrationId;
 import org.springframework.web.client.RestClient;
@@ -22,8 +24,23 @@ public class RestClientConfig {
     @Value("${blizzard.api.base-url}")
     private String baseUrl;
 
-    @Bean // overrides default web browser based OAuth2AuthorizedClientManager with a background-service manager
-    OAuth2AuthorizedClientManager authorizedClientManager(
+    @Bean
+    ClientHttpRequestInterceptor loggingInterceptor() {
+        return (request, body, execution) -> {
+            log.debug("---------- REQUEST INTERCEPTED ----------");
+            log.debug("Request Method : {}", request.getMethod());
+            log.debug("Request URI    : {}", request.getURI());
+            request.getHeaders()
+                    .forEach((headerName, headerValues) -> log.debug("Header '{}' : {}", headerName, headerValues));
+            ClientHttpResponse response = execution.execute(request, body);
+            log.debug("Response Status: {}", response.getStatusCode());
+            return response;
+        };
+    }
+
+    @Bean // overrides default web browser based OAuth2AuthorizedClientManager with a
+          // background-service manager
+    OAuth2AuthorizedClientManager serviceManager(
             ClientRegistrationRepository clientRegistrationRepository,
             OAuth2AuthorizedClientService authorizedClientService) {
         return new AuthorizedClientServiceOAuth2AuthorizedClientManager(
@@ -31,21 +48,12 @@ public class RestClientConfig {
     }
 
     @Bean
-    RestClient restClient(RestClient.Builder builder, OAuth2AuthorizedClientManager authorizedClientManager) {
-        ClientHttpRequestInterceptor loggingInterceptor = (request, body, execution) -> {
-            log.debug("---------- REQUEST INTERCEPTED ----------");
-            log.debug("Request Method : {}", request.getMethod());
-            log.debug("Request URI    : {}", request.getURI());
-            request.getHeaders().forEach((headerName, headerValues) -> 
-                log.debug("Header '{}' : {}", headerName, headerValues));
-            ClientHttpResponse response = execution.execute(request, body);
-            log.debug("Response Status: {}", response.getStatusCode());
-            return response;
-        };
+    RestClient blizzardServiceRestClient(RestClient.Builder builder,
+            OAuth2AuthorizedClientManager serviceManager,
+            ClientHttpRequestInterceptor loggingInterceptor) {
 
-        // OAuth2 interceptor provided by Spring Security
-        OAuth2ClientHttpRequestInterceptor oauthInterceptor =
-                new OAuth2ClientHttpRequestInterceptor(authorizedClientManager);
+        OAuth2ClientHttpRequestInterceptor oauthInterceptor = new OAuth2ClientHttpRequestInterceptor(
+                serviceManager);
 
         return builder
                 .baseUrl(baseUrl)
@@ -55,4 +63,32 @@ public class RestClientConfig {
                 .defaultHeader("Battlenet-Namespace", "static-classic1x-eu")
                 .build();
     }
+
+    @Bean
+    DefaultOAuth2AuthorizedClientManager userManager(
+            ClientRegistrationRepository clientRegistrationRepository,
+            OAuth2AuthorizedClientRepository authorizedClientRepository) {
+        
+        return new DefaultOAuth2AuthorizedClientManager(
+                clientRegistrationRepository, authorizedClientRepository);
+    }
+
+    @Bean
+    RestClient blizzardUserRestClient(RestClient.Builder builder,
+            DefaultOAuth2AuthorizedClientManager userManager,
+            ClientHttpRequestInterceptor loggingInterceptor) {
+
+        OAuth2ClientHttpRequestInterceptor oauthInterceptor = new OAuth2ClientHttpRequestInterceptor(
+                userManager);
+
+        return builder
+                .baseUrl(baseUrl)
+                .requestInterceptor(oauthInterceptor)
+                .requestInterceptor(loggingInterceptor)
+                .defaultRequest(request -> request.attributes(clientRegistrationId("blizzard-user")))
+                .defaultHeader("Battlenet-Namespace", "profile-eu")
+                .build();
+
+    }
+
 }

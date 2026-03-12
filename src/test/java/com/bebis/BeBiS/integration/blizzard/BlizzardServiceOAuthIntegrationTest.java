@@ -15,10 +15,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 
-public class BlizzardOAuthIntegrationTest extends BaseWiremockTest {
+public class BlizzardServiceOAuthIntegrationTest extends BaseWiremockTest {
 
     @Autowired
-    private BlizzardClient blizzardClient;
+    private BlizzardServiceClient blizzardClient;
 
     @Test
     void shouldFetchItem() {
