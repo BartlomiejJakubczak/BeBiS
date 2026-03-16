@@ -17,9 +17,9 @@ public class BlizzardUserClient {
 
     public String getProfileSummary() {
         return this.restClient.get()
-            .uri("/profile/user/wow" + LOCALE_QUERY_PARAM)
-            .retrieve()
-            .body(String.class);
+                .uri("/profile/user/wow" + LOCALE_QUERY_PARAM)
+                .retrieve()
+                .body(String.class);
     }
 
 }

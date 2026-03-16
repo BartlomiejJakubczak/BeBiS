@@ -1,11 +1,11 @@
 package com.bebis.BeBiS.integration.blizzard;
 
-import java.time.Instant;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.bebis.BeBiS.config.RestClientConfig;
+import com.bebis.BeBiS.item.Item;
+import com.bebis.BeBiS.item.ItemTestData;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
@@ -20,14 +20,14 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 import org.springframework.web.client.RestClient;
 
-import com.bebis.BeBiS.config.RestClientConfig;
-import com.bebis.BeBiS.item.Item;
-import com.bebis.BeBiS.item.ItemTestData;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 @RestClientTest(BlizzardServiceClient.class)
 @Import(RestClientConfig.class) // pulls 2 RestClient beans, hence elaborate setup
@@ -42,12 +42,15 @@ class BlizzardServiceClientTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-    
-    @MockitoBean private ClientRegistrationRepository clientRegistrationRepository;
-    
-    @MockitoBean private OAuth2AuthorizedClientService authorizedClientService;
-    
-    @MockitoBean private OAuth2AuthorizedClientRepository authorizedClientRepository;
+
+    @MockitoBean
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    @MockitoBean
+    private OAuth2AuthorizedClientService authorizedClientService;
+
+    @MockitoBean
+    private OAuth2AuthorizedClientRepository authorizedClientRepository;
 
     private MockRestServiceServer server;
 
@@ -64,13 +67,13 @@ class BlizzardServiceClientTest {
 
         // Create a fake "Authorized Client" with a pre-baked token
         OAuth2AccessToken fakeToken = new OAuth2AccessToken(
-                OAuth2AccessToken.TokenType.BEARER, 
-                "fake-token-value", 
-                Instant.now(), 
+                OAuth2AccessToken.TokenType.BEARER,
+                "fake-token-value",
+                Instant.now(),
                 Instant.now().plusSeconds(3600));
 
         OAuth2AuthorizedClient authorizedClient = new OAuth2AuthorizedClient(
-                dummyRegistration, 
+                dummyRegistration,
                 "anonymousUser", // Default principal for service-to-service oauth2
                 fakeToken);
 
@@ -91,7 +94,7 @@ class BlizzardServiceClientTest {
 
         // when
         server.expect(requestTo("https://eu.api.blizzard.com/data/wow/item/" + thunderfury.id() + BlizzardServiceClient.LOCALE_QUERY_PARAM))
-              .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Item result = blizzardClient.getItem(thunderfury.id());
 

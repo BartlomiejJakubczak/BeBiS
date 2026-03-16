@@ -21,5 +21,5 @@ public class ItemController {
     public ResponseEntity<Item> getItem(@PathVariable int itemId) {
         return new ResponseEntity<>(itemsService.getItem(itemId), HttpStatus.OK);
     }
-    
+
 }

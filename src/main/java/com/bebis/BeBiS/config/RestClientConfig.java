@@ -13,8 +13,9 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.client.OAuth2ClientHttpRequestInterceptor;
-import static org.springframework.security.oauth2.client.web.client.RequestAttributeClientRegistrationIdResolver.clientRegistrationId;
 import org.springframework.web.client.RestClient;
+
+import static org.springframework.security.oauth2.client.web.client.RequestAttributeClientRegistrationIdResolver.clientRegistrationId;
 
 @Configuration
 public class RestClientConfig {
@@ -41,8 +42,9 @@ public class RestClientConfig {
         };
     }
 
-    @Bean // overrides default web browser based OAuth2AuthorizedClientManager with a
-          // background-service manager
+    @Bean
+        // overrides default web browser based OAuth2AuthorizedClientManager with a
+        // background-service manager
     OAuth2AuthorizedClientManager serviceManager(
             ClientRegistrationRepository clientRegistrationRepository,
             OAuth2AuthorizedClientService authorizedClientService) {
@@ -52,9 +54,9 @@ public class RestClientConfig {
 
     @Bean
     RestClient blizzardServiceRestClient(@Value("${blizzard.api.namespace.service}") String serviceNamespace,
-            RestClient.Builder builder,
-            OAuth2AuthorizedClientManager serviceManager,
-            ClientHttpRequestInterceptor loggingInterceptor) {
+                                         RestClient.Builder builder,
+                                         OAuth2AuthorizedClientManager serviceManager,
+                                         ClientHttpRequestInterceptor loggingInterceptor) {
 
         OAuth2ClientHttpRequestInterceptor oauthInterceptor = new OAuth2ClientHttpRequestInterceptor(
                 serviceManager);
@@ -72,16 +74,16 @@ public class RestClientConfig {
     DefaultOAuth2AuthorizedClientManager userManager(
             ClientRegistrationRepository clientRegistrationRepository,
             OAuth2AuthorizedClientRepository authorizedClientRepository) {
-        
+
         return new DefaultOAuth2AuthorizedClientManager(
                 clientRegistrationRepository, authorizedClientRepository);
     }
 
     @Bean
     RestClient blizzardUserRestClient(@Value("${blizzard.api.namespace.client}") String clientNamespace,
-            RestClient.Builder builder,
-            DefaultOAuth2AuthorizedClientManager userManager,
-            ClientHttpRequestInterceptor loggingInterceptor) {
+                                      RestClient.Builder builder,
+                                      DefaultOAuth2AuthorizedClientManager userManager,
+                                      ClientHttpRequestInterceptor loggingInterceptor) {
 
         OAuth2ClientHttpRequestInterceptor oauthInterceptor = new OAuth2ClientHttpRequestInterceptor(
                 userManager);

@@ -1,8 +1,7 @@
 package com.bebis.BeBiS.profile;
 
-import org.springframework.stereotype.Service;
-
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ProfileService {

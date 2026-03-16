@@ -1,8 +1,7 @@
 package com.bebis.BeBiS.item;
 
-import org.springframework.stereotype.Service;
-
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
+import org.springframework.stereotype.Service;
 
 @Service
 public class ItemService {
@@ -16,5 +15,5 @@ public class ItemService {
     public Item getItem(int itemId) {
         return blizzardClient.getItem(itemId);
     }
-    
+
 }

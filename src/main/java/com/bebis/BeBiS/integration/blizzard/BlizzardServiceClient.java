@@ -1,10 +1,9 @@
 package com.bebis.BeBiS.integration.blizzard;
 
+import com.bebis.BeBiS.item.Item;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
-
-import com.bebis.BeBiS.item.Item;
 
 @Component
 public class BlizzardServiceClient {

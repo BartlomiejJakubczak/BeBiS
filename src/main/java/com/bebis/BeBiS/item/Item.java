@@ -8,8 +8,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
  * but being explicit here helps others see we are intentionally cherry-picking from Blizzard's JSON.
  */
 
-@JsonIgnoreProperties(ignoreUnknown=true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record Item(
-    int id,
-    String name
-) {}
+        int id,
+        String name
+) {
+}
