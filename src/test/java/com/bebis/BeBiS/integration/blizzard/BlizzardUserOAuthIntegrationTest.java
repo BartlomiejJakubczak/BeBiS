@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
 
-    @Value("${blizzard.api.namespace.client}")
-    private String clientNamespace;
+    @Value("${blizzard.api.namespace.user}")
+    private String userNamespace;
 
     @Autowired
     private ClientRegistrationRepository clientRegistrationRepository; // "bucket" of configurations (what is Blizzard's URL? What's ClientID?)
@@ -69,7 +69,7 @@ public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
     void shouldFetchProfileSummary() {
         // given
         stubFor(get(urlPathEqualTo("/profile/user/wow"))
-                .withHeader(namespaceHeader, equalTo(clientNamespace))
+                .withHeader(namespaceHeader, equalTo(userNamespace))
                 .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
                 .willReturn(okJson("""
                         {"id": 12345, "summary": "profile summary"}

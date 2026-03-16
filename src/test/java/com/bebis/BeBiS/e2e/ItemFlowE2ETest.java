@@ -8,7 +8,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class ItemsFlowE2ETest extends BaseIntegrationTest {
+public class ItemFlowE2ETest extends BaseIntegrationTest {
 
     @Autowired
     private TestRestTemplate restTemplate; // "browser in a box"

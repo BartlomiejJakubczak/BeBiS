@@ -30,7 +30,7 @@ blizzard:
     locale: en_GB
     namespace:
       header: Battlenet-Namespace
-      client: profile-eu
+      user: profile-eu
       service: static-classic1x-eu
     base-url: https://eu.api.blizzard.com
 

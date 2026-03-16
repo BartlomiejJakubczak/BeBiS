@@ -80,7 +80,7 @@ public class RestClientConfig {
     }
 
     @Bean
-    RestClient blizzardUserRestClient(@Value("${blizzard.api.namespace.client}") String clientNamespace,
+    RestClient blizzardUserRestClient(@Value("${blizzard.api.namespace.user}") String clientNamespace,
                                       RestClient.Builder builder,
                                       DefaultOAuth2AuthorizedClientManager userManager,
                                       ClientHttpRequestInterceptor loggingInterceptor) {
