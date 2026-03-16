@@ -1,12 +1,9 @@
 package com.bebis.BeBiS.integration.blizzard;
 
-import java.time.Instant;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.bebis.BeBiS.config.RestClientConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,13 +21,16 @@ import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.web.client.RestClient;
+
+import java.time.Instant;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import org.springframework.web.client.RestClient;
-
-import com.bebis.BeBiS.config.RestClientConfig;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestClientTest(BlizzardUserClient.class) // sets up OUTGOING HTTP tools, so web server is gone
 @Import(RestClientConfig.class) // pulls 2 RestClient beans, hence elaborate setup
@@ -38,19 +38,22 @@ public class BlizzardUserClientTest {
 
     @Value("${blizzard.api.base-url}")
     private String baseUrl;
-    
+
     @Autowired
     @Qualifier("blizzardUserRestClient")
     private RestClient userRestClient;
-    
+
     @MockitoBean(name = "userManager") // mock the whole manager to avoid the need for a real HttpServletRequest
     private DefaultOAuth2AuthorizedClientManager userManager;
-    
-    @MockitoBean private ClientRegistrationRepository clientRegistrationRepository;
-    
-    @MockitoBean private OAuth2AuthorizedClientRepository authorizedClientRepository;
-    
-    @MockitoBean private OAuth2AuthorizedClientService authorizedClientService;
+
+    @MockitoBean
+    private ClientRegistrationRepository clientRegistrationRepository;
+
+    @MockitoBean
+    private OAuth2AuthorizedClientRepository authorizedClientRepository;
+
+    @MockitoBean
+    private OAuth2AuthorizedClientService authorizedClientService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -59,7 +62,8 @@ public class BlizzardUserClientTest {
     private BlizzardUserClient blizzardUserClient;
 
     @BeforeEach
-    @WithMockUser(username = "test") // Simulate an authenticated user for the test
+    @WithMockUser(username = "test")
+        // Simulate an authenticated user for the test
     void setUp() {
         // DefaultOAuth2AuthorizedClientManager is hardcoded to look at the user's browser session to find the token
         // Because there is no web server running in this sliced test, the HttpServletRequest is null
@@ -80,20 +84,20 @@ public class BlizzardUserClientTest {
 
         // mock the whole thing
         when(userManager.authorize(any())).thenReturn(fakeAuthorizedClient);
-        
+
         RestClient.Builder builder = userRestClient.mutate();
         server = MockRestServiceServer.bindTo(builder).build();
         blizzardUserClient = new BlizzardUserClient(builder.build());
     }
 
     @Test
-    void shouldGetProfileSummaryWithCorrectPath() throws Exception {
+    void shouldGetProfileSummaryWithCorrectPath() {
         // given
         String expectedSummary = "Profile Summary";
-        server.expect(requestTo("https://eu.api.blizzard.com/profile/user/wow" + BlizzardUserClient.LOCALE_QUERY_PARAM))
-              // Optional: prove the interceptor attached the token from our mocked manager!
-              .andExpect(header("Authorization", "Bearer fake-user-token")) 
-              .andRespond(withSuccess(expectedSummary, MediaType.APPLICATION_JSON));
+        server.expect(requestTo(baseUrl + "/profile/user/wow" + BlizzardUserClient.LOCALE_QUERY_PARAM))
+                // Optional: prove the interceptor attached the token from our mocked manager!
+                .andExpect(header("Authorization", "Bearer fake-user-token"))
+                .andRespond(withSuccess(expectedSummary, MediaType.APPLICATION_JSON));
 
         // when
         String response = blizzardUserClient.getProfileSummary();
@@ -102,6 +106,6 @@ public class BlizzardUserClientTest {
         assertEquals(expectedSummary, response);
         server.verify();
     }
-    
+
 
 }

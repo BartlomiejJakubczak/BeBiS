@@ -24,6 +24,9 @@ public class RestClientConfig {
     @Value("${blizzard.api.base-url}")
     private String baseUrl;
 
+    @Value("${blizzard.api.namespace.header}")
+    private String namespaceHeader;
+
     @Bean
     ClientHttpRequestInterceptor loggingInterceptor() {
         return (request, body, execution) -> {
@@ -48,7 +51,8 @@ public class RestClientConfig {
     }
 
     @Bean
-    RestClient blizzardServiceRestClient(RestClient.Builder builder,
+    RestClient blizzardServiceRestClient(@Value("${blizzard.api.namespace.service}") String serviceNamespace,
+            RestClient.Builder builder,
             OAuth2AuthorizedClientManager serviceManager,
             ClientHttpRequestInterceptor loggingInterceptor) {
 
@@ -60,7 +64,7 @@ public class RestClientConfig {
                 .requestInterceptor(oauthInterceptor)
                 .requestInterceptor(loggingInterceptor)
                 .defaultRequest(request -> request.attributes(clientRegistrationId("blizzard-service")))
-                .defaultHeader("Battlenet-Namespace", "static-classic1x-eu")
+                .defaultHeader(namespaceHeader, serviceNamespace)
                 .build();
     }
 
@@ -74,7 +78,8 @@ public class RestClientConfig {
     }
 
     @Bean
-    RestClient blizzardUserRestClient(RestClient.Builder builder,
+    RestClient blizzardUserRestClient(@Value("${blizzard.api.namespace.client}") String clientNamespace,
+            RestClient.Builder builder,
             DefaultOAuth2AuthorizedClientManager userManager,
             ClientHttpRequestInterceptor loggingInterceptor) {
 
@@ -86,7 +91,7 @@ public class RestClientConfig {
                 .requestInterceptor(oauthInterceptor)
                 .requestInterceptor(loggingInterceptor)
                 .defaultRequest(request -> request.attributes(clientRegistrationId("blizzard-user")))
-                .defaultHeader("Battlenet-Namespace", "profile-eu")
+                .defaultHeader(namespaceHeader, clientNamespace)
                 .build();
 
     }
