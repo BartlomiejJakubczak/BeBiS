@@ -28,6 +28,8 @@ public class BlizzardServiceOAuthIntegrationTest extends BaseWiremockTest {
                 """)));
 
         stubFor(get(urlPathEqualTo("/data/wow/item/19019"))
+                .withHeader("Battlenet-Namespace", equalTo("static-classic1x-eu"))
+                .withQueryParam("locale", equalTo("en_GB")) // wiremock ignores everything that is after "?" by default
                 .willReturn(okJson("""
                 {"id": 19019, "name": "Thunderfury"}
                 """)));
