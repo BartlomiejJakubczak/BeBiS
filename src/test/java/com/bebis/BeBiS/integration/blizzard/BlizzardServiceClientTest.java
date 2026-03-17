@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.config.RestClientConfig;
-import com.bebis.BeBiS.integration.blizzard.dto.Item;
+import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.ItemTestData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,7 +94,7 @@ class BlizzardServiceClientTest {
     @Test
     void shouldGetItemWithCorrectPath() throws Exception {
         // given
-        Item thunderfury = ItemTestData.thunderfury();
+        ItemResponse thunderfury = ItemTestData.thunderfury();
         String jsonResponse = objectMapper.writeValueAsString(thunderfury);
 
         // when
@@ -102,7 +102,7 @@ class BlizzardServiceClientTest {
                 .andExpect(header("Authorization", "Bearer fake-service-token"))
                 .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        Item result = blizzardClient.getItem(thunderfury.id());
+        ItemResponse result = blizzardClient.getItem(thunderfury.id());
 
         // then
         assertEquals(thunderfury, result);

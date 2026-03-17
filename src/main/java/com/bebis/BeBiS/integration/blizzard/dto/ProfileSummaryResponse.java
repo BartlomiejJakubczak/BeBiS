@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record ProfileSummary(
+public record ProfileSummaryResponse(
         long id,
-        @JsonProperty("wow_accounts") List<WowAccount> wowAccounts
+        @JsonProperty("wow_accounts") List<WowAccountDTO> wowAccounts
 ) {
 }

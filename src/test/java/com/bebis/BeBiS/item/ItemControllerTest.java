@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.item;
 
-import com.bebis.BeBiS.integration.blizzard.dto.Item;
+import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class ItemControllerTest {
     @Test
     void shouldReturnItem() throws Exception {
         // given
-        Item thunderfury = ItemTestData.thunderfury();
+        ItemResponse thunderfury = ItemTestData.thunderfury();
         // when
         when(itemsService.getItem(thunderfury.id())).thenReturn(thunderfury);
         // then

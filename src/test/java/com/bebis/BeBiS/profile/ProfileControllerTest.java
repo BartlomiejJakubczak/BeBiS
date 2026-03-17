@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile;
 
-import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +32,7 @@ public class ProfileControllerTest {
     @Test
     void shouldReturnProfileSummary() throws Exception {
         // given
-        ProfileSummary expectedSummary = new ProfileSummary(12345, new ArrayList<>());
+        ProfileSummaryResponse expectedSummary = new ProfileSummaryResponse(12345, new ArrayList<>());
         // when
         when(profileService.getProfileSummary()).thenReturn(expectedSummary);
         // then

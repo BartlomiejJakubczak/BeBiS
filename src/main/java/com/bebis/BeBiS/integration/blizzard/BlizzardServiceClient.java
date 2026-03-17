@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.integration.blizzard;
 
-import com.bebis.BeBiS.integration.blizzard.dto.Item;
+import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -16,11 +16,11 @@ public class BlizzardServiceClient {
         this.restClient = restClient;
     }
 
-    public Item getItem(long id) {
+    public ItemResponse getItem(long id) {
         return this.restClient.get()
                 .uri("/data/wow/item/{id}" + LOCALE_QUERY_PARAM, id)
                 .retrieve()
-                .body(Item.class);
+                .body(ItemResponse.class);
     }
 
 }

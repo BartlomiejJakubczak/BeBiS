@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
-import com.bebis.BeBiS.integration.blizzard.dto.Item;
+import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,10 +24,10 @@ public class ItemServiceTest {
     @Test
     void shouldGetItemFromBlizzard() {
         // given
-        Item thunderfury = ItemTestData.thunderfury();
+        ItemResponse thunderfury = ItemTestData.thunderfury();
         // when
         when(blizzardClient.getItem(thunderfury.id())).thenReturn(thunderfury);
-        Item response = itemsService.getItem(thunderfury.id());
+        ItemResponse response = itemsService.getItem(thunderfury.id());
         // then
         assertEquals(thunderfury, response);
         verify(blizzardClient).getItem(thunderfury.id());

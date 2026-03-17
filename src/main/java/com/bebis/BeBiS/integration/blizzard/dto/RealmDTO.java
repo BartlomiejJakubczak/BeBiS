@@ -1,8 +1,9 @@
 package com.bebis.BeBiS.integration.blizzard.dto;
 
-public record Race(
+public record RealmDTO(
         int id,
         String name,
-        HrefLink key
+        String slug,
+        HrefLinkDTO key
 ) {
 }

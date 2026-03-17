@@ -1,4 +1,4 @@
 package com.bebis.BeBiS.integration.blizzard.dto;
 
-public record HrefLink(String href) {
+public record HrefLinkDTO(String href) {
 }

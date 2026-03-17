@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
-import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,7 +13,7 @@ public class ProfileService {
         this.blizzardClient = blizzardClient;
     }
 
-    public ProfileSummary getProfileSummary() {
+    public ProfileSummaryResponse getProfileSummary() {
         return blizzardClient.getProfileSummary();
     }
 

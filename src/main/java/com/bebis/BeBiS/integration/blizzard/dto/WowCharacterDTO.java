@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record WowCharacter(
+public record WowCharacterDTO(
         long id,
         String name,
         int level,
-        HrefLink character,
-        Realm realm,
-        @JsonProperty("playable_race") Race race,
-        @JsonProperty("playable_class") WoWClass wowClass
+        HrefLinkDTO character,
+        RealmDTO realm,
+        @JsonProperty("playable_race") RaceDTO race,
+        @JsonProperty("playable_class") WoWClassDTO wowClass
 ) {
 }

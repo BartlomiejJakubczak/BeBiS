@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
-import com.bebis.BeBiS.integration.blizzard.dto.Item;
+import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,7 +13,7 @@ public class ItemService {
         this.blizzardClient = blizzardClient;
     }
 
-    public Item getItem(long itemId) {
+    public ItemResponse getItem(long itemId) {
         return blizzardClient.getItem(itemId);
     }
 

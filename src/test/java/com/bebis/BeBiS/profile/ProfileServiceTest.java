@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
-import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,10 +27,10 @@ public class ProfileServiceTest {
     @Test
     void shouldGetProfileSummaryFromBlizzard() {
         // given
-        ProfileSummary expectedSummary = new ProfileSummary(12345, new ArrayList<>());
+        ProfileSummaryResponse expectedSummary = new ProfileSummaryResponse(12345, new ArrayList<>());
         // when
         when(blizzardClient.getProfileSummary()).thenReturn(expectedSummary);
-        ProfileSummary response = profileService.getProfileSummary();
+        ProfileSummaryResponse response = profileService.getProfileSummary();
         // then
         assertEquals(expectedSummary, response);
         verify(blizzardClient).getProfileSummary();

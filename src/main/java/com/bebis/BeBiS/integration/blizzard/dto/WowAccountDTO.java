@@ -2,8 +2,8 @@ package com.bebis.BeBiS.integration.blizzard.dto;
 
 import java.util.List;
 
-public record WowAccount(
+public record WowAccountDTO(
         long id,
-        List<WowCharacter> characters
+        List<WowCharacterDTO> characters
 ) {
 }

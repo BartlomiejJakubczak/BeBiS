@@ -1,9 +1,8 @@
 package com.bebis.BeBiS.integration.blizzard.dto;
 
-public record Realm(
+public record WoWClassDTO(
         int id,
         String name,
-        String slug,
-        HrefLink key
+        HrefLinkDTO key
 ) {
 }

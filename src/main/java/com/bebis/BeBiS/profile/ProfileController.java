@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile;
 
-import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +17,7 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/summary")
-    public ResponseEntity<ProfileSummary> getProfileSummary() {
+    public ResponseEntity<ProfileSummaryResponse> getProfileSummary() {
         return ResponseEntity.ok(profileService.getProfileSummary());
     }
 
