@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.profile;
 
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +16,7 @@ public class ProfileController {
         this.profileService = profileService;
     }
 
-    @GetMapping("/summary")
+    @GetMapping(value = "/summary", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> getProfileSummary() {
         String summary = profileService.getProfileSummary();
         return ResponseEntity.ok(summary);

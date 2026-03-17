@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
+import com.bebis.BeBiS.integration.blizzard.dto.Item;
 import org.springframework.stereotype.Service;
 
 @Service

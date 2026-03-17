@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.item;
 
+import com.bebis.BeBiS.integration.blizzard.dto.Item;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.config.RestClientConfig;
-import com.bebis.BeBiS.item.Item;
+import com.bebis.BeBiS.integration.blizzard.dto.Item;
 import com.bebis.BeBiS.item.ItemTestData;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.item;
+package com.bebis.BeBiS.integration.blizzard.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
