@@ -94,7 +94,7 @@ class BlizzardServiceClientTest {
     @Test
     void shouldGetItemWithCorrectPath() throws Exception {
         // given
-        ItemResponse thunderfury = ItemTestData.thunderfury();
+        ItemResponse thunderfury = ItemTestData.thunderfuryResponse();
         String jsonResponse = objectMapper.writeValueAsString(thunderfury);
 
         // when

@@ -1,6 +1,5 @@
 package com.bebis.BeBiS.item;
 
-import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +18,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<ItemResponse> getItem(@PathVariable int itemId) {
+    public ResponseEntity<Item> getItem(@PathVariable int itemId) {
         return new ResponseEntity<>(itemsService.getItem(itemId), HttpStatus.OK);
     }
 

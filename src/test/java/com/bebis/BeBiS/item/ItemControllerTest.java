@@ -1,6 +1,5 @@
 package com.bebis.BeBiS.item;
 
-import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.bebis.BeBiS.item.ItemTestData.THUNDERFURY_ID;
+import static com.bebis.BeBiS.item.ItemTestData.thunderfury;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -29,14 +30,12 @@ public class ItemControllerTest {
 
     @Test
     void shouldReturnItem() throws Exception {
-        // given
-        ItemResponse thunderfury = ItemTestData.thunderfury();
         // when
-        when(itemsService.getItem(thunderfury.id())).thenReturn(thunderfury);
+        when(itemsService.getItem(THUNDERFURY_ID)).thenReturn(thunderfury());
         // then
-        mockMvc.perform(get("/api/items/{id}", thunderfury.id()))
+        mockMvc.perform(get("/api/items/{id}", THUNDERFURY_ID))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(thunderfury)));
+                .andExpect(content().json(objectMapper.writeValueAsString(thunderfury())));
     }
 
 }
