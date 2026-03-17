@@ -23,17 +23,19 @@ spring:
           blizzard:
             authorization-uri: https://oauth.battle.net/authorize
             token-uri: https://oauth.battle.net/token
-            user-info-uri: https://openid-connect.onboard.battle.net/userinfo
+            user-info-uri: https://eu.battle.net/oauth/userinfo
+            user-name-attribute: sub
 
 blizzard:
   api:
     locale: en_GB
     namespace:
       header: Battlenet-Namespace
-      user: profile-eu
+      user: profile-classic1x-eu
       service: static-classic1x-eu
     base-url: https://eu.api.blizzard.com
 
 logging:
   level:
+    org.springframework.security: TRACE
     com.bebis.BeBiS: DEBUG

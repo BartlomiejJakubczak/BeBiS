@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -26,6 +27,7 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
@@ -52,6 +54,9 @@ class BlizzardServiceClientTest {
     @MockitoBean
     private OAuth2AuthorizedClientRepository authorizedClientRepository;
 
+    @Value("${blizzard.api.base-url}")
+    private String baseUrl;
+
     private MockRestServiceServer server;
 
     @BeforeEach
@@ -68,7 +73,7 @@ class BlizzardServiceClientTest {
         // Create a fake "Authorized Client" with a pre-baked token
         OAuth2AccessToken fakeToken = new OAuth2AccessToken(
                 OAuth2AccessToken.TokenType.BEARER,
-                "fake-token-value",
+                "fake-service-token",
                 Instant.now(),
                 Instant.now().plusSeconds(3600));
 
@@ -93,7 +98,8 @@ class BlizzardServiceClientTest {
         String jsonResponse = objectMapper.writeValueAsString(thunderfury);
 
         // when
-        server.expect(requestTo("https://eu.api.blizzard.com/data/wow/item/" + thunderfury.id() + BlizzardServiceClient.LOCALE_QUERY_PARAM))
+        server.expect(requestTo(baseUrl + "/data/wow/item/" + thunderfury.id() + BlizzardServiceClient.LOCALE_QUERY_PARAM))
+                .andExpect(header("Authorization", "Bearer fake-service-token"))
                 .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
         Item result = blizzardClient.getItem(thunderfury.id());
