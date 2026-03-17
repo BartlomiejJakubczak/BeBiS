@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.profile;
 
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,9 +18,8 @@ public class ProfileController {
     }
 
     @GetMapping(value = "/summary", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getProfileSummary() {
-        String summary = profileService.getProfileSummary();
-        return ResponseEntity.ok(summary);
+    public ResponseEntity<ProfileSummary> getProfileSummary() {
+        return ResponseEntity.ok(profileService.getProfileSummary());
     }
 
 }

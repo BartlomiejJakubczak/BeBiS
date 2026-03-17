@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.profile;
 
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.ArrayList;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,13 +32,13 @@ public class ProfileControllerTest {
     @Test
     void shouldReturnProfileSummary() throws Exception {
         // given
-        String expectedSummary = "This is a profile summary.";
+        ProfileSummary expectedSummary = new ProfileSummary(12345, new ArrayList<>());
         // when
         when(profileService.getProfileSummary()).thenReturn(expectedSummary);
         // then
         mockMvc.perform(get("/api/profile/summary"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(expectedSummary));
+                .andExpect(content().json(objectMapper.writeValueAsString(expectedSummary)));
     }
 
 }

@@ -21,7 +21,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.time.Instant;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
 
@@ -72,14 +72,14 @@ public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
                 .withHeader(namespaceHeader, equalTo(userNamespace))
                 .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
                 .willReturn(okJson("""
-                        {"id": 12345, "summary": "profile summary"}
+                        {"id": 12345, "wow_accounts": []}
                         """)));
 
         // when
-        var summary = blizzardUserClient.getProfileSummary();
+        var profileSummary = blizzardUserClient.getProfileSummary();
 
         // then
-        assertTrue(summary.contains("profile summary"));
+        assertEquals(12345, profileSummary.id());
         verify(getRequestedFor(urlPathEqualTo("/profile/user/wow"))
                 .withHeader("Authorization", equalTo("Bearer fake-user-token")));
     }

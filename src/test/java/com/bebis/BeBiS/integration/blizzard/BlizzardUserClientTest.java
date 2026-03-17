@@ -93,17 +93,17 @@ public class BlizzardUserClientTest {
     @Test
     void shouldGetProfileSummaryWithCorrectPath() {
         // given
-        String expectedSummary = "Profile Summary";
+        long id = 12345;
         server.expect(requestTo(baseUrl + "/profile/user/wow" + BlizzardUserClient.LOCALE_QUERY_PARAM))
                 // Optional: prove the interceptor attached the token from our mocked manager!
                 .andExpect(header("Authorization", "Bearer fake-user-token"))
-                .andRespond(withSuccess(expectedSummary, MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess("{ \"id\" : \"12345\"}", MediaType.APPLICATION_JSON));
 
         // when
-        String response = blizzardUserClient.getProfileSummary();
+        var profileSummary = blizzardUserClient.getProfileSummary();
 
         // then
-        assertEquals(expectedSummary, response);
+        assertEquals(id, profileSummary.id());
         server.verify();
     }
 

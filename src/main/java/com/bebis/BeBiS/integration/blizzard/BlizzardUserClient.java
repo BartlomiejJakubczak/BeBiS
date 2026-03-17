@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.integration.blizzard;
 
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummary;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -15,11 +16,11 @@ public class BlizzardUserClient {
         this.restClient = restClient;
     }
 
-    public String getProfileSummary() {
+    public ProfileSummary getProfileSummary() {
         return this.restClient.get()
                 .uri("/profile/user/wow" + LOCALE_QUERY_PARAM)
                 .retrieve()
-                .body(String.class);
+                .body(ProfileSummary.class);
     }
 
 }

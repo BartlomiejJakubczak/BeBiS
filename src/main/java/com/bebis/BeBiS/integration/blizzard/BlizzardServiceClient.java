@@ -16,7 +16,7 @@ public class BlizzardServiceClient {
         this.restClient = restClient;
     }
 
-    public Item getItem(int id) {
+    public Item getItem(long id) {
         return this.restClient.get()
                 .uri("/data/wow/item/{id}" + LOCALE_QUERY_PARAM, id)
                 .retrieve()
