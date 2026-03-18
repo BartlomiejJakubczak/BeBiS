@@ -12,6 +12,6 @@ public record WowCharacterDTO(
         HrefLinkDTO character,
         RealmDTO realm,
         @JsonProperty("playable_race") RaceDTO race,
-        @JsonProperty("playable_class") WoWClassDTO wowClass
+        @JsonProperty("playable_class") WowClassDTO wowClass
 ) {
 }
