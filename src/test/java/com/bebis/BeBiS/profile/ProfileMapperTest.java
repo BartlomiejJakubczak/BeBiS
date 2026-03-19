@@ -51,7 +51,7 @@ public class ProfileMapperTest {
         // then
         assertEquals(1, result.size());
         WowCharacter mapped = result.getFirst();
-        assertEquals(characterId, mapped.id());
+        assertEquals(characterId, mapped.id().id());
         assertEquals(characterName, mapped.name());
         assertEquals(characterDto.realm().name(), mapped.realm().name());
         assertEquals(characterLevel, mapped.level());

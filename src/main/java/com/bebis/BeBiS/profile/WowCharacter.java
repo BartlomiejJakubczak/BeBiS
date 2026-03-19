@@ -3,7 +3,7 @@ package com.bebis.BeBiS.profile;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 
 public record WowCharacter(
-        long id, // id in the DB should probably consist of id + slug, as id is unique per realm only
+        Id id,
         String name,
         int level,
         Race race,
@@ -33,9 +33,15 @@ public record WowCharacter(
         DRUID
     }
 
+    public record Id(
+            long id,
+            String realmSlug
+    ) {
+    }
+
     public static WowCharacter fromDTO(WowCharacterDTO dto) {
         return new WowCharacter(
-                dto.id(),
+                new Id(dto.id(), dto.realm().slug()),
                 dto.name(),
                 dto.level(),
                 Race.valueOf(dto.race().name()),
