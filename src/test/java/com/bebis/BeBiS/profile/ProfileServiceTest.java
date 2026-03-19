@@ -2,13 +2,13 @@ package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -21,18 +21,25 @@ public class ProfileServiceTest {
     @Mock
     private BlizzardUserClient blizzardClient;
 
-    @InjectMocks
+    private final ProfileMapper profileMapper = new ProfileMapper();
+
     private ProfileService profileService;
 
+    @BeforeEach
+    void setUp() {
+        profileService = new ProfileService(blizzardClient, profileMapper);
+    }
+
     @Test
-    void shouldGetProfileSummaryFromBlizzard() {
+    void shouldGetListOfCharactersFromProfileSummary() {
         // given
-        ProfileSummaryResponse expectedSummary = new ProfileSummaryResponse(12345, new ArrayList<>());
+        ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
+        List<WowCharacter> allCharactersFromSummary = profileMapper.mapToDomain(expectedSummary);
         // when
         when(blizzardClient.getProfileSummary()).thenReturn(expectedSummary);
-        ProfileSummaryResponse response = profileService.getProfileSummary();
+        List<WowCharacter> allCharacters = profileService.getProfileSummary();
         // then
-        assertEquals(expectedSummary, response);
+        assertEquals(allCharactersFromSummary, allCharacters);
         verify(blizzardClient).getProfileSummary();
     }
 

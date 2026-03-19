@@ -9,14 +9,14 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ProfileController.class) // loads MVC layer, controllers and security filters
+@WebMvcTest(ProfileController.class) // loads MVC layer, controllers and security filters, doesn't scan Service layer
 @AutoConfigureMockMvc(addFilters = false) // disable SecurityFilterChain for controller unit tests
 public class ProfileControllerTest {
 
@@ -29,16 +29,19 @@ public class ProfileControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private final ProfileMapper profileMapper = new ProfileMapper();
+
     @Test
-    void shouldReturnProfileSummary() throws Exception {
+    void shouldReturnCharactersFromProfileSummary() throws Exception {
         // given
-        ProfileSummaryResponse expectedSummary = new ProfileSummaryResponse(12345, new ArrayList<>());
+        ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
+        List<WowCharacter> allCharacters = profileMapper.mapToDomain(expectedSummary);
         // when
-        when(profileService.getProfileSummary()).thenReturn(expectedSummary);
+        when(profileService.getProfileSummary()).thenReturn(allCharacters);
         // then
         mockMvc.perform(get("/api/profile/summary"))
                 .andExpect(status().isOk())
-                .andExpect(content().json(objectMapper.writeValueAsString(expectedSummary)));
+                .andExpect(content().json(objectMapper.writeValueAsString(allCharacters)));
     }
 
 }
