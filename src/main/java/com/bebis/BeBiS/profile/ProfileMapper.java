@@ -2,6 +2,7 @@ package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
+import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,8 +20,19 @@ public class ProfileMapper {
                 .map(WowAccountDTO::characters)
                 .filter(Objects::nonNull)
                 .flatMap(List::stream)
-                .map(WowCharacter::fromDTO)
+                .map(this::fromDTO)
                 .toList();
+    }
+
+    private WowCharacter fromDTO(WowCharacterDTO dto) {
+        return new WowCharacter(
+                new WowCharacter.Id(dto.id(), dto.realm().slug()),
+                dto.name(),
+                dto.level(),
+                WowCharacter.Race.valueOf(dto.race().name()),
+                WowCharacter.WowClass.valueOf(dto.wowClass().name()),
+                new WowRealm(dto.realm().name(), dto.realm().slug())
+        );
     }
 
 }

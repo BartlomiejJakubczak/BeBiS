@@ -7,14 +7,16 @@ import org.springframework.stereotype.Service;
 public class ItemService {
 
     private final BlizzardServiceClient blizzardClient;
+    private final ItemMapper itemMapper;
 
-    public ItemService(BlizzardServiceClient blizzardClient) {
+    public ItemService(BlizzardServiceClient blizzardClient, ItemMapper itemMapper) {
         this.blizzardClient = blizzardClient;
+        this.itemMapper = itemMapper;
     }
 
     public Item getItem(long itemId) {
         var response = blizzardClient.getItem(itemId);
-        return new Item(response.id(), response.name());
+        return itemMapper.map(response);
     }
 
 }

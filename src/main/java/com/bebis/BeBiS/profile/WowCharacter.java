@@ -1,7 +1,5 @@
 package com.bebis.BeBiS.profile;
 
-import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
-
 public record WowCharacter(
         Id id,
         String name,
@@ -37,17 +35,6 @@ public record WowCharacter(
             long id,
             String realmSlug
     ) {
-    }
-
-    public static WowCharacter fromDTO(WowCharacterDTO dto) {
-        return new WowCharacter(
-                new Id(dto.id(), dto.realm().slug()),
-                dto.name(),
-                dto.level(),
-                Race.valueOf(dto.race().name()),
-                WowClass.valueOf(dto.wowClass().name()),
-                new WowRealm(dto.realm().name(), dto.realm().slug())
-        );
     }
 
 }

@@ -1,9 +1,9 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -18,8 +18,14 @@ public class ItemServiceTest {
     @Mock
     private BlizzardServiceClient blizzardClient;
 
-    @InjectMocks
+    private final ItemMapper itemMapper = new ItemMapper();
+
     private ItemService itemsService;
+
+    @BeforeEach
+    void setup() {
+        itemsService = new ItemService(blizzardClient, itemMapper);
+    }
 
     @Test
     void shouldGetItemFromBlizzard() {
