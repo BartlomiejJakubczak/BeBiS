@@ -58,12 +58,16 @@ public class BlizzardUserClientTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    /*
+        not a real server as opposed to wiremock, only to test how client behaves,
+        like for example what happens when API returns 404
+     */
     private MockRestServiceServer server;
     private BlizzardUserClient blizzardUserClient;
 
     @BeforeEach
+    // Simulate an authenticated user for the test
     @WithMockUser(username = "test")
-        // Simulate an authenticated user for the test
     void setUp() {
         // DefaultOAuth2AuthorizedClientManager is hardcoded to look at the user's browser session to find the token
         // Because there is no web server running in this sliced test, the HttpServletRequest is null
@@ -95,7 +99,6 @@ public class BlizzardUserClientTest {
         // given
         long id = 12345;
         server.expect(requestTo(baseUrl + "/profile/user/wow" + BlizzardUserClient.LOCALE_QUERY_PARAM))
-                // Optional: prove the interceptor attached the token from our mocked manager!
                 .andExpect(header("Authorization", "Bearer fake-user-token"))
                 .andRespond(withSuccess("{ \"id\" : \"12345\"}", MediaType.APPLICATION_JSON));
 
@@ -103,7 +106,7 @@ public class BlizzardUserClientTest {
         var profileSummary = blizzardUserClient.getProfileSummary();
 
         // then
-        assertEquals(id, profileSummary.id());
+        assertEquals(id, profileSummary.blizzardAccountId());
         server.verify();
     }
 

@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.e2e;
 
-import com.bebis.BeBiS.BaseIntegrationTest;
+import com.bebis.BeBiS.base.BaseE2ETest;
 import com.bebis.BeBiS.item.Item;
 import com.bebis.BeBiS.item.Weapon;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import static com.bebis.BeBiS.item.ItemTestData.thunderfury;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
-public class ItemFlowE2ETest extends BaseIntegrationTest {
+public class ItemFlowE2ETest extends BaseE2ETest {
 
     @Autowired
     private TestRestTemplate restTemplate; // "browser in a box"

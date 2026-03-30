@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.integration.blizzard;
 
+import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -17,10 +18,17 @@ public class BlizzardUserClient {
     }
 
     public ProfileSummaryResponse getProfileSummary() {
-        return this.restClient.get()
+        return restClient.get()
                 .uri("/profile/user/wow" + LOCALE_QUERY_PARAM)
                 .retrieve()
                 .body(ProfileSummaryResponse.class);
+    }
+
+    public EquipmentResponse getCharacterEquipment(String realmSlug, String characterName) {
+        return restClient.get()
+                .uri("/profile/wow/character/" + realmSlug + "/" + characterName + "/equipment" + LOCALE_QUERY_PARAM)
+                .retrieve()
+                .body(EquipmentResponse.class);
     }
 
 }

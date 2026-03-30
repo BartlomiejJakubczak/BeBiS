@@ -47,6 +47,7 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
         SHOULDER("Shoulder"),
         BODY("Shirt"),
         CHEST("Chest"),
+        TABARD("Tabard"),
         WAIST("Waist"),
         LEGS("Legs"),
         FEET("Feet"),
@@ -67,11 +68,7 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
         HOLDABLE("Held In Off-hand"), // Usually caster off-hands
         THROWN("Thrown"),
         RANGEDRIGHT("Wands/Guns"),
-
-        // Non-Equippables
-        TABARD("Tabard"),
-        NON_EQUIP("Non-equippable"),
-        BAG("Bag");
+        RELIC("Relic");
 
         private final String displayName;
 

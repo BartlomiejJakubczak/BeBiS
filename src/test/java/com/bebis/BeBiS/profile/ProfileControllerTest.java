@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
+import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +13,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ProfileController.class) // loads MVC layer, controllers and security filters, doesn't scan Service layer
-@AutoConfigureMockMvc(addFilters = false) // disable SecurityFilterChain for controller unit tests
+@AutoConfigureMockMvc
 public class ProfileControllerTest {
 
     @Autowired
@@ -35,13 +37,17 @@ public class ProfileControllerTest {
     void shouldReturnCharactersFromProfileSummary() throws Exception {
         // given
         ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
-        List<WowCharacter> allCharacters = profileMapper.mapToDomain(expectedSummary);
+        long blizzardAccountId = expectedSummary.blizzardAccountId();
+        List<WowCharacterEntity> entities = profileMapper.mapToEntity(expectedSummary, blizzardAccountId);
+        List<WowCharacter> allCharacters = profileMapper.mapToDomain(entities);
         // when
-        when(profileService.getProfileSummary()).thenReturn(allCharacters);
+        when(profileService.getProfileSummary(blizzardAccountId)).thenReturn(allCharacters);
         // then
-        mockMvc.perform(get("/api/profile/summary"))
+        mockMvc.perform(get("/api/profile/summary")
+                        .with(oauth2Login() // creates the mock OAuth2User
+                                .attributes(attrs -> attrs.put("id", blizzardAccountId))) // supply the needed accountId
+                )
                 .andExpect(status().isOk())
                 .andExpect(content().json(objectMapper.writeValueAsString(allCharacters)));
     }
-
 }

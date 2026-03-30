@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.profile;
 
 public record WowCharacter(
-        Id id,
+        Id wowCharacterId,
         String name,
         int level,
         Race race,
@@ -16,7 +16,11 @@ public record WowCharacter(
         ORC,
         TROLL,
         TAUREN,
-        UNDEAD
+        UNDEAD;
+
+        public static Race fromBlizzardName(String blizzardName) {
+            return Race.valueOf(blizzardName.toUpperCase().replace("-", "_"));
+        }
     }
 
     public enum WowClass {

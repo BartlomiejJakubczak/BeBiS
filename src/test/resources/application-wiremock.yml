@@ -9,3 +9,6 @@ spring:
         provider:
           blizzard:
             token-uri: http://localhost:8089/token
+  datasource:
+    url: jdbc:h2:mem:testdb://localhost:5432/placeholder
+    driver-class-name: org.h2.Driver

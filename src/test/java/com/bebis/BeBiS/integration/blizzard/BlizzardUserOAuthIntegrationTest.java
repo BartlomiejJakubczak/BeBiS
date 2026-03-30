@@ -1,11 +1,12 @@
 package com.bebis.BeBiS.integration.blizzard;
 
-import com.bebis.BeBiS.BaseWiremockTest;
+import com.bebis.BeBiS.base.BaseWiremockTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ import java.time.Instant;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SpringBootTest
 public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
 
     @Value("${blizzard.api.namespace.user}")
@@ -79,7 +81,7 @@ public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
         var profileSummary = blizzardUserClient.getProfileSummary();
 
         // then
-        assertEquals(12345, profileSummary.id());
+        assertEquals(12345, profileSummary.blizzardAccountId());
         verify(getRequestedFor(urlPathEqualTo("/profile/user/wow"))
                 .withHeader("Authorization", equalTo("Bearer fake-user-token")));
     }
