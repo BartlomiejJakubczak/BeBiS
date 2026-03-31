@@ -51,13 +51,24 @@ public record ItemResponse(
     }
 
     public record WeaponDTO(
-            @JsonProperty("attack_speed") DisplayValueDTO attackSpeed,
-            DisplayValueDTO damage
+            @JsonProperty("attack_speed") AttackSpeedDTO attackSpeed,
+            DamageDTO damage,
+            DpsDTO dps
     ) {
-        public record DisplayValueDTO(
-                double value,
+
+        public record DamageDTO(
                 @JsonProperty("min_value") int minValue,
                 @JsonProperty("max_value") int maxValue
+        ) {
+        }
+
+        public record AttackSpeedDTO(
+                double value
+        ) {
+        }
+
+        public record DpsDTO(
+                double value
         ) {
         }
     }

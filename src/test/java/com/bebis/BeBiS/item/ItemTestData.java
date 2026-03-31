@@ -24,8 +24,9 @@ public class ItemTestData {
                         new StatDTO(new StatDTO.StatTypeWrapper("STAMINA"), 8)
                 )),
                 new WeaponDTO(
-                        new WeaponDTO.DisplayValueDTO(1.9, 0, 0),
-                        new WeaponDTO.DisplayValueDTO(0, 82, 153)
+                        new WeaponDTO.AttackSpeedDTO(1.9),
+                        new WeaponDTO.DamageDTO(82, 153),
+                        new WeaponDTO.DpsDTO(61.84)
                 ),
                 null, // No armor on weapons
                 new ArrayList<>(List.of(new PreviewItemDTO.SpellEffectDTO(TF_EFFECT))),
