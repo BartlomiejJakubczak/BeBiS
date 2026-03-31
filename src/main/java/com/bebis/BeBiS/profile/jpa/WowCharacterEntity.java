@@ -63,13 +63,13 @@ public class WowCharacterEntity {
     @EqualsAndHashCode
     public static class CompositeKey implements Serializable {
 
-        @Column(name = "id", nullable = false)
+        @Column(name = "id")
         private long id;
 
         @Column(name = "realm_slug", nullable = false)
         private String realmSlug;
 
-        @Column(name = "blizzard_account_id", nullable = false)
+        @Column(name = "blizzard_account_id")
         private long blizzardAccountId;
     }
 }
