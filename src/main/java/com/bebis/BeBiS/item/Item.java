@@ -32,6 +32,7 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
     }
 
     public enum Quality {
+        UNKNOWN,
         POOR,
         COMMON,
         UNCOMMON,

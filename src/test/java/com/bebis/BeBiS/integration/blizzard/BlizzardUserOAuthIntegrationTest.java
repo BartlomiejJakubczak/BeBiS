@@ -22,7 +22,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.time.Instant;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
@@ -68,20 +67,19 @@ public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
     }
 
     @Test
-    void shouldFetchProfileSummary() {
+    void shouldAttachOAuth2TokenToAuthorizationCodeFlowRequest() {
         // given
         stubFor(get(urlPathEqualTo("/profile/user/wow"))
                 .withHeader(namespaceHeader, equalTo(userNamespace))
                 .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
                 .willReturn(okJson("""
-                        {"id": 12345, "wow_accounts": []}
+                        {"wow_accounts": []}
                         """)));
 
         // when
-        var profileSummary = blizzardUserClient.getProfileSummary();
+        blizzardUserClient.getProfileSummary();
 
         // then
-        assertEquals(12345, profileSummary.blizzardAccountId());
         verify(getRequestedFor(urlPathEqualTo("/profile/user/wow"))
                 .withHeader("Authorization", equalTo("Bearer fake-user-token")));
     }

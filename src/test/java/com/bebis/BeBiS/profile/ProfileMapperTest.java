@@ -1,8 +1,10 @@
 package com.bebis.BeBiS.profile;
 
+import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
+import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import org.junit.jupiter.api.Test;
 
@@ -14,33 +16,33 @@ public class ProfileMapperTest {
 
     private final ProfileMapper profileMapper = new ProfileMapper();
 
-    // mapToEntity
+    // mapToSyncData
 
     @Test
     void shouldReturnEmptyListFromNoAccounts() {
         //given
         ProfileSummaryResponse profileSummaryResponse = ProfileTestData.generateProfileSummaryResponse(null, null);
-        long blizzardAccountId = profileSummaryResponse.blizzardAccountId();
+        long blizzardAccountId = 1L;
         //then
-        assertEquals(List.of(), profileMapper.mapToEntity(profileSummaryResponse, blizzardAccountId));
+        assertEquals(List.of(), profileMapper.mapToSyncData(profileSummaryResponse, blizzardAccountId));
     }
 
     @Test
     void shouldReturnEmptyListFromAccountWithNoCharacters() {
         //given
         ProfileSummaryResponse profileSummaryResponse = ProfileTestData.generateProfileSummaryResponse(1, 0);
-        long blizzardAccountId = profileSummaryResponse.blizzardAccountId();
+        long blizzardAccountId = 1L;
         //then
-        assertEquals(List.of(), profileMapper.mapToEntity(profileSummaryResponse, blizzardAccountId));
+        assertEquals(List.of(), profileMapper.mapToSyncData(profileSummaryResponse, blizzardAccountId));
     }
 
     @Test
     void shouldReturnEmptyListFromMultipleAccountsWithNoCharacters() {
         //given
         ProfileSummaryResponse profileSummaryResponse = ProfileTestData.generateProfileSummaryResponse(2, 0);
-        long blizzardAccountId = profileSummaryResponse.blizzardAccountId();
+        long blizzardAccountId = 1L;
         //then
-        assertEquals(List.of(), profileMapper.mapToEntity(profileSummaryResponse, blizzardAccountId));
+        assertEquals(List.of(), profileMapper.mapToSyncData(profileSummaryResponse, blizzardAccountId));
     }
 
     @Test
@@ -53,18 +55,20 @@ public class ProfileMapperTest {
         long blizzardAccountId = 1;
         WowCharacterDTO characterDto = ProfileTestData.generateWowCharacterDTO(1, characterName, realmName);
         WowAccountDTO accountDto = new WowAccountDTO(1, List.of(characterDto));
-        ProfileSummaryResponse response = new ProfileSummaryResponse(blizzardAccountId, List.of(accountDto));
+        ProfileSummaryResponse response = new ProfileSummaryResponse(List.of(accountDto));
         // when
-        List<WowCharacterEntity> result = profileMapper.mapToEntity(response, blizzardAccountId);
+        List<CharacterSyncData> result = profileMapper.mapToSyncData(response, blizzardAccountId);
         // then
         assertEquals(1, result.size());
-        WowCharacterEntity mapped = result.getFirst();
-        assertEquals(characterId, mapped.getPk().getId());
-        assertEquals(characterName, mapped.getName());
-        assertEquals(characterDto.realm().name(), mapped.getRealmName());
-        assertEquals(characterLevel, mapped.getLevel());
-        assertEquals(characterDto.race().name(), mapped.getRace().name());
-        assertEquals(characterDto.wowClass().name(), mapped.getWowClass().name());
+        CharacterSyncData mapped = result.getFirst();
+        assertEquals(characterId, mapped.characterId());
+        assertEquals(realmName.toLowerCase(), mapped.realmSlug());
+        assertEquals(blizzardAccountId, mapped.blizzardAccountId());
+        assertEquals(characterName, mapped.name());
+        assertEquals(characterDto.realm().name(), mapped.realmName());
+        assertEquals(characterLevel, mapped.level());
+        assertEquals(characterDto.race().name(), mapped.race().name());
+        assertEquals(characterDto.wowClass().name(), mapped.wowClass().name());
     }
 
     @Test
@@ -78,22 +82,22 @@ public class ProfileMapperTest {
         WowCharacterDTO char3 = ProfileTestData.generateWowCharacterDTO(3, "Thrall", "Soulseeker");
         WowAccountDTO account2 = new WowAccountDTO(2, List.of(char3));
 
-        long blizzardAccountId = 1;
-        ProfileSummaryResponse response = new ProfileSummaryResponse(blizzardAccountId, List.of(account1, account2));
+        long blizzardAccountId = 1L;
+        ProfileSummaryResponse response = new ProfileSummaryResponse(List.of(account1, account2));
 
         // when
-        List<WowCharacterEntity> result = profileMapper.mapToEntity(response, blizzardAccountId);
+        List<CharacterSyncData> result = profileMapper.mapToSyncData(response, blizzardAccountId);
 
         // then
         assertEquals(3, result.size(), "Should have exactly 3 characters in total");
 
         // Verify specific "Anchor Points" to ensure coverage
-        assertEquals("Thelamar", result.get(0).getName(), "First character of first account missing");
-        assertEquals("Leeroy", result.get(1).getName(), "Second character of first account missing");
-        assertEquals("Thrall", result.get(2).getName(), "Character from second account missing");
+        assertEquals("Thelamar", result.get(0).name(), "First character of first account missing");
+        assertEquals("Leeroy", result.get(1).name(), "Second character of first account missing");
+        assertEquals("Thrall", result.get(2).name(), "Character from second account missing");
 
         // Verify a domain field to ensure the mapping was complete
-        assertEquals(char3.race().name(), result.get(2).getRace().name(), "Race from second account missing");
+        assertEquals(char3.race().name(), result.get(2).race().name(), "Race from second account missing");
     }
 
     // mapToDomain
@@ -102,11 +106,12 @@ public class ProfileMapperTest {
     void shouldReturnDomainCharacterFromEntity() {
         // given
         long characterId = 12345L;
-        long blizzardAccountId = 1L; // The "Owner"
+        long blizzardAccountId = 1L;
         String realmSlug = "soulseeker";
 
         WowCharacterEntity entity = new WowCharacterEntity(
                 new WowCharacterEntity.CompositeKey(characterId, realmSlug, blizzardAccountId),
+                new EquipmentEntity(),
                 "Thelemar",
                 60,
                 WowCharacter.Race.NIGHT_ELF,
@@ -137,11 +142,11 @@ public class ProfileMapperTest {
         long blizzardAccountId = 1L; // The "Owner"
         WowCharacterEntity entity1 = new WowCharacterEntity(
                 new WowCharacterEntity.CompositeKey(1L, "soulseeker", blizzardAccountId),
-                "Char1", 60, WowCharacter.Race.ORC, WowCharacter.WowClass.WARRIOR, "Soulseeker"
+                new EquipmentEntity(), "Char1", 60, WowCharacter.Race.ORC, WowCharacter.WowClass.WARRIOR, "Soulseeker"
         );
         WowCharacterEntity entity2 = new WowCharacterEntity(
                 new WowCharacterEntity.CompositeKey(2L, "soulseeker", blizzardAccountId),
-                "Char2", 60, WowCharacter.Race.TROLL, WowCharacter.WowClass.MAGE, "Soulseeker"
+                new EquipmentEntity(), "Char2", 60, WowCharacter.Race.TROLL, WowCharacter.WowClass.MAGE, "Soulseeker"
         );
         List<WowCharacterEntity> entities = List.of(entity1, entity2);
 

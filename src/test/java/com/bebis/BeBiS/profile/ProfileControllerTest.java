@@ -1,7 +1,8 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
-import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
+import com.bebis.BeBiS.profile.dto.CharacterSyncData;
+import com.bebis.BeBiS.profile.jpa.WowCharacterEntityFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +34,15 @@ public class ProfileControllerTest {
 
     private final ProfileMapper profileMapper = new ProfileMapper();
 
+    private final WowCharacterEntityFactory characterEntityFactory = new WowCharacterEntityFactory();
+
     @Test
     void shouldReturnCharactersFromProfileSummary() throws Exception {
         // given
         ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
-        long blizzardAccountId = expectedSummary.blizzardAccountId();
-        List<WowCharacterEntity> entities = profileMapper.mapToEntity(expectedSummary, blizzardAccountId);
-        List<WowCharacter> allCharacters = profileMapper.mapToDomain(entities);
+        long blizzardAccountId = 1L;
+        List<CharacterSyncData> syncData = profileMapper.mapToSyncData(expectedSummary, blizzardAccountId);
+        List<WowCharacter> allCharacters = profileMapper.mapToDomain(characterEntityFactory.createNewCharacters(syncData));
         // when
         when(profileService.getProfileSummary(blizzardAccountId)).thenReturn(allCharacters);
         // then

@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -57,6 +58,9 @@ public abstract class ItemEntity {
     @Column(name = "unique_equipped")
     private boolean uniqueEquipped;
 
+    @Column(name = "armor_value")
+    private int armorValue; // Moved here because nearly any equippable can have armor
+
     @ElementCollection // Tells Hibernate this is a separate collection table, not a standard column.
     @CollectionTable(name = "item_stats", joinColumns = {
             @JoinColumn(name = "item_id"),
@@ -81,7 +85,7 @@ public abstract class ItemEntity {
     @NoArgsConstructor
     @Getter
     @EqualsAndHashCode
-    public static class CompositeKey {
+    public static class CompositeKey implements Serializable {
 
         @Column(name = "item_id")
         private long itemId;

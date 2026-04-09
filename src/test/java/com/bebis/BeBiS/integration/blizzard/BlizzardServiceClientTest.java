@@ -92,7 +92,7 @@ class BlizzardServiceClientTest {
     }
 
     @Test
-    void shouldGetItemWithCorrectPath() throws Exception {
+    void shouldGetBaseItemWithCorrectPath() throws Exception {
         // given
         ItemResponse thunderfury = ItemTestData.thunderfuryResponse();
         String jsonResponse = objectMapper.writeValueAsString(thunderfury);
@@ -102,7 +102,7 @@ class BlizzardServiceClientTest {
                 .andExpect(header("Authorization", "Bearer fake-service-token"))
                 .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ItemResponse result = blizzardClient.getItem(thunderfury.id());
+        ItemResponse result = blizzardClient.getBaseItem(thunderfury.id());
 
         // then
         assertEquals(thunderfury, result);

@@ -4,10 +4,8 @@ import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import static com.bebis.BeBiS.integration.blizzard.dto.ItemResponse.*;
-import static com.bebis.BeBiS.item.Item.*;
 
 public class ItemTestData {
     public static final long THUNDERFURY_ID = 19019;
@@ -24,11 +22,11 @@ public class ItemTestData {
                         new StatDTO(new StatDTO.StatTypeWrapper("STAMINA"), 8)
                 )),
                 new WeaponDTO(
-                        new WeaponDTO.AttackSpeedDTO(1.9),
+                        new WeaponDTO.AttackSpeedDTO(1900),
                         new WeaponDTO.DamageDTO(82, 153),
                         new WeaponDTO.DpsDTO(61.84)
                 ),
-                null, // No armor on weapons
+                null,
                 new ArrayList<>(List.of(new PreviewItemDTO.SpellEffectDTO(TF_EFFECT))),
                 "Unique" // Marks it as true
         );
@@ -58,9 +56,10 @@ public class ItemTestData {
     }
 
     // Generates a Ring/Trinket (Class 4, Subclass 0)
-    public static ItemResponse genericResponse(long id, String name, String type) {
+    public static ItemResponse equippableItemResponse(long id, String name, String type, Integer armorValue) {
+        ArmorDTO armorDTO = (armorValue != null) ? new ArmorDTO(armorValue) : null;
         var preview = new PreviewItemDTO(
-                new ArrayList<>(), null, null, new ArrayList<>(), null
+                new ArrayList<>(), null, armorDTO, new ArrayList<>(), null
         );
 
         return new ItemResponse(
@@ -70,21 +69,5 @@ public class ItemTestData {
                 new InventoryTypeDTO(type),
                 preview
         );
-    }
-
-    public static Item thunderfury() {
-        ItemMetadata metadata = new ItemMetadata(
-                THUNDERFURY_ID,
-                THUNDERFURY_NAME,
-                InventoryType.WEAPON,
-                Quality.LEGENDARY,
-                80, 60, true,
-                Map.of(
-                        StatType.AGILITY, 5,
-                        StatType.STAMINA, 8
-                ),
-                List.of(TF_EFFECT)
-        );
-        return new Weapon(metadata, 1.9, 82, 153, Weapon.WeaponType.SWORD);
     }
 }

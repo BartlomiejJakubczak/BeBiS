@@ -3,6 +3,7 @@ package com.bebis.BeBiS.profile;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
+import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ import java.util.Optional;
 @Component
 public class ProfileMapper {
 
-    public List<WowCharacterEntity> mapToEntity(ProfileSummaryResponse response, long blizzardAccountId) {
+    public List<CharacterSyncData> mapToSyncData(ProfileSummaryResponse response, long blizzardAccountId) {
         return Optional.ofNullable(response.wowAccounts())
                 .orElse(List.of())
                 .stream()
@@ -45,9 +46,11 @@ public class ProfileMapper {
     }
 
     // will have to test it eventually as I made it public, or develop some testing classes for generating Entities
-    public WowCharacterEntity fromDTO(WowCharacterDTO dto, long blizzardAccountId) {
-        return new WowCharacterEntity(
-                new WowCharacterEntity.CompositeKey(dto.wowCharacterId(), dto.realm().slug(), blizzardAccountId),
+    public CharacterSyncData fromDTO(WowCharacterDTO dto, long blizzardAccountId) {
+        return new CharacterSyncData(
+                dto.wowCharacterId(),
+                dto.realm().slug(),
+                blizzardAccountId,
                 dto.name(),
                 dto.level(),
                 WowCharacter.Race.fromBlizzardName(dto.race().name()),

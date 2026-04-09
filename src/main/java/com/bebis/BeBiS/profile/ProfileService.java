@@ -1,9 +1,12 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
+import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
+import com.bebis.BeBiS.profile.jpa.WowCharacterEntityFactory;
 import com.bebis.BeBiS.profile.jpa.WowCharacterRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,27 +21,34 @@ public class ProfileService {
     private final BlizzardUserClient blizzardClient;
     private final WowCharacterRepository characterRepository;
     private final ProfileMapper profileMapper;
+    private final WowCharacterEntityFactory characterEntityFactory;
 
-    public ProfileService(BlizzardUserClient blizzardClient, WowCharacterRepository characterRepository, ProfileMapper profileMapper) {
+    public ProfileService(
+            BlizzardUserClient blizzardClient,
+            WowCharacterRepository characterRepository,
+            ProfileMapper profileMapper,
+            WowCharacterEntityFactory characterEntityFactory) {
         this.blizzardClient = blizzardClient;
         this.characterRepository = characterRepository;
         this.profileMapper = profileMapper;
+        this.characterEntityFactory = characterEntityFactory;
     }
 
+    @Transactional
     public List<WowCharacter> getProfileSummary(long blizzardAccountId) {
         return profileMapper.mapToDomain(syncRepoWithSummary(blizzardAccountId));
     }
 
     private List<WowCharacterEntity> syncRepoWithSummary(long blizzardAccountId) {
-        List<WowCharacterEntity> fromSummary = profileMapper.mapToEntity(blizzardClient.getProfileSummary(), blizzardAccountId);
+        List<CharacterSyncData> fromSummary = profileMapper.mapToSyncData(blizzardClient.getProfileSummary(), blizzardAccountId);
         // these come from repo, so they are in MANAGED state
         Map<Long, WowCharacterEntity> existingMap = convertToMap(characterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId));
         // The "Golden Sync" mental model (buckets)
         List<WowCharacterEntity> toSave = new ArrayList<>();
         Set<Long> processedIds = new HashSet<>();
         boolean modifiedExisting = false;
-        for (WowCharacterEntity fresh : fromSummary) {
-            long id = fresh.getPk().getId();
+        for (CharacterSyncData fresh : fromSummary) {
+            long id = fresh.characterId();
             processedIds.add(id);
             if (existingMap.containsKey(id)) {
                 // update existing entity
@@ -47,7 +57,8 @@ public class ProfileService {
                 modifiedExisting |= existing.updateFrom(fresh);
             } else {
                 // create a new one
-                toSave.add(fresh);
+                WowCharacterEntity newEntity = characterEntityFactory.createNewCharacter(fresh);
+                toSave.add(newEntity);
             }
         }
         // clean up deleted or moved characters
@@ -66,7 +77,7 @@ public class ProfileService {
         // REFRESH: Fetch everything one last time to ensure the "toSave" list
         // actually contains every character (both updated and new).
         if (toDelete.isEmpty() && toSave.isEmpty() && !modifiedExisting) {
-            return fromSummary; // if repo is in sync with the summary no need to get the repo data the 2nd time
+            return new ArrayList<>(existingMap.values()); // if repo is in sync with the summary no need to get the repo data the 2nd time
         } else {
             return characterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId); // re-sync just to be sure
         }

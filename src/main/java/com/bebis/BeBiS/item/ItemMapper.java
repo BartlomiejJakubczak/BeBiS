@@ -1,6 +1,10 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
+import com.bebis.BeBiS.item.dto.ItemSyncData;
+import com.bebis.BeBiS.item.jpa.ArmorEntity;
+import com.bebis.BeBiS.item.jpa.ItemEntity;
+import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -8,126 +12,193 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebis.BeBiS.item.Item.*;
+import static com.bebis.BeBiS.item.Item.InventoryType;
+import static com.bebis.BeBiS.item.Item.Quality;
 
 @Component
 public class ItemMapper {
 
-    public Item map(ItemResponse dto) {
+    public Item mapToDomain(ItemEntity entity) {
+        Item.ItemMetadata meta = new Item.ItemMetadata(
+                entity.getId().getItemId(),
+                entity.getName(),
+                entity.getInventoryType(),
+                entity.getQuality(),
+                entity.getItemLevel(),
+                entity.getRequiredLevel(),
+                entity.isUniqueEquipped(),
+                entity.getStats() != null ? new HashMap<>(entity.getStats()) : new HashMap<>(),
+                entity.getSpecialEffects() != null ? new ArrayList<>(entity.getSpecialEffects()) : new ArrayList<>()
+        );
+
+        return switch (entity) {
+            case WeaponEntity w ->
+                    new Weapon(meta, w.getSpeed(), w.getMinDamage(), w.getMaxDamage(), w.getWeaponType());
+            case ArmorEntity a -> new Armor(meta, a.getArmorValue(), a.getArmorType());
+            default -> new EquippableItem(meta);
+        };
+    }
+
+    public ItemSyncData mapToSyncData(ItemResponse dto, long enchId) {
         int classId = dto.itemClass().id();
         int subclassId = (int) dto.subclass().id();
 
-        if (classId == 2) {
-            return mapToWeapon(dto);
-        } else if (classId == 4) {
-            // VITAL: Rings, Necks, Trinkets, and caster Off-hands are Class 4 (Armor), Subclass 0 (Misc).
-            // They DO NOT have armor blocks in the Blizzard JSON. Calling dto.preview().armor() on them will NPE.
-            if (subclassId == 0) {
-                return mapToEquippable(dto);
-            }
-            return mapToArmor(dto);
+        return switch (classId) {
+            case 2 -> createWeaponSyncData(dto, enchId);
+            case 4 -> (subclassId == 0) ? createEquippableItemSyncData(dto, enchId) : createArmorSyncData(dto, enchId);
+            default -> throw new IllegalArgumentException("Unsupported item class: " + classId);
+        };
+    }
+
+    private ItemSyncData createWeaponSyncData(ItemResponse dto, long enchId) {
+        var weaponData = dto.preview().weapon();
+        double speed = weaponData.attackSpeed().value();
+        // Blizzard API sometimes returns speed in ms (1900) instead of seconds (1.9)
+        return new ItemSyncData(
+                dto.id(),
+                enchId,
+                dto.name(),
+                mapQuality(dto.quality().type().toUpperCase()),
+                mapInventoryType(dto.inventoryType().type()),
+                dto.itemLevel(),
+                dto.requiredLevel(),
+                dto.preview().uniqueEquipped() != null,
+                mapStats(dto),
+                mapSpecialEffects(dto),
+                extractArmorValue(dto), // some weapons might have armor
+                null,
+                speed > 100 ? speed / 1000.0 : speed,
+                weaponData.damage().minValue(),
+                weaponData.damage().maxValue(),
+                weaponData.dps().value(),
+                mapWeaponType((int) dto.subclass().id())
+        );
+    }
+
+    private ItemSyncData createArmorSyncData(ItemResponse dto, long enchId) {
+        return new ItemSyncData(
+                dto.id(),
+                enchId,
+                dto.name(),
+                mapQuality(dto.quality().type().toUpperCase()),
+                mapInventoryType(dto.inventoryType().type()),
+                dto.itemLevel(),
+                dto.requiredLevel(),
+                dto.preview().uniqueEquipped() != null,
+                mapStats(dto),
+                mapSpecialEffects(dto),
+                extractArmorValue(dto),
+                mapArmorType((int) dto.subclass().id()),
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private ItemSyncData createEquippableItemSyncData(ItemResponse dto, long enchId) {
+        return new ItemSyncData(
+                dto.id(),
+                enchId,
+                dto.name(),
+                mapQuality(dto.quality().type().toUpperCase()),
+                mapInventoryType(dto.inventoryType().type()),
+                dto.itemLevel(),
+                dto.requiredLevel(),
+                dto.preview().uniqueEquipped() != null,
+                mapStats(dto),
+                mapSpecialEffects(dto),
+                extractArmorValue(dto), // some rings or trinkets might have armor
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    private Integer extractArmorValue(ItemResponse dto) {
+        return (dto.preview().armor() != null) ? dto.preview().armor().value() : null;
+    }
+
+    private Map<StatType, Integer> mapStats(ItemResponse dto) {
+        List<ItemResponse.StatDTO> statsFromDTO = dto.preview().stats();
+        if (statsFromDTO.isEmpty()) {
+            return new HashMap<>();
         } else {
-            // Fast-fail for non-equippables (Bags, Potions, Quest Items)
-            throw new IllegalArgumentException("Item is not equippable: " + dto.name());
+            Map<StatType, Integer> stats = new HashMap<>();
+            statsFromDTO.forEach(s -> {
+                try {
+                    stats.put(StatType.valueOf(s.type().type()), s.value());
+                } catch (IllegalArgumentException ignored) {
+                }
+            });
+            return stats;
         }
     }
 
-    private Weapon mapToWeapon(ItemResponse dto) {
-        ItemMetadata meta = mapMetadata(dto);
+    private List<String> mapSpecialEffects(ItemResponse dto) {
+        List<ItemResponse.PreviewItemDTO.SpellEffectDTO> spellsFromDTO = dto.preview().spells();
+        if (spellsFromDTO.isEmpty()) {
+            return new ArrayList<>();
+        } else {
+            List<String> specialEffects = new ArrayList<>();
+            spellsFromDTO.forEach(
+                    s -> specialEffects.add(s.description()));
+            return specialEffects;
+        }
+    }
 
-        var weaponData = dto.preview().weapon();
-        double rawSpeed = weaponData.attackSpeed().value();
-        double speed = (rawSpeed > 100) ? rawSpeed / 1000.0 : rawSpeed;
-        int min = weaponData.damage().minValue();
-        int max = weaponData.damage().maxValue();
-
-        Weapon.WeaponType type = switch ((int) dto.subclass().id()) {
-            case 0, 1 -> Weapon.WeaponType.AXE;
+    private Weapon.WeaponType mapWeaponType(int subclassId) {
+        return switch (subclassId) {
+            case 0, 1 -> Weapon.WeaponType.AXE;       // 0: 1H, 1: 2H
             case 2 -> Weapon.WeaponType.BOW;
             case 3 -> Weapon.WeaponType.GUN;
-            case 4, 5 -> Weapon.WeaponType.MACE;
+            case 4, 5 -> Weapon.WeaponType.MACE;      // 4: 1H, 5: 2H
             case 6 -> Weapon.WeaponType.POLEARM;
-            case 7, 8 -> Weapon.WeaponType.SWORD;
+            case 7, 8 -> Weapon.WeaponType.SWORD;     // 7: 1H, 8: 2H
             case 10 -> Weapon.WeaponType.STAFF;
             case 15 -> Weapon.WeaponType.DAGGER;
+            case 18 -> Weapon.WeaponType.CROSSBOW;
             case 19 -> Weapon.WeaponType.WAND;
             default -> Weapon.WeaponType.UNARMED;
         };
-
-        return new Weapon(meta, speed, min, max, type);
     }
 
-    private Armor mapToArmor(ItemResponse dto) {
-        ItemMetadata meta = mapMetadata(dto);
-
-        // VITAL: Armor data lives inside the preview block
-        int value = dto.preview().armor().value();
-
-        Armor.ArmorType type = switch ((int) dto.subclass().id()) {
+    private Armor.ArmorType mapArmorType(int subclassId) {
+        return switch (subclassId) {
             case 1 -> Armor.ArmorType.CLOTH;
             case 2 -> Armor.ArmorType.LEATHER;
             case 3 -> Armor.ArmorType.MAIL;
             case 4 -> Armor.ArmorType.PLATE;
             case 6 -> Armor.ArmorType.SHIELD;
-            default -> Armor.ArmorType.MISC;
+            default -> Armor.ArmorType.MISC;          // Covers Class 4 Subclass 0 (Rings/Necks)
         };
-
-        return new Armor(meta, value, type);
     }
 
-    private EquippableItem mapToEquippable(ItemResponse dto) {
-        return new EquippableItem(mapMetadata(dto));
-    }
-
-    private ItemMetadata mapMetadata(ItemResponse dto) {
-        Map<StatType, Integer> statsMap = new HashMap<>();
-        List<String> effects = new ArrayList<>();
-        boolean isUnique = false;
-
-        // VITAL: All rich tooltip data (stats, spells, uniqueness) is nested in preview_item.
-        // We must null-check the preview block just in case a grey item has no tooltip data.
-        if (dto.preview() != null) {
-            if (dto.preview().stats() != null) {
-                for (var s : dto.preview().stats()) {
-                    try {
-                        statsMap.put(StatType.valueOf(s.type().type()), s.value());
-                    } catch (IllegalArgumentException ignored) {
-                        // Ignores unknown stats
-                    }
+    private InventoryType mapInventoryType(String raw) {
+        return switch (raw.toUpperCase()) {
+            case "WEAPON" -> InventoryType.WEAPON;
+            case "WEAPONMAINHAND" -> InventoryType.WEAPONMAINHAND;
+            case "ROBE" -> InventoryType.CHEST;
+            case "BACK" -> InventoryType.CLOAK;
+            default -> {
+                try {
+                    yield InventoryType.valueOf(raw.toUpperCase());
+                } catch (Exception e) {
+                    yield InventoryType.UNKNOWN;
                 }
             }
+        };
+    }
 
-            if (dto.preview().spells() != null) {
-                dto.preview().spells().forEach(s -> effects.add(s.description()));
-            }
-
-            // In Classic Era, if this string exists at all, the item is restricted.
-            isUnique = dto.preview().uniqueEquipped() != null;
-        }
-
-        String rawType = dto.inventoryType().type().toUpperCase();
-        InventoryType invType;
+    private Quality mapQuality(String raw) {
         try {
-            invType = switch (rawType) {
-                case "WEAPON" -> InventoryType.WEAPON;
-                case "WEAPONMAINHAND" -> InventoryType.WEAPONMAINHAND;
-                case "ROBE" -> InventoryType.CHEST;
-                default -> InventoryType.valueOf(rawType);
-            };
-        } catch (IllegalArgumentException e) {
-            invType = InventoryType.UNKNOWN;
+            return Quality.valueOf(raw.toUpperCase());
+        } catch (Exception e) {
+            return Quality.UNKNOWN;
         }
-
-        return new Item.ItemMetadata(
-                dto.id(),
-                dto.name(),
-                invType,
-                Quality.valueOf(dto.quality().type().toUpperCase()),
-                dto.itemLevel(),
-                dto.requiredLevel(),
-                isUnique,
-                statsMap,
-                effects
-        );
     }
 }

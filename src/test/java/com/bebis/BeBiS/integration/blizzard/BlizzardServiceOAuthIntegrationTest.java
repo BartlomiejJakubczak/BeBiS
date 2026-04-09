@@ -32,7 +32,7 @@ public class BlizzardServiceOAuthIntegrationTest extends BaseWiremockTest {
                         {"id": 19019, "name": "Thunderfury"}""")));
 
         // when
-        var item = blizzardClient.getItem(ItemTestData.THUNDERFURY_ID);
+        var item = blizzardClient.getBaseItem(ItemTestData.THUNDERFURY_ID);
 
         // then
         assertTrue(item.name().contains("Thunderfury"));

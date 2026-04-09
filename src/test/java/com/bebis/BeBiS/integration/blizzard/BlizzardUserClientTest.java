@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.config.RestClientConfig;
+import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +25,8 @@ import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
@@ -95,20 +96,17 @@ public class BlizzardUserClientTest {
     }
 
     @Test
-    void shouldGetProfileSummaryWithCorrectPath() {
+    void shouldGetProfileSummaryWithCorrectPath() throws Exception {
         // given
-        long id = 12345;
+        ProfileSummaryResponse mockResponse = new ProfileSummaryResponse(List.of());
         server.expect(requestTo(baseUrl + "/profile/user/wow" + BlizzardUserClient.LOCALE_QUERY_PARAM))
                 .andExpect(header("Authorization", "Bearer fake-user-token"))
-                .andRespond(withSuccess("{ \"id\" : \"12345\"}", MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
         // when
-        var profileSummary = blizzardUserClient.getProfileSummary();
+        blizzardUserClient.getProfileSummary();
 
         // then
-        assertEquals(id, profileSummary.blizzardAccountId());
         server.verify();
     }
-
-
 }

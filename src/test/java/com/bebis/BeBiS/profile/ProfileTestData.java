@@ -13,9 +13,6 @@ import java.util.List;
 import java.util.Random;
 
 public class ProfileTestData {
-
-    public static final long DEFAULT_BLIZZARD_ACCOUNT_ID = 1L;
-
     public static final int CHAR_MAX_NAME_LENGTH = 12;
     public static final int MAX_LEVEL = 60;
     public static List<RaceDTO> races = Arrays.stream(WowCharacter.Race.values())
@@ -31,15 +28,15 @@ public class ProfileTestData {
     public static final int DEFAULT_CHAR_LEVEL = 60;
 
     public static ProfileSummaryResponse generateProfileSummaryResponse(Integer numberOfAccounts, Integer numberOfCharactersPerAccount) {
-        return new ProfileSummaryResponse(DEFAULT_BLIZZARD_ACCOUNT_ID, generateWowAccountDTOList(numberOfAccounts, numberOfCharactersPerAccount));
+        return new ProfileSummaryResponse(generateWowAccountDTOList(numberOfAccounts, numberOfCharactersPerAccount));
     }
 
     public static ProfileSummaryResponse generateProfileSummaryResponse(List<WowAccountDTO> accounts) {
-        return new ProfileSummaryResponse(DEFAULT_BLIZZARD_ACCOUNT_ID, accounts);
+        return new ProfileSummaryResponse(accounts);
     }
 
     public static ProfileSummaryResponse generateProfileSummaryResponse() {
-        return new ProfileSummaryResponse(DEFAULT_BLIZZARD_ACCOUNT_ID, generateWowAccountDTOList(DEFAULT_ACCOUNT_COUNT, DEFAULT_CHAR_COUNT));
+        return new ProfileSummaryResponse(generateWowAccountDTOList(DEFAULT_ACCOUNT_COUNT, DEFAULT_CHAR_COUNT));
     }
 
     public static List<WowAccountDTO> generateWowAccountDTOList(Integer numberOfAccounts, Integer numberOfCharactersPerAccount) {

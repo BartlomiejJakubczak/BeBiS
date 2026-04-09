@@ -5,12 +5,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
 @Setter
 public final class Equipment {
-    private Map<Slot, Item> equipment;
+    private Map<Slot, EquippedItem> equipment;
 
     public Equipment() {
         this.equipment = new HashMap<>();
@@ -42,7 +43,7 @@ public final class Equipment {
         A naive transposition. More complex logic will be done in some kind of bis finder service, like for example
         if main_hand is a two hand, then off hand is off limits and so on.
      */
-    public void putItem(Slot slot, Item item) {
-        equipment.put(slot, item);
+    public void putItem(Slot slot, Item item, List<String> playerEnchs) {
+        equipment.put(slot, new EquippedItem(item, playerEnchs));
     }
 }
