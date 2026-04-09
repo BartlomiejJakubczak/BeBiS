@@ -2,9 +2,7 @@ package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
-import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
-import com.bebis.BeBiS.profile.jpa.WowCharacterEntityFactory;
-import com.bebis.BeBiS.profile.jpa.WowCharacterRepository;
+import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,91 +22,36 @@ public class ProfileServiceTest {
     private BlizzardUserClient blizzardClient;
 
     @Mock
-    private WowCharacterRepository wowCharacterRepository;
+    private ProfileSynchronizer synchronizer;
 
-    private final ProfileMapper profileMapper = new ProfileMapper();
-
-    private final WowCharacterEntityFactory characterEntityFactory = new WowCharacterEntityFactory();
+    @Mock
+    private ProfileMapper profileMapper;
 
     private ProfileService profileService;
 
     @BeforeEach
     void setUp() {
-        profileService = new ProfileService(blizzardClient, wowCharacterRepository, profileMapper, characterEntityFactory);
+        profileService = new ProfileService(blizzardClient, synchronizer, profileMapper);
     }
 
     @Test
-    void shouldGetCharactersFromProfileSummaryRepoInSync() {
+    void shouldPullAndSynchronizeProfileDataFromBlizzard() {
         // given
         ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
         long blizzardAccountId = 1L;
-        List<WowCharacterEntity> summaryEntities = characterEntityFactory.createNewCharacters(profileMapper.mapToSyncData(expectedSummary, blizzardAccountId));
+        List<CharacterSyncData> syncData = new ArrayList<>();
+
         when(blizzardClient.getProfileSummary()).thenReturn(expectedSummary);
-        when(wowCharacterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId)).thenReturn(summaryEntities);
+        when(profileMapper.mapToSyncData(expectedSummary, blizzardAccountId)).thenReturn(syncData);
+        when(synchronizer.synchronize(syncData, blizzardAccountId)).thenReturn(List.of());
+
         // when
         profileService.getProfileSummary(blizzardAccountId);
+
         // then
-        verify(blizzardClient).getProfileSummary();
-        // no update, save or delete, so invoke repo 1 time
-        verify(wowCharacterRepository, times(1)).findAllByPk_BlizzardAccountId(blizzardAccountId);
-        verify(wowCharacterRepository, never()).saveAll(any());
-        verify(wowCharacterRepository, never()).deleteAll(any());
+        verify(blizzardClient, times(1)).getProfileSummary();
+        verify(synchronizer, times(1)).synchronize(syncData, blizzardAccountId);
+        verify(profileMapper, times(1)).mapToDomain(anyList());
     }
 
-    @Test
-    void shouldGetCharactersFromProfileSummaryWithFewerCharacters() {
-        // given
-        ProfileSummaryResponse summary = ProfileTestData.generateProfileSummaryResponse();
-        long blizzardAccountId = 1L;
-        List<WowCharacterEntity> repoEntities = new ArrayList<>(characterEntityFactory.createNewCharacters(profileMapper.mapToSyncData(summary, blizzardAccountId)));
-        WowCharacterEntity oldEntity = characterEntityFactory.createNewCharacter(profileMapper.fromDTO(ProfileTestData.generateWowCharacterDTO(2137), blizzardAccountId));
-        repoEntities.add(oldEntity);
-        when(blizzardClient.getProfileSummary()).thenReturn(summary);
-        when(wowCharacterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId)).thenReturn(repoEntities);
-        // when
-        profileService.getProfileSummary(blizzardAccountId);
-        // then
-        verify(blizzardClient).getProfileSummary();
-        // deletion happened, so re-sync repo after
-        verify(wowCharacterRepository, times(2)).findAllByPk_BlizzardAccountId(blizzardAccountId);
-        verify(wowCharacterRepository, never()).saveAll(any());
-        verify(wowCharacterRepository, times(1)).deleteAll(List.of(oldEntity));
-    }
-
-    @Test
-    void shouldGetCharactersFromProfileSummaryWithMoreCharacters() {
-        // given
-        ProfileSummaryResponse summary = ProfileTestData.generateProfileSummaryResponse();
-        long blizzardAccountId = 1L;
-        List<WowCharacterEntity> repoEntities = new ArrayList<>(characterEntityFactory.createNewCharacters(profileMapper.mapToSyncData(summary, blizzardAccountId)));
-        WowCharacterEntity toAdd = repoEntities.removeFirst();
-        when(blizzardClient.getProfileSummary()).thenReturn(summary);
-        when(wowCharacterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId)).thenReturn(repoEntities);
-        // when
-        profileService.getProfileSummary(blizzardAccountId);
-        // then
-        verify(blizzardClient).getProfileSummary();
-        // new character in summary, saveAll and re-sync
-        verify(wowCharacterRepository, times(2)).findAllByPk_BlizzardAccountId(blizzardAccountId);
-        verify(wowCharacterRepository, never()).deleteAll(any());
-        verify(wowCharacterRepository, times(1)).saveAll(List.of(toAdd));
-    }
-
-    @Test
-    void shouldGetCharactersFromProfileSummaryWithEditedCharacters() {
-        // given
-        ProfileSummaryResponse summary = ProfileTestData.generateProfileSummaryResponse();
-        long blizzardAccountId = 1L;
-        List<WowCharacterEntity> repoEntities = new ArrayList<>(characterEntityFactory.createNewCharacters(profileMapper.mapToSyncData(summary, blizzardAccountId)));
-        repoEntities.getFirst().setName("Edited");
-        when(blizzardClient.getProfileSummary()).thenReturn(summary);
-        when(wowCharacterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId)).thenReturn(repoEntities);
-        // when
-        profileService.getProfileSummary(blizzardAccountId);
-        // then
-        // edited character in summary, still a change so re-sync
-        verify(wowCharacterRepository, times(2)).findAllByPk_BlizzardAccountId(blizzardAccountId);
-        verify(wowCharacterRepository, never()).deleteAll(any());
-        verify(wowCharacterRepository, never()).saveAll(any());
-    }
 }
