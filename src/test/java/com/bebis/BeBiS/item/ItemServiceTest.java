@@ -2,7 +2,7 @@ package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.jpa.ArmorEntity;
+import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntityFactory;
 import com.bebis.BeBiS.item.jpa.ItemRepository;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,74 +24,88 @@ class ItemServiceTest {
     @Mock
     private BlizzardServiceClient blizzardClient;
     @Mock
-    private ItemRepository itemRepository;
+    private ItemRepository repository;
     @Mock
-    private ItemEntityFactory itemEntityFactory;
+    private ItemEntityFactory entityFactory;
+    @Mock
+    private ItemMapper mapper;
 
-    private final ItemMapper itemMapper = new ItemMapper();
-    private ItemService itemService;
+    private ItemService service;
 
-    private static final long BASE_ENCH = 0L;
-    private static final long SUFFIX_ENCH = 37L; // "of the Tiger", etc.
+    private static final long BASE_ENCH_ID = 0L;
+    private static final long SUFFIX_ENCH_ID = 37L; // "of the Tiger", etc.
 
     @BeforeEach
     void setup() {
-        itemService = new ItemService(blizzardClient, itemRepository, itemMapper, itemEntityFactory);
+        service = new ItemService(blizzardClient, repository, mapper, entityFactory);
     }
 
     @Test
-    void shouldDelegateToRepoIfEntityExists() {
+    void shouldReturnExistingEntityDirectlyFromRepo() {
         // given
-        ItemEntity.CompositeKey pk = new ItemEntity.CompositeKey(ItemTestData.THUNDERFURY_ID, BASE_ENCH);
-        when(itemRepository.findById(pk)).thenReturn(Optional.of(new WeaponEntity()));
+        ItemEntity.CompositeKey pk = new ItemEntity.CompositeKey(ItemTestData.THUNDERFURY_ID, BASE_ENCH_ID);
+        WeaponEntity existingWeapon = new WeaponEntity();
+
+        when(repository.findById(pk)).thenReturn(Optional.of(existingWeapon));
 
         // when
-        itemService.getOrCreateEntity(ItemTestData.THUNDERFURY_ID, BASE_ENCH);
+        ItemEntity result = service.getOrCreateEntity(ItemTestData.THUNDERFURY_ID, BASE_ENCH_ID);
 
         // then
-        verify(itemRepository, times(1)).findById(pk);
-        verifyNoInteractions(blizzardClient);
-        verifyNoInteractions(itemEntityFactory);
+        assertThat(result).isSameAs(existingWeapon);
+        verify(repository, times(1)).findById(pk);
+        verifyNoInteractions(blizzardClient, mapper, entityFactory);
     }
 
     @Test
-    void shouldDelegateToFactoryWhenItemIsMissing() {
+    void shouldOrchestrateFullFetchAndCreationWhenMissing() {
         // given
-        long armorId = 12345L;
-        String armorName = "Plate Chest";
-        ItemResponse armorResponse = ItemTestData.armorResponse(armorId, armorName, 500, 4);
+        long itemId = 12345L;
+        ItemEntity.CompositeKey pk = new ItemEntity.CompositeKey(itemId, BASE_ENCH_ID);
 
-        when(itemRepository.findById(any())).thenReturn(Optional.empty());
-        when(blizzardClient.getBaseItem(armorId)).thenReturn(armorResponse);
-        when(itemEntityFactory.createItemEntity(any())).thenReturn(new ArmorEntity());
+        ItemSyncData syncData = mock(ItemSyncData.class);
+        ItemResponse response = mock(ItemResponse.class);
+        WeaponEntity createdEntity = new WeaponEntity();
+
+        when(repository.findById(pk)).thenReturn(Optional.empty()); // queried item not there
+        when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
+        when(mapper.mapToSyncData(response, BASE_ENCH_ID)).thenReturn(syncData);
+        when(entityFactory.createItemEntity(syncData)).thenReturn(createdEntity);
 
         // when
-        itemService.getOrCreateEntity(armorId, BASE_ENCH);
+        ItemEntity result = service.getOrCreateEntity(itemId, BASE_ENCH_ID);
 
         // then
-        verify(itemEntityFactory).createItemEntity(argThat(data ->
-                data.itemId() == armorId &&
-                        data.armorValue() == 500 && // Proves the Mapper + Service pipeline is intact
-                        data.name().equals(armorName)
-        ));
+        assertThat(result).isSameAs(createdEntity);
+        verify(repository).findById(pk);
+        verify(blizzardClient).getBaseItem(itemId);
+        verify(mapper).mapToSyncData(response, BASE_ENCH_ID);
+        verify(entityFactory).createItemEntity(syncData);
     }
 
     @Test
     void shouldFetchNewVariantEvenIfBaseItemExistsInRepo() {
         // given
         long itemId = 12345L;
-        ItemEntity.CompositeKey requestedPk = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH);
+        ItemEntity.CompositeKey requestedPk = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH_ID);
 
-        when(itemRepository.findById(requestedPk)).thenReturn(Optional.empty()); // 21, 37 not in db
-        when(blizzardClient.getBaseItem(itemId)).thenReturn(ItemTestData.thunderfuryResponse());
-        when(itemEntityFactory.createItemEntity(any())).thenReturn(new WeaponEntity());
+        ItemSyncData syncData = mock(ItemSyncData.class);
+        ItemResponse response = mock(ItemResponse.class);
+        WeaponEntity createdEntity = new WeaponEntity();
+
+        when(repository.findById(requestedPk)).thenReturn(Optional.empty()); // 21, 37 not in db
+        when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
+        when(mapper.mapToSyncData(response, SUFFIX_ENCH_ID)).thenReturn(syncData);
+        when(entityFactory.createItemEntity(syncData)).thenReturn(createdEntity);
 
         // when
-        itemService.getOrCreateEntity(itemId, SUFFIX_ENCH);
+        ItemEntity result = service.getOrCreateEntity(itemId, SUFFIX_ENCH_ID);
 
         // then
-        verify(itemRepository).findById(requestedPk);
+        assertThat(result).isSameAs(createdEntity);
+        verify(repository).findById(requestedPk);
         verify(blizzardClient).getBaseItem(itemId);
-        verify(itemEntityFactory).createItemEntity(argThat(data -> data.randomEnchId() == SUFFIX_ENCH));
+        verify(mapper).mapToSyncData(response, SUFFIX_ENCH_ID);
+        verify(entityFactory).createItemEntity(syncData);
     }
 }
