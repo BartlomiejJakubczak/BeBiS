@@ -6,9 +6,7 @@ import com.bebis.BeBiS.item.ItemService;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 
 @Component
 public class EquipmentSynchronizer {
@@ -21,20 +19,25 @@ public class EquipmentSynchronizer {
 
     public void synchronize(EquipmentResponse response, EquipmentEntity equipment) {
         equipment.getItems().clear(); // a fresh snapshot
-        Set<ItemEntity> toSave = new HashSet<>();
         for (EquipmentResponse.ItemDTO itemDTO : response.equipment()) {
+            Optional<Equipment.Slot> slot = extractSlot(itemDTO);
+            if (slot.isEmpty()) {
+                continue; // Skip the rest of the loop for this item
+            }
+
             long suffixId = itemDTO.getSuffixId();
             ItemEntity baseItem = itemService.getOrCreateEntity(itemDTO.item().id(), suffixId);
-            if (itemDTO.name() != null && suffixId != 0) {
-                baseItem.setName(itemDTO.name()); // attach the full name to the item
-            }
+
             EquipmentEntity.EquippedItem freshItem = new EquipmentEntity.EquippedItem();
+            if (itemDTO.name() != null && suffixId != 0) {
+                freshItem.setFullName(itemDTO.name()); // attach the full name to the equipped item
+            }
+
             freshItem.setItem(baseItem);
             freshItem.setPlayerEnchants(itemDTO.getPlayerEnchantStrings());
-            toSave.add(baseItem);
-            extractSlot(itemDTO).ifPresent(value -> equipment.getItems().put(value, freshItem));
+
+            equipment.getItems().put(slot.get(), freshItem);
         }
-        itemService.saveEntities(toSave);
     }
 
     private Optional<Equipment.Slot> extractSlot(EquipmentResponse.ItemDTO itemDTO) {

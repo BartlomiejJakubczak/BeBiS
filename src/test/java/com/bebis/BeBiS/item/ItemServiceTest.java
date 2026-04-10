@@ -71,6 +71,7 @@ class ItemServiceTest {
         when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
         when(mapper.mapToSyncData(response, BASE_ENCH_ID)).thenReturn(syncData);
         when(entityFactory.createItemEntity(syncData)).thenReturn(createdEntity);
+        when(repository.save(createdEntity)).thenReturn(createdEntity);
 
         // when
         ItemEntity result = service.getOrCreateEntity(itemId, BASE_ENCH_ID);
@@ -97,6 +98,7 @@ class ItemServiceTest {
         when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
         when(mapper.mapToSyncData(response, SUFFIX_ENCH_ID)).thenReturn(syncData);
         when(entityFactory.createItemEntity(syncData)).thenReturn(createdEntity);
+        when(repository.save(createdEntity)).thenReturn(createdEntity);
 
         // when
         ItemEntity result = service.getOrCreateEntity(itemId, SUFFIX_ENCH_ID);

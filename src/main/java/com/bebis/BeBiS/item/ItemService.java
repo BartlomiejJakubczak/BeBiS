@@ -7,6 +7,7 @@ import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntityFactory;
 import com.bebis.BeBiS.item.jpa.ItemRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
@@ -27,12 +28,14 @@ public class ItemService {
         this.itemEntityFactory = itemEntityFactory;
     }
 
+    @Transactional
     public ItemEntity getOrCreateEntity(Long itemId, long enchId) {
         return itemRepository.findById(new CompositeKey(itemId, enchId))
                 .orElseGet(() -> {
                     ItemResponse dto = blizzardClient.getBaseItem(itemId);
                     ItemSyncData syncData = itemMapper.mapToSyncData(dto, enchId);
-                    return itemEntityFactory.createItemEntity(syncData);
+                    ItemEntity entity = itemEntityFactory.createItemEntity(syncData);
+                    return itemRepository.save(entity);
                 });
     }
 

@@ -74,6 +74,9 @@ public class EquipmentEntity {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
+        @Column(name = "full_name")
+        private String fullName;
+
         // Because ItemEntity uses a composite key, I MUST use @JoinColumns here.
         @ManyToOne(optional = false) // optional = false ensures a slot can't exist without an item
         @JoinColumns({
