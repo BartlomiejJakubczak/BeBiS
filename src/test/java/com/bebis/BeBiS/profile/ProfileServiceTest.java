@@ -9,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -37,21 +36,22 @@ public class ProfileServiceTest {
     @Test
     void shouldPullAndSynchronizeProfileDataFromBlizzard() {
         // given
-        ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
         long blizzardAccountId = 1L;
-        List<CharacterSyncData> syncData = new ArrayList<>();
 
-        when(blizzardClient.getProfileSummary()).thenReturn(expectedSummary);
-        when(profileMapper.mapToSyncData(expectedSummary, blizzardAccountId)).thenReturn(syncData);
+        ProfileSummaryResponse response = mock(ProfileSummaryResponse.class);
+        List<CharacterSyncData> syncData = List.of(mock(CharacterSyncData.class));
+
+        when(blizzardClient.getProfileSummary()).thenReturn(response);
+        when(profileMapper.mapToSyncData(response, blizzardAccountId)).thenReturn(syncData);
         when(synchronizer.synchronize(syncData, blizzardAccountId)).thenReturn(List.of());
 
         // when
         profileService.getProfileSummary(blizzardAccountId);
 
         // then
-        verify(blizzardClient, times(1)).getProfileSummary();
-        verify(synchronizer, times(1)).synchronize(syncData, blizzardAccountId);
-        verify(profileMapper, times(1)).mapToDomain(anyList());
+        verify(blizzardClient).getProfileSummary();
+        verify(synchronizer).synchronize(syncData, blizzardAccountId);
+        verify(profileMapper).mapToDomain(anyList());
     }
 
 }
