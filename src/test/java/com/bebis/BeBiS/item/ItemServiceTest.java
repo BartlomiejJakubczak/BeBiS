@@ -50,13 +50,16 @@ class ItemServiceTest {
 
         when(repository.findById(pk)).thenReturn(Optional.of(existingWeapon));
 
+        EquipmentResponse.ItemDTO mockItemDTO = mock(EquipmentResponse.ItemDTO.class);
+
         // when
-        ItemEntity result = service.getOrCreateEntity(ItemTestData.THUNDERFURY_ID, mock(EquipmentResponse.ItemDTO.class));
+        ItemEntity result = service.getOrCreateEntity(ItemTestData.THUNDERFURY_ID, mockItemDTO);
 
         // then
         assertThat(result).isSameAs(existingWeapon);
         verify(repository, times(1)).findById(pk);
-        verifyNoInteractions(blizzardClient, mapper, entityFactory);
+        verify(mapper).mapSuffixId(mockItemDTO);
+        verifyNoInteractions(blizzardClient, entityFactory);
     }
 
     @Test
@@ -94,11 +97,11 @@ class ItemServiceTest {
 
         ItemResponse baseResponse = ItemTestData.thunderfuryResponse();
         EquipmentResponse.ItemDTO equippedDTO = mock(EquipmentResponse.ItemDTO.class);
-        when(equippedDTO.getSuffixId()).thenReturn(SUFFIX_ENCH_ID);
 
         ItemEntity.CompositeKey expectedKey = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH_ID);
 
-        when(repository.findById(expectedKey)).thenReturn(Optional.empty());
+        when(mapper.mapSuffixId(equippedDTO)).thenReturn(SUFFIX_ENCH_ID);
+        when(repository.findById(eq(expectedKey))).thenReturn(Optional.empty());
         when(blizzardClient.getBaseItem(itemId)).thenReturn(baseResponse);
 
         ItemSyncData expectedSyncData = mock(ItemSyncData.class);

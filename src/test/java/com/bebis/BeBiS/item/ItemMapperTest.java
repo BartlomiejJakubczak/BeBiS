@@ -275,4 +275,85 @@ class ItemMapperTest {
         assertEquals(0, result.getMetadata().itemLevel(), "Null Entity level should be 0 in Domain");
         assertEquals(0, result.getMetadata().requiredLevel());
     }
+
+    // --- mapSuffixId ---
+
+    @Test
+    void shouldReturnSuffixIdWhenNameEndsWithOfSuffix() {
+        // given
+        long suffixId = 123L;
+        ItemResponse base = ItemTestData.armorResponse(1L, "Bracers", 10);
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
+                base, "WRISTS", "UNCOMMON", "of the Whale", suffixId, 20, List.of(), List.of()
+        );
+
+        // when
+        long result = itemMapper.mapSuffixId(dto);
+
+        // then
+        assertEquals(suffixId, result, "Should extract the ID when name ends with suffix and starts with 'of '");
+    }
+
+    @Test
+    void shouldReturnZeroWhenEnchantmentDoesNotStartWithOf() {
+        // given
+        ItemResponse base = ItemTestData.armorResponse(1L, "Stamina Bracers", 10);
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(
+                base, "WRISTS", List.of(EquipmentTestData.enchant(999L, "+7 Stamina"))
+        );
+
+        // when
+        long result = itemMapper.mapSuffixId(dto);
+
+        // then
+        assertEquals(0L, result, "Should ignore enchantments that don't start with 'of '");
+    }
+
+    @Test
+    void shouldReturnZeroWhenNameDoesNotEndWithEnchantment() {
+        // given: An enchantment "of the Tiger" exists, but the item name is just "Bracers"
+        ItemResponse base = ItemTestData.armorResponse(1L, "Bracers", 10);
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(
+                base, "WRISTS", List.of(EquipmentTestData.enchant(123L, "of the Tiger"))
+        );
+
+        // when
+        long result = itemMapper.mapSuffixId(dto);
+
+        // then
+        assertEquals(0L, result, "Should ignore 'of ' enchantments if they aren't part of the item name");
+    }
+
+    @Test
+    void shouldHandleNullEnchantmentsOrName() {
+        // given
+        EquipmentResponse.ItemDTO nullEnchs = new EquipmentResponse.ItemDTO(
+                null, null, "Bracers", null, null, null, null, null, null
+        );
+        EquipmentResponse.ItemDTO nullName = new EquipmentResponse.ItemDTO(
+                null, null, null, null, null, null, null, null, List.of()
+        );
+
+        // when / then
+        assertEquals(0L, itemMapper.mapSuffixId(nullEnchs));
+        assertEquals(0L, itemMapper.mapSuffixId(nullName));
+    }
+
+    @Test
+    void shouldMatchSpecificSuffixAmongMultipleEnchantments() {
+        // given
+        long suffixId = 123L;
+        ItemResponse base = ItemTestData.armorResponse(1L, "Bracers", 10);
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
+                base, "WRISTS", "UNCOMMON", "of the Bear", suffixId, 20,
+                List.of(),
+                List.of(EquipmentTestData.enchant(2137L, "Crusader"))
+        );
+
+        // when
+        long result = itemMapper.mapSuffixId(dto);
+
+        // then
+        assertEquals(suffixId, result, "Should correctly pick 'of the Bear' and ignore 'Crusader'");
+    }
 }

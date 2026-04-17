@@ -52,13 +52,16 @@ public class EquipmentSynchronizerTest {
     @Test
     void shouldMapSlotsCorrectlyAndApplyEnchants() {
         // given
+        long suffixId = 0L;
         EquipmentEntity entity = new EquipmentEntity();
         entity.setItems(new HashMap<>());
 
-        ItemEntity mockItem = new WeaponEntity(); // Real entity for reference check
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(
                 tf, "main_hand", List.of(EquipmentTestData.enchant(2137L, "Crusader")));
+
+        ItemEntity mockItem = new WeaponEntity(); // Real entity for reference check
+        mockItem.setId(new ItemEntity.CompositeKey(tf.id(), suffixId));
 
         when(itemService.getOrCreateEntity(tf.id(), itemDTO)).thenReturn(mockItem);
 
@@ -69,12 +72,11 @@ public class EquipmentSynchronizerTest {
         synchronizer.synchronize(response, entity);
 
         // then
-        verify(itemService).getOrCreateEntity(eq(tf.id()),
-                argThat(dto -> dto.getPlayerEnchantStrings().contains("Crusader") && dto.getSuffixId() == 0L));
+        verify(itemService).getOrCreateEntity(eq(tf.id()), eq(itemDTO));
 
         assertThat(entity.getItems()).containsKey(Equipment.Slot.MAIN_HAND);
         EquipmentEntity.EquippedItem equipped = entity.getItems().get(Equipment.Slot.MAIN_HAND);
-        
+
         assertThat(equipped.getItem()).isSameAs(mockItem);
         assertThat(equipped.getPlayerEnchants()).containsExactly("Crusader");
     }

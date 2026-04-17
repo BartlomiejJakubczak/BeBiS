@@ -77,7 +77,7 @@ public class ItemMapper {
         // Blizzard API sometimes returns speed in ms (1900) instead of seconds (1.9)
         return new ItemSyncData(
                 baseDTO.id(),
-                equippedItemDTO.getSuffixId(),
+                mapSuffixId(equippedItemDTO),
                 validateRequired(equippedItemDTO.name(), "name"),
                 mapQuality(equippedItemDTO.quality().type().toUpperCase()),
                 mapInventoryType(baseDTO.inventoryType().type()),
@@ -99,7 +99,7 @@ public class ItemMapper {
     private ItemSyncData createArmorSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         return new ItemSyncData(
                 baseDTO.id(),
-                equippedItemDTO.getSuffixId(),
+                mapSuffixId(equippedItemDTO),
                 validateRequired(equippedItemDTO.name(), "name"),
                 mapQuality(equippedItemDTO.quality().type().toUpperCase()),
                 mapInventoryType(baseDTO.inventoryType().type()),
@@ -121,7 +121,7 @@ public class ItemMapper {
     private ItemSyncData createEquippableItemSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         return new ItemSyncData(
                 baseDTO.id(),
-                equippedItemDTO.getSuffixId(),
+                mapSuffixId(equippedItemDTO),
                 validateRequired(equippedItemDTO.name(), "name"),
                 mapQuality(equippedItemDTO.quality().type().toUpperCase()),
                 mapInventoryType(baseDTO.inventoryType().type()),
@@ -138,6 +138,17 @@ public class ItemMapper {
                 null,
                 null
         );
+    }
+
+    public long mapSuffixId(EquipmentResponse.ItemDTO equippedItemDTO) {
+        if (equippedItemDTO.enchantments() == null || equippedItemDTO.name() == null) {
+            return 0L;
+        }
+        return equippedItemDTO.enchantments().stream()
+                .filter((ench) -> equippedItemDTO.name().endsWith(ench.displayString()) && ench.displayString().startsWith("of "))
+                .map(EquipmentResponse.ItemDTO.EnchantmentDTO::enchantmentId)
+                .findFirst()
+                .orElse(0L);
     }
 
     private Integer mapArmorValue(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {

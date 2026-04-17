@@ -6,6 +6,7 @@ import com.bebis.BeBiS.item.ItemService;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -29,7 +30,7 @@ public class EquipmentSynchronizer {
 
             EquipmentEntity.EquippedItem freshItem = new EquipmentEntity.EquippedItem();
             freshItem.setItem(baseItem);
-            freshItem.setPlayerEnchants(itemDTO.getPlayerEnchantStrings());
+            freshItem.setPlayerEnchants(extractPlayerEnchantStrings(itemDTO, baseItem.getId().getRandomEnchantmentId()));
 
             equipment.getItems().put(slot.get(), freshItem);
         }
@@ -43,5 +44,13 @@ public class EquipmentSynchronizer {
             // Log it: "Warning: Unknown slot type received from Blizzard: " + itemDTO.slot().type()
             return Optional.empty();
         }
+    }
+
+    private List<String> extractPlayerEnchantStrings(EquipmentResponse.ItemDTO equippedItemDTO, long suffixId) {
+        if (equippedItemDTO.enchantments() == null) return List.of();
+        return equippedItemDTO.enchantments().stream()
+                .filter(ench -> ench.enchantmentId() != suffixId)
+                .map(EquipmentResponse.ItemDTO.EnchantmentDTO::displayString)
+                .toList();
     }
 }

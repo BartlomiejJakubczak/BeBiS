@@ -32,7 +32,7 @@ public class ItemService {
 
     @Transactional
     public ItemEntity getOrCreateEntity(@NonNull Long itemId, @NonNull EquipmentResponse.ItemDTO equippedItemDTO) {
-        return itemRepository.findById(new CompositeKey(itemId, equippedItemDTO.getSuffixId()))
+        return itemRepository.findById(new CompositeKey(itemId, itemMapper.mapSuffixId(equippedItemDTO)))
                 .orElseGet(() -> {
                     ItemResponse baseDTO = blizzardClient.getBaseItem(itemId);
                     ItemSyncData syncData = itemMapper.mapToSyncData(baseDTO, equippedItemDTO);
@@ -40,6 +40,7 @@ public class ItemService {
                     return itemRepository.save(entity);
                 });
     }
+
 
     public Optional<ItemEntity> getEntity(Long itemId, long enchId) {
         return itemRepository.findById(new CompositeKey(itemId, enchId));

@@ -68,24 +68,5 @@ public record EquipmentResponse(
         ) {
         }
 
-        public long getSuffixId() {
-            if (this.enchantments() == null || this.name() == null) {
-                return 0L;
-            }
-            return this.enchantments().stream()
-                    .filter((ench) -> this.name().endsWith(ench.displayString()) && ench.displayString().startsWith("of "))
-                    .map(EnchantmentDTO::enchantmentId)
-                    .findFirst()
-                    .orElse(0L);
-        }
-
-        public List<String> getPlayerEnchantStrings() {
-            if (enchantments == null) return List.of();
-            long suffixId = getSuffixId();
-            return enchantments.stream()
-                    .filter(ench -> ench.enchantmentId() != suffixId)
-                    .map(EnchantmentDTO::displayString)
-                    .toList();
-        }
     }
 }
