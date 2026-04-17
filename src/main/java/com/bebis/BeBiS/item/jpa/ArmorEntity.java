@@ -21,7 +21,7 @@ import lombok.Setter;
 @EqualsAndHashCode(callSuper = true)
 public class ArmorEntity extends ItemEntity {
 
-    @Column(name = "armor_type", nullable = false)
+    @Column(name = "armor_type")
     @Enumerated(value = EnumType.STRING)
     private Armor.ArmorType armorType;
 }

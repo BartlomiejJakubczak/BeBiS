@@ -15,8 +15,8 @@ public record ItemResponse(
         long id,
         String name,
         QualityDTO quality,
-        @JsonProperty("level") int itemLevel,
-        @JsonProperty("required_level") int requiredLevel,
+        @JsonProperty("level") Integer itemLevel,
+        @JsonProperty("required_level") Integer requiredLevel,
         @JsonProperty("item_class") ItemClassDTO itemClass, // Defines Weapon/Armor/Misc
         @JsonProperty("item_subclass") SubclassDTO subclass, // Defines Sword/Plate/etc
         @JsonProperty("inventory_type") InventoryTypeDTO inventoryType,

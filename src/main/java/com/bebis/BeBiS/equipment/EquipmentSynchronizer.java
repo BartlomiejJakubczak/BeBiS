@@ -25,14 +25,9 @@ public class EquipmentSynchronizer {
                 continue; // Skip the rest of the loop for this item
             }
 
-            long suffixId = itemDTO.getSuffixId();
-            ItemEntity baseItem = itemService.getOrCreateEntity(itemDTO.item().id(), suffixId);
+            ItemEntity baseItem = itemService.getOrCreateEntity(itemDTO.item().id(), itemDTO);
 
             EquipmentEntity.EquippedItem freshItem = new EquipmentEntity.EquippedItem();
-            if (itemDTO.name() != null && suffixId != 0) {
-                freshItem.setFullName(itemDTO.name()); // attach the full name to the equipped item
-            }
-
             freshItem.setItem(baseItem);
             freshItem.setPlayerEnchants(itemDTO.getPlayerEnchantStrings());
 

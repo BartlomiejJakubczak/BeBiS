@@ -2,7 +2,9 @@ package com.bebis.BeBiS.equipment;
 
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
+import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.ItemService;
+import com.bebis.BeBiS.item.ItemTestData;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,72 +56,27 @@ public class EquipmentSynchronizerTest {
         entity.setItems(new HashMap<>());
 
         ItemEntity mockItem = new WeaponEntity(); // Real entity for reference check
-        EquipmentResponse.ItemDTO itemDto = mock(EquipmentResponse.ItemDTO.class);
-        EquipmentResponse.ItemDTO.SlotDTO slotDto = mock(EquipmentResponse.ItemDTO.SlotDTO.class);
-        EquipmentResponse.ItemDTO.ItemDTOReference itemRef = mock(EquipmentResponse.ItemDTO.ItemDTOReference.class);
+        ItemResponse tf = ItemTestData.thunderfuryResponse();
+        EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(
+                tf, "main_hand", List.of(EquipmentTestData.enchant(2137L, "Crusader")));
 
-        // Stubbing the DTO "Pipe"
-        when(itemDto.slot()).thenReturn(slotDto);
-        when(slotDto.type()).thenReturn("main_hand");
-        when(itemDto.item()).thenReturn(itemRef);
-        when(itemRef.id()).thenReturn(19019L);
-        when(itemDto.getSuffixId()).thenReturn(0L);
-        when(itemDto.getPlayerEnchantStrings()).thenReturn(List.of("Crusader"));
-
-        when(itemService.getOrCreateEntity(19019L, 0L)).thenReturn(mockItem);
+        when(itemService.getOrCreateEntity(tf.id(), itemDTO)).thenReturn(mockItem);
 
         EquipmentResponse response = mock(EquipmentResponse.class);
-        when(response.equipment()).thenReturn(List.of(itemDto));
+        when(response.equipment()).thenReturn(List.of(itemDTO));
 
         // when
         synchronizer.synchronize(response, entity);
 
         // then
+        verify(itemService).getOrCreateEntity(eq(tf.id()),
+                argThat(dto -> dto.getPlayerEnchantStrings().contains("Crusader") && dto.getSuffixId() == 0L));
+
         assertThat(entity.getItems()).containsKey(Equipment.Slot.MAIN_HAND);
         EquipmentEntity.EquippedItem equipped = entity.getItems().get(Equipment.Slot.MAIN_HAND);
-
+        
         assertThat(equipped.getItem()).isSameAs(mockItem);
         assertThat(equipped.getPlayerEnchants()).containsExactly("Crusader");
-        assertThat(equipped.getFullName()).isNull(); // No suffix, so no full name override
-    }
-
-    @Test
-    void shouldApplyFullNameToEquippedItemWhenSuffixIsPresent() {
-        // given
-        EquipmentEntity entity = new EquipmentEntity();
-        entity.setItems(new HashMap<>());
-
-        long itemId = 12345L;
-        long suffixId = 37L;
-        String fullName = "Ironforge Breastplate of the Tiger";
-
-        ItemEntity baseItem = new WeaponEntity();
-        EquipmentResponse.ItemDTO itemDto = mock(EquipmentResponse.ItemDTO.class);
-        EquipmentResponse.ItemDTO.SlotDTO slotDto = mock(EquipmentResponse.ItemDTO.SlotDTO.class);
-        EquipmentResponse.ItemDTO.ItemDTOReference itemRef = mock(EquipmentResponse.ItemDTO.ItemDTOReference.class);
-
-        when(itemDto.slot()).thenReturn(slotDto);
-        when(slotDto.type()).thenReturn("chest");
-        when(itemDto.item()).thenReturn(itemRef);
-        when(itemRef.id()).thenReturn(itemId);
-
-        // Trigger the Full Name logic
-        when(itemDto.getSuffixId()).thenReturn(suffixId);
-        when(itemDto.name()).thenReturn(fullName);
-
-        when(itemService.getOrCreateEntity(itemId, suffixId)).thenReturn(baseItem);
-
-        EquipmentResponse response = mock(EquipmentResponse.class);
-        when(response.equipment()).thenReturn(List.of(itemDto));
-
-        // when
-        synchronizer.synchronize(response, entity);
-
-        // then
-        EquipmentEntity.EquippedItem equipped = entity.getItems().get(Equipment.Slot.CHEST);
-        assertThat(equipped.getFullName()).isEqualTo(fullName);
-        // Ensure we haven't touched the base item's generic name
-        assertThat(baseItem.getName()).isNotEqualTo(fullName);
     }
 
     @Test

@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 public record ItemSyncData(
-        long itemId,
-        long randomEnchId,
+        Long itemId,
+        Long randomEnchId,
         String name,
         Item.Quality quality,
         Item.InventoryType inventoryType,
-        int itemLevel,
-        int requiredLevel,
-        boolean uniqueEquipped,
+        Integer itemLevel,
+        Integer requiredLevel,
+        Boolean uniqueEquipped,
         Map<StatType, Integer> stats,
         List<String> specialEffects,
         Integer armorValue,

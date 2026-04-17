@@ -16,6 +16,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 @Entity
+@Table(name = "items")
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "item_category")
 @Getter
@@ -50,16 +52,16 @@ public abstract class ItemEntity {
     private Item.InventoryType inventoryType;
 
     @Column(name = "item_level")
-    private int itemLevel;
+    private Integer itemLevel;
 
     @Column(name = "required_level")
-    private int requiredLevel;
+    private Integer requiredLevel;
 
     @Column(name = "unique_equipped")
-    private boolean uniqueEquipped;
+    private Boolean uniqueEquipped;
 
     @Column(name = "armor_value")
-    private int armorValue; // Moved here because nearly any equippable can have armor
+    private Integer armorValue; // Moved here because nearly any equippable can have armor
 
     @ElementCollection // Tells Hibernate this is a separate collection table, not a standard column.
     @CollectionTable(name = "item_stats", joinColumns = {
@@ -88,9 +90,9 @@ public abstract class ItemEntity {
     public static class CompositeKey implements Serializable {
 
         @Column(name = "item_id")
-        private long itemId;
+        private Long itemId;
 
         @Column(name = "random_enchantment_id")
-        private long randomEnchantmentId;
+        private Long randomEnchantmentId;
     }
 }

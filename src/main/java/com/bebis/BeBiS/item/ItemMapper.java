@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.item;
 
+import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.bebis.BeBiS.item.Item.InventoryType;
 import static com.bebis.BeBiS.item.Item.Quality;
@@ -24,71 +26,90 @@ public class ItemMapper {
                 entity.getName(),
                 entity.getInventoryType(),
                 entity.getQuality(),
-                entity.getItemLevel(),
-                entity.getRequiredLevel(),
-                entity.isUniqueEquipped(),
+                Optional.ofNullable(entity.getItemLevel()).orElse(0),
+                Optional.ofNullable(entity.getRequiredLevel()).orElse(0),
+                Optional.ofNullable(entity.getUniqueEquipped()).orElse(false),
                 entity.getStats() != null ? new HashMap<>(entity.getStats()) : new HashMap<>(),
                 entity.getSpecialEffects() != null ? new ArrayList<>(entity.getSpecialEffects()) : new ArrayList<>()
         );
 
         return switch (entity) {
-            case WeaponEntity w ->
-                    new Weapon(meta, w.getSpeed(), w.getMinDamage(), w.getMaxDamage(), w.getWeaponType());
-            case ArmorEntity a -> new Armor(meta, a.getArmorValue(), a.getArmorType());
+            case WeaponEntity w -> new Weapon(
+                    meta,
+                    Optional.ofNullable(w.getSpeed()).orElse(0.0),
+                    Optional.ofNullable(w.getMinDamage()).orElse(0),
+                    Optional.ofNullable(w.getMaxDamage()).orElse(0),
+                    w.getWeaponType()
+            );
+            case ArmorEntity a -> new Armor(
+                    meta,
+                    Optional.ofNullable(a.getArmorValue()).orElse(0),
+                    a.getArmorType()
+            );
             default -> new EquippableItem(meta);
         };
     }
 
-    public ItemSyncData mapToSyncData(ItemResponse dto, long enchId) {
-        int classId = dto.itemClass().id();
-        int subclassId = (int) dto.subclass().id();
+    public ItemSyncData mapToSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
+        int classId = baseDTO.itemClass().id();
+        int subclassId = (int) baseDTO.subclass().id();
 
         return switch (classId) {
-            case 2 -> createWeaponSyncData(dto, enchId);
-            case 4 -> (subclassId == 0) ? createEquippableItemSyncData(dto, enchId) : createArmorSyncData(dto, enchId);
+            case 2 -> createWeaponSyncData(baseDTO, equippedItemDTO);
+            case 4 ->
+                    (subclassId == 0) ? createEquippableItemSyncData(baseDTO, equippedItemDTO) : createArmorSyncData(baseDTO, equippedItemDTO);
             default -> throw new IllegalArgumentException("Unsupported item class: " + classId);
         };
     }
 
-    private ItemSyncData createWeaponSyncData(ItemResponse dto, long enchId) {
-        var weaponData = dto.preview().weapon();
-        double speed = weaponData.attackSpeed().value();
+    private ItemSyncData createWeaponSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
+        var weaponData = equippedItemDTO.weapon();
+        double speed = 0.0;
+        int minDamage = 0;
+        int maxDamage = 0;
+        double dps = 0.0;
+        if (weaponData != null) {
+            speed = weaponData.attackSpeed().value();
+            minDamage = weaponData.damage().minValue();
+            maxDamage = weaponData.damage().maxValue();
+            dps = weaponData.dps().value();
+        }
         // Blizzard API sometimes returns speed in ms (1900) instead of seconds (1.9)
         return new ItemSyncData(
-                dto.id(),
-                enchId,
-                dto.name(),
-                mapQuality(dto.quality().type().toUpperCase()),
-                mapInventoryType(dto.inventoryType().type()),
-                dto.itemLevel(),
-                dto.requiredLevel(),
-                dto.preview().uniqueEquipped() != null,
-                mapStats(dto),
-                mapSpecialEffects(dto),
-                extractArmorValue(dto), // some weapons might have armor
+                baseDTO.id(),
+                equippedItemDTO.getSuffixId(),
+                validateRequired(equippedItemDTO.name(), "name"),
+                mapQuality(equippedItemDTO.quality().type().toUpperCase()),
+                mapInventoryType(baseDTO.inventoryType().type()),
+                validateRequired(equippedItemDTO.itemLevel().value(), "item_level"),
+                baseDTO.requiredLevel(),
+                mapBoolean(baseDTO.preview().uniqueEquipped() != null),
+                mapStats(equippedItemDTO),
+                mapSpecialEffects(baseDTO), // those won't change even if "suffixed"
+                mapArmorValue(baseDTO, equippedItemDTO), // some weapons might have armor
                 null,
                 speed > 100 ? speed / 1000.0 : speed,
-                weaponData.damage().minValue(),
-                weaponData.damage().maxValue(),
-                weaponData.dps().value(),
-                mapWeaponType((int) dto.subclass().id())
+                minDamage,
+                maxDamage,
+                dps,
+                mapWeaponType((int) baseDTO.subclass().id())
         );
     }
 
-    private ItemSyncData createArmorSyncData(ItemResponse dto, long enchId) {
+    private ItemSyncData createArmorSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         return new ItemSyncData(
-                dto.id(),
-                enchId,
-                dto.name(),
-                mapQuality(dto.quality().type().toUpperCase()),
-                mapInventoryType(dto.inventoryType().type()),
-                dto.itemLevel(),
-                dto.requiredLevel(),
-                dto.preview().uniqueEquipped() != null,
-                mapStats(dto),
-                mapSpecialEffects(dto),
-                extractArmorValue(dto),
-                mapArmorType((int) dto.subclass().id()),
+                baseDTO.id(),
+                equippedItemDTO.getSuffixId(),
+                validateRequired(equippedItemDTO.name(), "name"),
+                mapQuality(equippedItemDTO.quality().type().toUpperCase()),
+                mapInventoryType(baseDTO.inventoryType().type()),
+                validateRequired(equippedItemDTO.itemLevel().value(), "item_level"),
+                baseDTO.requiredLevel(),
+                mapBoolean(baseDTO.preview().uniqueEquipped() != null),
+                mapStats(equippedItemDTO),
+                mapSpecialEffects(baseDTO),
+                mapArmorValue(baseDTO, equippedItemDTO),
+                mapArmorType((int) baseDTO.subclass().id()),
                 null,
                 null,
                 null,
@@ -97,19 +118,19 @@ public class ItemMapper {
         );
     }
 
-    private ItemSyncData createEquippableItemSyncData(ItemResponse dto, long enchId) {
+    private ItemSyncData createEquippableItemSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         return new ItemSyncData(
-                dto.id(),
-                enchId,
-                dto.name(),
-                mapQuality(dto.quality().type().toUpperCase()),
-                mapInventoryType(dto.inventoryType().type()),
-                dto.itemLevel(),
-                dto.requiredLevel(),
-                dto.preview().uniqueEquipped() != null,
-                mapStats(dto),
-                mapSpecialEffects(dto),
-                extractArmorValue(dto), // some rings or trinkets might have armor
+                baseDTO.id(),
+                equippedItemDTO.getSuffixId(),
+                validateRequired(equippedItemDTO.name(), "name"),
+                mapQuality(equippedItemDTO.quality().type().toUpperCase()),
+                mapInventoryType(baseDTO.inventoryType().type()),
+                validateRequired(equippedItemDTO.itemLevel().value(), "item_level"),
+                baseDTO.requiredLevel(),
+                mapBoolean(baseDTO.preview().uniqueEquipped() != null),
+                mapStats(equippedItemDTO),
+                mapSpecialEffects(baseDTO),
+                mapArmorValue(baseDTO, equippedItemDTO), // some rings or trinkets might have armor
                 null,
                 null,
                 null,
@@ -119,19 +140,24 @@ public class ItemMapper {
         );
     }
 
-    private Integer extractArmorValue(ItemResponse dto) {
-        return (dto.preview().armor() != null) ? dto.preview().armor().value() : null;
+    private Integer mapArmorValue(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
+        if (equippedItemDTO.armor() != null) return equippedItemDTO.armor().value();
+        return mapArmorValueFromBase(baseDTO);
     }
 
-    private Map<StatType, Integer> mapStats(ItemResponse dto) {
-        List<ItemResponse.StatDTO> statsFromDTO = dto.preview().stats();
-        if (statsFromDTO.isEmpty()) {
+    private Integer mapArmorValueFromBase(ItemResponse baseDTO) {
+        return (baseDTO.preview().armor() != null) ? baseDTO.preview().armor().value() : null;
+    }
+
+    private Map<StatType, Integer> mapStats(EquipmentResponse.ItemDTO dto) {
+        List<EquipmentResponse.ItemDTO.StatDTO> statsFromDTO = dto.stats();
+        if (statsFromDTO == null || statsFromDTO.isEmpty()) {
             return new HashMap<>();
         } else {
             Map<StatType, Integer> stats = new HashMap<>();
             statsFromDTO.forEach(s -> {
                 try {
-                    stats.put(StatType.valueOf(s.type().type()), s.value());
+                    stats.put(StatType.valueOf(s.type().type().toUpperCase()), s.value());
                 } catch (IllegalArgumentException ignored) {
                 }
             });
@@ -200,5 +226,16 @@ public class ItemMapper {
         } catch (Exception e) {
             return Quality.UNKNOWN;
         }
+    }
+
+    private boolean mapBoolean(Boolean value) {
+        return value != null && value;
+    }
+
+    private <T> T validateRequired(T value, String fieldName) {
+        if (value == null) {
+            throw new IllegalStateException("Critical data missing: " + fieldName);
+        }
+        return value;
     }
 }

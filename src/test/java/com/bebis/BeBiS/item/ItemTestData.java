@@ -41,7 +41,49 @@ public class ItemTestData {
         );
     }
 
-    public static ItemResponse armorResponse(long id, String name, int armorValue, int subclassId) {
+    public static ItemResponse createDtoWithNulls() {
+        // A Preview block where everything optional is explicitly null
+        var preview = new ItemResponse.PreviewItemDTO(
+                new ArrayList<>(), // Empty stats list
+                null,              // No weapon data
+                null,              // No armor data
+                new ArrayList<>(), // No spells
+                null               // unique_equipped is NULL
+        );
+
+        return new ItemResponse(
+                999L,
+                "Simple String Ring",
+                new ItemResponse.QualityDTO("COMMON"),
+                1, 1,
+                new ItemResponse.ItemClassDTO(4, "Armor"),
+                new ItemResponse.SubclassDTO(0, "Misc"),
+                new ItemResponse.InventoryTypeDTO("FINGER"),
+                preview
+        );
+    }
+
+    public static ItemResponse createDtoWithGarbageEnums(String quality, String inventoryType) {
+        var preview = new ItemResponse.PreviewItemDTO(
+                new ArrayList<>(), // Empty stats list
+                null,              // No weapon data
+                null,              // No armor data
+                new ArrayList<>(), // No spells
+                null               // unique_equipped is NULL
+        );
+        return new ItemResponse(
+                999L,
+                "Simple String Ring",
+                new ItemResponse.QualityDTO(quality),
+                1, 1,
+                new ItemResponse.ItemClassDTO(4, "Armor"),
+                new ItemResponse.SubclassDTO(0, "Misc"),
+                new ItemResponse.InventoryTypeDTO(inventoryType),
+                preview
+        );
+    }
+
+    public static ItemResponse armorResponse(long id, String name, int armorValue) {
         var preview = new PreviewItemDTO(
                 new ArrayList<>(), null, new ArmorDTO(armorValue), new ArrayList<>(), null
         );
@@ -49,7 +91,7 @@ public class ItemTestData {
         return new ItemResponse(
                 id, name, new QualityDTO("RARE"), 40, 40,
                 new ItemClassDTO(4, "Armor"),
-                new SubclassDTO(subclassId, "Material"),
+                new SubclassDTO(4, "Plate"), // 0 means ring
                 new InventoryTypeDTO("CHEST"),
                 preview
         );

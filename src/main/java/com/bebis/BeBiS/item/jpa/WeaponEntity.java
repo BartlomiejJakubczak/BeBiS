@@ -20,17 +20,17 @@ import lombok.Setter;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public class WeaponEntity extends ItemEntity {
-    private double speed;
+    private Double speed;
 
     @Column(name = "min_damage")
-    private int minDamage;
+    private Integer minDamage;
 
     @Column(name = "max_damage")
-    private int maxDamage;
+    private Integer maxDamage;
 
-    private double dps;
+    private Double dps;
 
-    @Column(name = "weapon_type", nullable = false)
+    @Column(name = "weapon_type")
     @Enumerated(value = EnumType.STRING)
     private Weapon.WeaponType weaponType;
 }

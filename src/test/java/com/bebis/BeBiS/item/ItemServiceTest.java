@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
+import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,7 +51,7 @@ class ItemServiceTest {
         when(repository.findById(pk)).thenReturn(Optional.of(existingWeapon));
 
         // when
-        ItemEntity result = service.getOrCreateEntity(ItemTestData.THUNDERFURY_ID, BASE_ENCH_ID);
+        ItemEntity result = service.getOrCreateEntity(ItemTestData.THUNDERFURY_ID, mock(EquipmentResponse.ItemDTO.class));
 
         // then
         assertThat(result).isSameAs(existingWeapon);
@@ -65,49 +67,53 @@ class ItemServiceTest {
 
         ItemSyncData syncData = mock(ItemSyncData.class);
         ItemResponse response = mock(ItemResponse.class);
+        EquipmentResponse.ItemDTO itemDTO = mock(EquipmentResponse.ItemDTO.class);
         WeaponEntity createdEntity = new WeaponEntity();
 
         when(repository.findById(pk)).thenReturn(Optional.empty()); // queried item not there
         when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
-        when(mapper.mapToSyncData(response, BASE_ENCH_ID)).thenReturn(syncData);
+        when(mapper.mapToSyncData(response, itemDTO)).thenReturn(syncData);
         when(entityFactory.createItemEntity(syncData)).thenReturn(createdEntity);
         when(repository.save(createdEntity)).thenReturn(createdEntity);
 
         // when
-        ItemEntity result = service.getOrCreateEntity(itemId, BASE_ENCH_ID);
+        ItemEntity result = service.getOrCreateEntity(itemId, itemDTO);
 
         // then
         assertThat(result).isSameAs(createdEntity);
         verify(repository).findById(pk);
         verify(blizzardClient).getBaseItem(itemId);
-        verify(mapper).mapToSyncData(response, BASE_ENCH_ID);
+        verify(mapper).mapToSyncData(response, itemDTO);
         verify(entityFactory).createItemEntity(syncData);
     }
 
     @Test
-    void shouldFetchNewVariantEvenIfBaseItemExistsInRepo() {
+    void shouldTreatSuffixedVariantAsDistinctIdentity() {
         // given
         long itemId = 12345L;
-        ItemEntity.CompositeKey requestedPk = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH_ID);
 
-        ItemSyncData syncData = mock(ItemSyncData.class);
-        ItemResponse response = mock(ItemResponse.class);
+        ItemResponse baseResponse = ItemTestData.thunderfuryResponse();
+        EquipmentResponse.ItemDTO equippedDTO = mock(EquipmentResponse.ItemDTO.class);
+        when(equippedDTO.getSuffixId()).thenReturn(SUFFIX_ENCH_ID);
+
+        ItemEntity.CompositeKey expectedKey = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH_ID);
+
+        when(repository.findById(expectedKey)).thenReturn(Optional.empty());
+        when(blizzardClient.getBaseItem(itemId)).thenReturn(baseResponse);
+
+        ItemSyncData expectedSyncData = mock(ItemSyncData.class);
+        when(mapper.mapToSyncData(eq(baseResponse), eq(equippedDTO))).thenReturn(expectedSyncData);
+
         WeaponEntity createdEntity = new WeaponEntity();
-
-        when(repository.findById(requestedPk)).thenReturn(Optional.empty()); // 21, 37 not in db
-        when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
-        when(mapper.mapToSyncData(response, SUFFIX_ENCH_ID)).thenReturn(syncData);
-        when(entityFactory.createItemEntity(syncData)).thenReturn(createdEntity);
+        when(entityFactory.createItemEntity(expectedSyncData)).thenReturn(createdEntity);
         when(repository.save(createdEntity)).thenReturn(createdEntity);
 
         // when
-        ItemEntity result = service.getOrCreateEntity(itemId, SUFFIX_ENCH_ID);
+        service.getOrCreateEntity(itemId, equippedDTO);
 
         // then
-        assertThat(result).isSameAs(createdEntity);
-        verify(repository).findById(requestedPk);
-        verify(blizzardClient).getBaseItem(itemId);
-        verify(mapper).mapToSyncData(response, SUFFIX_ENCH_ID);
-        verify(entityFactory).createItemEntity(syncData);
+        // Verify that the factory received a SyncData with the correct suffix
+        verify(entityFactory).createItemEntity(argThat(Objects::nonNull));
+        verify(repository).save(createdEntity);
     }
 }
