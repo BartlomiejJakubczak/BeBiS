@@ -7,6 +7,7 @@ import com.bebis.BeBiS.item.jpa.ItemEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Component
@@ -20,15 +21,15 @@ public class EquipmentSynchronizer {
 
     public void synchronize(EquipmentResponse response, EquipmentEntity equipment) {
         equipment.getItems().clear(); // a fresh snapshot
+        Map<EquipmentResponse.ItemDTO, ItemEntity> resolvedItems = itemService.resolveItems(response.equipment());
         for (EquipmentResponse.ItemDTO itemDTO : response.equipment()) {
             Optional<Equipment.Slot> slot = extractSlot(itemDTO);
             if (slot.isEmpty()) {
                 continue; // Skip the rest of the loop for this item
             }
 
-            ItemEntity baseItem = itemService.getOrCreateEntity(itemDTO.item().id(), itemDTO);
-
             EquipmentEntity.EquippedItem freshItem = new EquipmentEntity.EquippedItem();
+            ItemEntity baseItem = resolvedItems.get(itemDTO);
             freshItem.setItem(baseItem);
             freshItem.setPlayerEnchants(extractPlayerEnchantStrings(itemDTO, baseItem.getId().getRandomEnchantmentId()));
 

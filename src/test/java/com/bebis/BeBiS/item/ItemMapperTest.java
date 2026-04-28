@@ -79,7 +79,7 @@ class ItemMapperTest {
     @Test
     void shouldMapEquippableItemSyncDataCorrectly() {
         // given: Class 4, Subclass 0 (Misc/Rings/Necks)
-        ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "RING", null);
+        ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", null);
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
 
         // when
@@ -94,7 +94,7 @@ class ItemMapperTest {
     @Test
     void shouldCaptureArmorOnNonArmorItems() {
         Integer expectedArmorValue = 150;
-        ItemResponse response = ItemTestData.equippableItemResponse(123, "Greatseal", "RING", expectedArmorValue);
+        ItemResponse response = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", expectedArmorValue);
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
                 response, "FINGER_1", "UNCOMMON", "of The Monkey",
                 37L, response.itemLevel() + 10, List.of(EquipmentTestData.stat("AGILITY", 5)), List.of()
@@ -121,7 +121,7 @@ class ItemMapperTest {
     @Test
     void shouldMapValidStatsAndIgnoreUnknownOnes() {
         // given
-        ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "RING", 2137);
+        ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", 2137);
         EquipmentResponse.ItemDTO dtoWithMixedStats = EquipmentTestData.fromItemResponseSuffixed(
                 base, "FINGER_1", "UNCOMMON", "of The Monkey", 37L, base.itemLevel() + 10,
                 List.of(

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest // this suite will need actual Services, mappers and so on
@@ -59,17 +60,24 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
                 Integer.class, itemId, enchId);
         assertThat(countBefore).isEqualTo(0);
 
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
+
         // when
-        itemService.getOrCreateEntity(itemId, EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of()));
+        Map<EquipmentResponse.ItemDTO, ItemEntity> result = itemService.resolveItems(List.of(dto));
 
         entityManager.flush(); // tells Hibernate to send SQL to Postgres immediately, without adhering to Transactional
 
         // then
+        assertNotNull(result.get(dto));
+        ItemEntity itemEntity = result.get(dto);
+        assertThat(itemEntity.getId().getItemId()).isEqualTo(itemId);
+        assertThat(itemEntity.getId().getRandomEnchantmentId()).isEqualTo(enchId);
+
         Map<String, Object> dbRow = jdbcTemplate.queryForMap(
                 "SELECT name, item_level FROM items WHERE item_id = ? AND random_enchantment_id = ?",
                 itemId, enchId);
-        assertThat(dbRow.get("name")).isEqualTo(response.name());
-        assertThat(dbRow.get("item_level")).isEqualTo(80);
+        assertThat(dbRow.get("name")).isEqualTo(itemEntity.getName());
+        assertThat(dbRow.get("item_level")).isEqualTo(itemEntity.getItemLevel());
     }
 
     @Test
@@ -78,24 +86,31 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
         ItemResponse response = ItemTestData.thunderfuryResponse();
         long itemId = response.id();
         long enchId = 0L;
+        int itemLevel = response.itemLevel();
 
         jdbcTemplate.update(
                 "INSERT INTO items (item_id, random_enchantment_id, name, item_level, quality, inventory_type, item_category) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                response.id(), enchId, response.name(), 80, "LEGENDARY", "WEAPON", "WEAPON"
+                itemId, enchId, response.name(), itemLevel, "LEGENDARY", "WEAPON", "WEAPON"
         );
 
-        // when
-        ItemEntity result = itemService.getOrCreateEntity(itemId, EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of()));
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
 
-        entityManager.flush(); // tells Hibernate to send SQL to Postgres immediately, without adhering to Transactional
+        // when
+        Map<EquipmentResponse.ItemDTO, ItemEntity> result = itemService.resolveItems(List.of(dto));
 
         // then
         verifyNoInteractions(blizzardClient);
 
-        assertThat(result).isInstanceOf(WeaponEntity.class);
-        assertThat(result.getName()).isEqualTo(response.name());
-        assertThat(result.getItemLevel()).isEqualTo(80);
+        assertNotNull(result.get(dto));
+        assertThat(result.get(dto)).isInstanceOf(WeaponEntity.class); // check for correctness of polymorphism of ItemEntity
+        ItemEntity tfEntity = result.get(dto);
+        // check if the pk was mapped correctly
+        assertThat(tfEntity.getId().getItemId()).isEqualTo(itemId);
+        assertThat(tfEntity.getId().getRandomEnchantmentId()).isEqualTo(enchId);
+        // check if some of other entity's fields were populated correctly
+        assertThat(tfEntity.getName()).isEqualTo(response.name());
+        assertThat(tfEntity.getItemLevel()).isEqualTo(itemLevel);
     }
 
     @Test
@@ -114,16 +129,15 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
 
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "FINGER_1", List.of());
         EquipmentResponse.ItemDTO suffixedDTO = EquipmentTestData.fromItemResponseSuffixed(
-                response, "FINGER_1", "RARE", "of The Bear", enchId, response.itemLevel() + 10,
+                response, "FINGER_2", "RARE", "of The Bear", enchId, response.itemLevel() + 10,
                 List.of(EquipmentTestData.stat("STRENGTH", 9), EquipmentTestData.stat("STAMINA", 9)),
                 List.of()
         );
 
         // when
-        itemService.getOrCreateEntity(itemId, dto);
-        itemService.getOrCreateEntity(itemId, suffixedDTO);
+        itemService.resolveItems(List.of(dto, suffixedDTO));
 
-        entityManager.flush();
+        entityManager.flush(); // make sure hibernate persists the new entries
 
         // then
         verify(blizzardClient, times(2)).getBaseItem(itemId);
@@ -131,5 +145,9 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
                 "SELECT random_enchantment_id FROM items WHERE item_id = ?",
                 Long.class, itemId);
         assertThat(savedSuffixes).containsExactlyInAnyOrder(0L, enchId);
+        String savedName = jdbcTemplate.queryForObject(
+                "SELECT name FROM items WHERE item_id = ? AND random_enchantment_id = ?",
+                String.class, itemId, enchId);
+        assertThat(savedName).contains("of The Bear");
     }
 }

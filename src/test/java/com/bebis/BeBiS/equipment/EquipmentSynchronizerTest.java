@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -63,7 +64,10 @@ public class EquipmentSynchronizerTest {
         ItemEntity mockItem = new WeaponEntity(); // Real entity for reference check
         mockItem.setId(new ItemEntity.CompositeKey(tf.id(), suffixId));
 
-        when(itemService.getOrCreateEntity(tf.id(), itemDTO)).thenReturn(mockItem);
+        Map<EquipmentResponse.ItemDTO, ItemEntity> items = new HashMap<>();
+        items.put(itemDTO, mockItem);
+
+        when(itemService.resolveItems(List.of(itemDTO))).thenReturn(items);
 
         EquipmentResponse response = mock(EquipmentResponse.class);
         when(response.equipment()).thenReturn(List.of(itemDTO));
@@ -72,7 +76,7 @@ public class EquipmentSynchronizerTest {
         synchronizer.synchronize(response, entity);
 
         // then
-        verify(itemService).getOrCreateEntity(eq(tf.id()), eq(itemDTO));
+        verify(itemService).resolveItems(eq(List.of(itemDTO)));
 
         assertThat(entity.getItems()).containsKey(Equipment.Slot.MAIN_HAND);
         EquipmentEntity.EquippedItem equipped = entity.getItems().get(Equipment.Slot.MAIN_HAND);
@@ -93,6 +97,8 @@ public class EquipmentSynchronizerTest {
         when(weirdItem.slot()).thenReturn(slotDto);
         when(slotDto.type()).thenReturn("POCKET_WATCH_SLOT");
 
+        when(itemService.resolveItems(List.of(weirdItem))).thenReturn(new HashMap<>());
+
         EquipmentResponse response = mock(EquipmentResponse.class);
         when(response.equipment()).thenReturn(List.of(weirdItem));
 
@@ -101,6 +107,6 @@ public class EquipmentSynchronizerTest {
 
         // then
         assertThat(entity.getItems()).isEmpty();
-        verifyNoInteractions(itemService); // Optimization: if slot is invalid, don't even fetch the item
+        verify(itemService, times(1)).resolveItems(eq(List.of(weirdItem)));
     }
 }
