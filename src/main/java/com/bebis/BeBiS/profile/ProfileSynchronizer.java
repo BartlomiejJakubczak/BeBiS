@@ -27,7 +27,6 @@ public class ProfileSynchronizer {
     public List<WowCharacterEntity> synchronize(List<CharacterSyncData> fromSummary, long blizzardAccountId) {
         // these come from repo, so they are in MANAGED state
         Map<Long, WowCharacterEntity> existingMap = convertToMap(characterRepository.findAllByPk_BlizzardAccountId(blizzardAccountId));
-        // The "Golden Sync" mental model (buckets)
         List<WowCharacterEntity> toSave = new ArrayList<>();
         Set<Long> processedIds = new HashSet<>();
         boolean modifiedExisting = false;

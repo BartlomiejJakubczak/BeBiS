@@ -26,10 +26,10 @@ public class ProfileService {
 
     @Transactional
     public List<WowCharacter> getProfileSummary(long blizzardAccountId) {
-        return profileMapper.mapToDomain(syncRepoWithSummary(blizzardAccountId));
+        return profileMapper.mapToDomain(syncBlizzardAccountCharacters(blizzardAccountId));
     }
 
-    private List<WowCharacterEntity> syncRepoWithSummary(long blizzardAccountId) {
+    private List<WowCharacterEntity> syncBlizzardAccountCharacters(long blizzardAccountId) {
         List<CharacterSyncData> fromSummary = profileMapper.mapToSyncData(blizzardClient.getProfileSummary(), blizzardAccountId);
         return synchronizer.synchronize(fromSummary, blizzardAccountId);
     }
