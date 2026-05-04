@@ -1,6 +1,18 @@
 spring:
   application:
     name: BeBiS
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bebis_db
+    username: bebis_user
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
 
   security:
     oauth2:
