@@ -1,10 +1,11 @@
 package com.bebis.BeBiS.item.integration;
 
-import com.bebis.BeBiS.base.BaseDatabaseTest;
+import com.bebis.BeBiS.base.BaseIntegrationTest;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
+import com.bebis.BeBiS.item.BlizzardItemFetcher;
 import com.bebis.BeBiS.item.ItemService;
 import com.bebis.BeBiS.item.ItemTestData;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
@@ -14,25 +15,26 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest // this suite will need actual Services, mappers and so on
-@TestPropertySource(properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-}) // to be replaced by a migration tool like Flyway or Liquibase
+@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
 @Transactional // this makes sure that jdbctemplate updates are rolled back after each test
-public class ItemServiceIntegrationTest extends BaseDatabaseTest {
+public class ItemServiceIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ItemService itemService;
@@ -45,6 +47,9 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
 
     @MockitoBean
     private BlizzardServiceClient blizzardClient;
+
+    @MockitoSpyBean // a wrapper around the real object, will retain its behavior
+    private BlizzardItemFetcher itemFetcher;
 
     @Test
     void shouldFetchFromBlizzardAndPersistEntityWhenNotInRepo() {
@@ -140,7 +145,7 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
         entityManager.flush(); // make sure hibernate persists the new entries
 
         // then
-        verify(blizzardClient, times(2)).getBaseItem(itemId);
+        verify(blizzardClient, times(1)).getBaseItem(itemId); // should pull from cache the second time
         List<Long> savedSuffixes = jdbcTemplate.queryForList(
                 "SELECT random_enchantment_id FROM items WHERE item_id = ?",
                 Long.class, itemId);
@@ -149,5 +154,29 @@ public class ItemServiceIntegrationTest extends BaseDatabaseTest {
                 "SELECT name FROM items WHERE item_id = ? AND random_enchantment_id = ?",
                 String.class, itemId, enchId);
         assertThat(savedName).contains("of The Bear");
+    }
+
+    @Test
+    void shouldPersistCacheItemInRedis() {
+        // given
+        ItemResponse response = ItemTestData.thunderfuryResponse();
+        long itemId = response.id();
+
+        when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
+
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
+
+        // when
+        itemService.resolveItems(List.of(dto));
+
+        // then
+        Cache itemsCache = cacheManager.getCache("items");
+        assertNotNull(itemsCache, "Cache 'items' should exist");
+
+        Cache.ValueWrapper wrapper = itemsCache.get(itemId);
+        assertNotNull(wrapper, "Item should be cached in Redis");
+
+        ItemResponse cachedValue = (ItemResponse) wrapper.get();
+        assertEquals(response.name(), cachedValue.name(), "Cached data should match original");
     }
 }

@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.equipment.integration;
 
-import com.bebis.BeBiS.base.BaseDatabaseTest;
+import com.bebis.BeBiS.base.BaseIntegrationTest;
 import com.bebis.BeBiS.equipment.Equipment;
 import com.bebis.BeBiS.equipment.EquipmentService;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
@@ -34,12 +34,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-}) // to be replaced by a migration tool like Flyway or Liquibase
+@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
 @Transactional // this makes sure that jdbctemplate updates are rolled back after each test
-public class EquipmentIntegrationTest extends BaseDatabaseTest {
+public class EquipmentIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private EquipmentService service;

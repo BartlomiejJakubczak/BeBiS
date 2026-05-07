@@ -1,6 +1,5 @@
 package com.bebis.BeBiS.item;
 
-import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
@@ -11,6 +10,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -18,13 +18,14 @@ import java.util.stream.Collectors;
 @Service
 public class ItemService {
 
-    private final BlizzardServiceClient blizzardClient;
+    private final BlizzardItemFetcher itemFetcher;
     private final ItemRepository itemRepository;
     private final ItemMapper itemMapper;
     private final ItemEntityFactory itemEntityFactory;
 
-    public ItemService(BlizzardServiceClient blizzardClient, ItemRepository itemRepository, ItemMapper itemMapper, ItemEntityFactory itemEntityFactory) {
-        this.blizzardClient = blizzardClient;
+    public ItemService(BlizzardItemFetcher itemFetcher, ItemRepository itemRepository, ItemMapper itemMapper,
+                       ItemEntityFactory itemEntityFactory) {
+        this.itemFetcher = itemFetcher;
         this.itemRepository = itemRepository;
         this.itemMapper = itemMapper;
         this.itemEntityFactory = itemEntityFactory;
@@ -34,7 +35,7 @@ public class ItemService {
     public Map<EquipmentResponse.ItemDTO, ItemEntity> resolveItems(List<EquipmentResponse.ItemDTO> dtos) {
         Map<ItemEntity.CompositeKey, EquipmentResponse.ItemDTO> pkToRepresentativeDto = dtos.stream()
                 .collect(Collectors.toMap(
-                        dto -> new ItemEntity.CompositeKey(dto.item().id(), itemMapper.mapSuffixId(dto)),
+                        this::toCompositeKey,
                         dto -> dto,
                         (existing, duplicate) -> existing // if there are two identical items equipped just pick one
                 ));
@@ -43,10 +44,14 @@ public class ItemService {
                 .stream()
                 .collect(Collectors.toMap(ItemEntity::getId, entity -> entity));
 
+        Map<Long, ItemResponse> baseItems = new HashMap<>();
+
         for (Map.Entry<ItemEntity.CompositeKey, EquipmentResponse.ItemDTO> entry : pkToRepresentativeDto.entrySet()) {
-            if (!resolvedEntities.containsKey(entry.getKey())) {
-                ItemEntity newEntity = fetchAndPersistFromBlizzard(entry.getValue());
-                resolvedEntities.put(entry.getKey(), newEntity);
+            ItemEntity.CompositeKey pk = entry.getKey();
+            if (!resolvedEntities.containsKey(pk)) {
+                long baseItemId = pk.getItemId();
+                ItemResponse baseDTO = baseItems.computeIfAbsent(baseItemId, itemFetcher::fetchItem);
+                resolvedEntities.put(pk, mapAndPersist(baseDTO, entry.getValue()));
             }
         }
 
@@ -55,12 +60,16 @@ public class ItemService {
         return dtos.stream()
                 .collect(Collectors.toMap(
                         dto -> dto,
-                        dto -> resolvedEntities.get(new ItemEntity.CompositeKey(dto.item().id(), itemMapper.mapSuffixId(dto)))
+                        dto -> resolvedEntities.get(toCompositeKey(dto)),
+                        (existing, duplicate) -> existing
                 ));
     }
 
-    private ItemEntity fetchAndPersistFromBlizzard(@NonNull EquipmentResponse.ItemDTO equippedItemDTO) {
-        ItemResponse baseDTO = blizzardClient.getBaseItem(equippedItemDTO.item().id());
+    private ItemEntity.CompositeKey toCompositeKey(EquipmentResponse.ItemDTO dto) {
+        return new ItemEntity.CompositeKey(dto.item().id(), itemMapper.mapSuffixId(dto));
+    }
+
+    private ItemEntity mapAndPersist(@NonNull ItemResponse baseDTO, @NonNull EquipmentResponse.ItemDTO equippedItemDTO) {
         ItemSyncData syncData = itemMapper.mapToSyncData(baseDTO, equippedItemDTO);
         ItemEntity entity = itemEntityFactory.createItemEntity(syncData);
         return itemRepository.save(entity);

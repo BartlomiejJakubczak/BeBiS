@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile.integration;
 
-import com.bebis.BeBiS.base.BaseDatabaseTest;
+import com.bebis.BeBiS.base.BaseIntegrationTest;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
@@ -29,12 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-}) // to be replaced by a migration tool like Flyway or Liquibase
+@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
 @Transactional // this makes sure that jdbctemplate updates are rolled back after each test
-public class ProfileIntegrationTest extends BaseDatabaseTest {
+public class ProfileIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private ProfileService service;

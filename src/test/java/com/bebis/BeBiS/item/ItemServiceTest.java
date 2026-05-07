@@ -1,7 +1,6 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.equipment.EquipmentTestData;
-import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.*;
 class ItemServiceTest {
 
     @Mock
-    private BlizzardServiceClient blizzardClient;
+    private BlizzardItemFetcher itemFetcher;
     @Mock
     private ItemRepository repository;
     @Mock
@@ -47,7 +46,7 @@ class ItemServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new ItemService(blizzardClient, repository, mapper, entityFactory);
+        service = new ItemService(itemFetcher, repository, mapper, entityFactory);
     }
 
     @Test
@@ -73,7 +72,7 @@ class ItemServiceTest {
         assertThat(result).containsEntry(tfDTO, existingWeapon);
         verify(repository, times(1)).findAllById(Set.of(pk));
         verify(mapper, times(2)).mapSuffixId(tfDTO);
-        verifyNoInteractions(blizzardClient, entityFactory);
+        verifyNoInteractions(itemFetcher, entityFactory);
     }
 
     @Test
@@ -93,7 +92,7 @@ class ItemServiceTest {
         when(repository.findAllById(Set.of(pk))).thenReturn(List.of()); // queried item not there
 
         when(mapper.mapSuffixId(eq(tfDTO))).thenReturn(BASE_ENCH_ID);
-        when(blizzardClient.getBaseItem(eq(tfDTO.item().id()))).thenReturn(tfResponse);
+        when(itemFetcher.fetchItem(eq(tfDTO.item().id()))).thenReturn(tfResponse);
         when(mapper.mapToSyncData(eq(tfResponse), eq(tfDTO))).thenReturn(syncDataMock);
         when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newWeapon);
         when(repository.save(newWeapon)).thenReturn(newWeapon);
@@ -104,7 +103,7 @@ class ItemServiceTest {
         // then
         assertThat(result.get(tfDTO)).isSameAs(newWeapon);
         verify(repository, times(1)).findAllById(Set.of(pk));
-        verify(blizzardClient).getBaseItem(tfDTO.item().id());
+        verify(itemFetcher).fetchItem(tfDTO.item().id());
         verify(entityFactory).createItemEntity(syncDataMock);
         verify(repository).save(newWeapon);
     }
@@ -131,7 +130,7 @@ class ItemServiceTest {
 
         when(mapper.mapSuffixId(eq(suffixedItemDTO_1))).thenReturn(suffixId_1);
         when(mapper.mapSuffixId(eq(suffixedItemDTO_2))).thenReturn(suffixId_2);
-        when(blizzardClient.getBaseItem(itemId)).thenReturn(itemResponse);
+        when(itemFetcher.fetchItem(itemId)).thenReturn(itemResponse);
         when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(syncDataMock);
         when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newItem);
         when(repository.save(newItem)).thenReturn(newItem);
@@ -145,7 +144,7 @@ class ItemServiceTest {
         verify(repository).findAllById(captor.capture());
         assertThat(captor.getValue()).containsExactlyInAnyOrder(pk_1, pk_2);
 
-        verify(blizzardClient, times(2)).getBaseItem(itemId);
+        verify(itemFetcher, times(1)).fetchItem(itemId); // should fetch base item only once
         verify(entityFactory, times(2)).createItemEntity(syncDataMock);
         verify(repository, times(2)).save(newItem);
     }
@@ -170,7 +169,7 @@ class ItemServiceTest {
 
         when(mapper.mapSuffixId(eq(firstRing))).thenReturn(SUFFIX_ENCH_ID);
         when(mapper.mapSuffixId(eq(secondRing))).thenReturn(SUFFIX_ENCH_ID);
-        when(blizzardClient.getBaseItem(itemId)).thenReturn(itemResponse);
+        when(itemFetcher.fetchItem(itemId)).thenReturn(itemResponse);
         when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(syncDataMock);
         when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newItem);
         when(repository.save(newItem)).thenReturn(newItem);
@@ -187,7 +186,7 @@ class ItemServiceTest {
         verify(repository).findAllById(captor.capture());
         assertThat(captor.getValue()).hasSize(1).contains(firstPk); // service de-duplicates keys by using map's keyset
 
-        verify(blizzardClient, times(1)).getBaseItem(itemId); // should call blizz once,
+        verify(itemFetcher, times(1)).fetchItem(itemId); // should call blizz once,
         // be saved to db and then pull from db on the second one
         verify(entityFactory, times(1)).createItemEntity(syncDataMock);
         verify(repository, times(1)).save(newItem);
@@ -228,7 +227,7 @@ class ItemServiceTest {
         when(mapper.mapSuffixId(eq(tfDTO))).thenReturn(BASE_ENCH_ID);
         when(mapper.mapSuffixId(eq(suffixedItemDTO_1))).thenReturn(suffixId_1);
         when(mapper.mapSuffixId(eq(suffixedItemDTO_2))).thenReturn(suffixId_2);
-        when(blizzardClient.getBaseItem(eq(itemId))).thenReturn(itemResponse);
+        when(itemFetcher.fetchItem(eq(itemId))).thenReturn(itemResponse);
         when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(syncDataMock);
         when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newItem);
         when(repository.save(newItem)).thenReturn(newItem);
@@ -243,8 +242,8 @@ class ItemServiceTest {
         verify(repository).findAllById(captor.capture());
         assertThat(captor.getValue()).hasSize(3).contains(firstPk, secondPk, thirdPk);
 
-        verify(blizzardClient, times(2)).getBaseItem(itemId);
-        verify(blizzardClient, never()).getBaseItem(existingId);
+        verify(itemFetcher, times(1)).fetchItem(itemId); // should fetch base item only once
+        verify(itemFetcher, never()).fetchItem(existingId);
         verify(entityFactory, times(2)).createItemEntity(syncDataMock);
         verify(repository, times(2)).save(any(ItemEntity.class));
     }
