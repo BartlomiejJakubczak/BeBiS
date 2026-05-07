@@ -60,7 +60,7 @@ class ItemServiceTest {
 
         ItemEntity.CompositeKey pk = new ItemEntity.CompositeKey(tfDTO.item().id(), BASE_ENCH_ID);
         WeaponEntity existingWeapon = new WeaponEntity();
-        existingWeapon.setId(pk);
+        existingWeapon.setPk(pk);
 
         when(repository.findAllById(Set.of(pk))).thenReturn(List.of(existingWeapon));
         when(mapper.mapSuffixId(eq(tfDTO))).thenReturn(BASE_ENCH_ID);
@@ -217,7 +217,7 @@ class ItemServiceTest {
         ItemEntity.CompositeKey thirdPk = new ItemEntity.CompositeKey(itemId, suffixId_2);
 
         ItemEntity existingTfEntity = new EquippableItemEntity();
-        existingTfEntity.setId(firstPk);
+        existingTfEntity.setPk(firstPk);
 
         ItemEntity newItem = new EquippableItemEntity();
         ItemSyncData syncDataMock = mock(ItemSyncData.class);

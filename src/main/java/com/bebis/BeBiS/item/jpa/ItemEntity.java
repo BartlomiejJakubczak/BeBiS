@@ -38,7 +38,7 @@ import java.util.Map;
 @EqualsAndHashCode
 public abstract class ItemEntity {
     @EmbeddedId
-    private CompositeKey id;
+    private CompositeKey pk;
 
     @Column(nullable = false)
     private String name;
@@ -65,8 +65,8 @@ public abstract class ItemEntity {
 
     @ElementCollection // Tells Hibernate this is a separate collection table, not a standard column.
     @CollectionTable(name = "item_stats", joinColumns = {
-            @JoinColumn(name = "item_id"),
-            @JoinColumn(name = "random_enchantment_id")
+            @JoinColumn(name = "base_id"),
+            @JoinColumn(name = "suffix_id")
     })
     //Defines the table name and the foreign key linking it back to the Item
     @MapKeyColumn(name = "stat_type") // Tells Hibernate to use the 'stat_type' column as the key (e.g., STAMINA)
@@ -76,8 +76,8 @@ public abstract class ItemEntity {
 
     @ElementCollection
     @CollectionTable(name = "item_effects", joinColumns = {
-            @JoinColumn(name = "item_id"),
-            @JoinColumn(name = "random_enchantment_id")
+            @JoinColumn(name = "base_id"),
+            @JoinColumn(name = "suffix_id")
     })
     @Column(name = "effect_description", length = 1000) // Effects can be long!
     private List<String> specialEffects = new ArrayList<>();
@@ -89,10 +89,10 @@ public abstract class ItemEntity {
     @EqualsAndHashCode
     public static class CompositeKey implements Serializable {
 
-        @Column(name = "item_id")
-        private Long itemId;
+        @Column(name = "base_id")
+        private Long baseId;
 
-        @Column(name = "random_enchantment_id")
-        private Long randomEnchantmentId;
+        @Column(name = "suffix_id")
+        private Long suffixId;
     }
 }

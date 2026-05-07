@@ -205,7 +205,7 @@ class ItemMapperTest {
     void shouldMapWeaponEntityToDomainWeapon() {
         // given
         WeaponEntity entity = new WeaponEntity();
-        entity.setId(new ItemEntity.CompositeKey(19019L, 0L));
+        entity.setPk(new ItemEntity.CompositeKey(19019L, 0L));
         entity.setName("Thunderfury");
         entity.setSpeed(1.9);
         entity.setMinDamage(44);
@@ -227,7 +227,7 @@ class ItemMapperTest {
     void shouldMapArmorEntityToDomainArmor() {
         // given
         ArmorEntity entity = new ArmorEntity();
-        entity.setId(new ItemEntity.CompositeKey(123L, 0L));
+        entity.setPk(new ItemEntity.CompositeKey(123L, 0L));
         entity.setArmorValue(500);
         entity.setArmorType(Armor.ArmorType.PLATE);
         entity.setInventoryType(Item.InventoryType.CHEST);
@@ -246,7 +246,7 @@ class ItemMapperTest {
     void shouldHandleUnknownStatsInDomainMapping() {
         // given
         WeaponEntity entity = new WeaponEntity();
-        entity.setId(new ItemEntity.CompositeKey(1L, 0L));
+        entity.setPk(new ItemEntity.CompositeKey(1L, 0L));
         // Using a stats map that might be empty or null
         entity.setStats(null);
 
@@ -261,7 +261,7 @@ class ItemMapperTest {
     void shouldDefaultNullLevelsToZeroInDomain() {
         // given: An entity with null wrappers
         ArmorEntity entity = new ArmorEntity();
-        entity.setId(new ItemEntity.CompositeKey(1L, 0L));
+        entity.setPk(new ItemEntity.CompositeKey(1L, 0L));
         entity.setName("Broken Boots");
         entity.setItemLevel(null);     // Wrapper is null
         entity.setRequiredLevel(null); // Wrapper is null

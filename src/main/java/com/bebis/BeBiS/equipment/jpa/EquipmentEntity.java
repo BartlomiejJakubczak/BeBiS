@@ -37,7 +37,7 @@ import java.util.Map;
 @EqualsAndHashCode(exclude = "character")
 public class EquipmentEntity {
     @Id
-    private WowCharacterEntity.CompositeKey id;
+    private WowCharacterEntity.CompositeKey pk;
 
     @OneToOne // when one-to-one JoinColumns creates columns in the current table, because eq belongs to the character
     @MapsId // look at character and grab its pk for my pk
@@ -77,13 +77,16 @@ public class EquipmentEntity {
         // Because ItemEntity uses a composite key, I MUST use @JoinColumns here.
         @ManyToOne(optional = false) // optional = false ensures a slot can't exist without an item
         @JoinColumns({
-                @JoinColumn(name = "item_id", referencedColumnName = "item_id"),
-                @JoinColumn(name = "random_enchantment_id", referencedColumnName = "random_enchantment_id")
+                @JoinColumn(name = "base_id", referencedColumnName = "base_id"),
+                @JoinColumn(name = "suffix_id", referencedColumnName = "suffix_id")
         })
         private ItemEntity item;
 
         @ElementCollection
-        @CollectionTable(name = "player_enchants")
+        @CollectionTable(
+                name = "player_enchants",
+                joinColumns = @JoinColumn(name = "equipped_item_id")
+        )
         // will create two rows, equipped_item_id and the one you name in @Column for value
         @Column(name = "enchant_display_string", length = 500)
         private List<String> playerEnchants = new ArrayList<>();

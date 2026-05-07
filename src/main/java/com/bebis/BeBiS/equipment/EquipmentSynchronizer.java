@@ -31,7 +31,7 @@ public class EquipmentSynchronizer {
             EquipmentEntity.EquippedItem freshItem = new EquipmentEntity.EquippedItem();
             ItemEntity baseItem = resolvedItems.get(itemDTO);
             freshItem.setItem(baseItem);
-            freshItem.setPlayerEnchants(extractPlayerEnchantStrings(itemDTO, baseItem.getId().getRandomEnchantmentId()));
+            freshItem.setPlayerEnchants(extractPlayerEnchantStrings(itemDTO, baseItem.getPk().getSuffixId()));
 
             equipment.getItems().put(slot.get(), freshItem);
         }

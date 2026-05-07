@@ -200,7 +200,7 @@ public class EquipmentIntegrationTest extends BaseIntegrationTest {
         assertThat(items.get(Equipment.Slot.FINGER_1).getItem().getName()).isEqualTo(newItemName);
 
         Integer count = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM equipped_items WHERE item_id = ? AND random_enchantment_id = ?",
+                "SELECT count(*) FROM equipped_items WHERE base_id = ? AND suffix_id = ?",
                 Integer.class, 123L, 0L);
 
         assertThat(count).isEqualTo(0);
@@ -236,7 +236,7 @@ public class EquipmentIntegrationTest extends BaseIntegrationTest {
                 .getItems();
         assertThat(items).isEmpty();
 
-        List<Long> savedEquippedItems = jdbcTemplate.queryForList("SELECT id FROM equipped_items WHERE item_id IN (?, ?)",
+        List<Long> savedEquippedItems = jdbcTemplate.queryForList("SELECT id FROM equipped_items WHERE base_id IN (?, ?)",
                 Long.class, 123L, 456L);
         assertThat(savedEquippedItems).isEmpty();
 
@@ -254,7 +254,7 @@ public class EquipmentIntegrationTest extends BaseIntegrationTest {
 
         WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, Map.of());
         ItemEntity item = setUpItemInDb(charId, "Greatseal");
-        ItemResponse itemResponse = ItemTestData.equippableItemResponse(item.getId().getItemId(), item.getName(), "finger", null);
+        ItemResponse itemResponse = ItemTestData.equippableItemResponse(item.getPk().getBaseId(), item.getName(), "finger", null);
         EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(itemResponse, "finger_1", List.of());
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(new EquipmentResponse(List.of(itemDTO)));
@@ -275,7 +275,7 @@ public class EquipmentIntegrationTest extends BaseIntegrationTest {
 
     private ItemEntity setUpItemInDb(long id, String name) {
         ItemEntity item = new EquippableItemEntity();
-        item.setId(new ItemEntity.CompositeKey(id, 0L));
+        item.setPk(new ItemEntity.CompositeKey(id, 0L));
         item.setName(name);
         item.setQuality(Item.Quality.UNCOMMON);
         item.setInventoryType(Item.InventoryType.FINGER);

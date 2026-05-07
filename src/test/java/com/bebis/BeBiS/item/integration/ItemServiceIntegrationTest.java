@@ -55,14 +55,14 @@ public class ItemServiceIntegrationTest extends BaseIntegrationTest {
     void shouldFetchFromBlizzardAndPersistEntityWhenNotInRepo() {
         // given
         ItemResponse response = ItemTestData.thunderfuryResponse();
-        long itemId = response.id();
-        long enchId = 0L;
+        long baseId = response.id();
+        long suffixId = 0L;
 
-        when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
+        when(blizzardClient.getBaseItem(baseId)).thenReturn(response);
 
         Integer countBefore = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM items WHERE item_id = ? AND random_enchantment_id = ?",
-                Integer.class, itemId, enchId);
+                "SELECT count(*) FROM items WHERE base_id = ? AND suffix_id = ?",
+                Integer.class, baseId, suffixId);
         assertThat(countBefore).isEqualTo(0);
 
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
@@ -75,12 +75,12 @@ public class ItemServiceIntegrationTest extends BaseIntegrationTest {
         // then
         assertNotNull(result.get(dto));
         ItemEntity itemEntity = result.get(dto);
-        assertThat(itemEntity.getId().getItemId()).isEqualTo(itemId);
-        assertThat(itemEntity.getId().getRandomEnchantmentId()).isEqualTo(enchId);
+        assertThat(itemEntity.getPk().getBaseId()).isEqualTo(baseId);
+        assertThat(itemEntity.getPk().getSuffixId()).isEqualTo(suffixId);
 
         Map<String, Object> dbRow = jdbcTemplate.queryForMap(
-                "SELECT name, item_level FROM items WHERE item_id = ? AND random_enchantment_id = ?",
-                itemId, enchId);
+                "SELECT name, item_level FROM items WHERE base_id = ? AND suffix_id = ?",
+                baseId, suffixId);
         assertThat(dbRow.get("name")).isEqualTo(itemEntity.getName());
         assertThat(dbRow.get("item_level")).isEqualTo(itemEntity.getItemLevel());
     }
@@ -89,14 +89,14 @@ public class ItemServiceIntegrationTest extends BaseIntegrationTest {
     void shouldGetFromRepoWhenEntityExists() {
         // given
         ItemResponse response = ItemTestData.thunderfuryResponse();
-        long itemId = response.id();
-        long enchId = 0L;
+        long baseId = response.id();
+        long suffixId = 0L;
         int itemLevel = response.itemLevel();
 
         jdbcTemplate.update(
-                "INSERT INTO items (item_id, random_enchantment_id, name, item_level, quality, inventory_type, item_category) " +
+                "INSERT INTO items (base_id, suffix_id, name, item_level, quality, inventory_type, item_category) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                itemId, enchId, response.name(), itemLevel, "LEGENDARY", "WEAPON", "WEAPON"
+                baseId, suffixId, response.name(), itemLevel, "LEGENDARY", "WEAPON", "WEAPON"
         );
 
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
@@ -111,8 +111,8 @@ public class ItemServiceIntegrationTest extends BaseIntegrationTest {
         assertThat(result.get(dto)).isInstanceOf(WeaponEntity.class); // check for correctness of polymorphism of ItemEntity
         ItemEntity tfEntity = result.get(dto);
         // check if the pk was mapped correctly
-        assertThat(tfEntity.getId().getItemId()).isEqualTo(itemId);
-        assertThat(tfEntity.getId().getRandomEnchantmentId()).isEqualTo(enchId);
+        assertThat(tfEntity.getPk().getBaseId()).isEqualTo(baseId);
+        assertThat(tfEntity.getPk().getSuffixId()).isEqualTo(suffixId);
         // check if some of other entity's fields were populated correctly
         assertThat(tfEntity.getName()).isEqualTo(response.name());
         assertThat(tfEntity.getItemLevel()).isEqualTo(itemLevel);
@@ -128,7 +128,7 @@ public class ItemServiceIntegrationTest extends BaseIntegrationTest {
         when(blizzardClient.getBaseItem(itemId)).thenReturn(response);
 
         Integer countBefore = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM items WHERE item_id = ? AND random_enchantment_id IN (?, ?)",
+                "SELECT count(*) FROM items WHERE base_id = ? AND suffix_id IN (?, ?)",
                 Integer.class, itemId, enchId, 0);
         assertThat(countBefore).isEqualTo(0);
 
@@ -147,11 +147,11 @@ public class ItemServiceIntegrationTest extends BaseIntegrationTest {
         // then
         verify(blizzardClient, times(1)).getBaseItem(itemId); // should pull from cache the second time
         List<Long> savedSuffixes = jdbcTemplate.queryForList(
-                "SELECT random_enchantment_id FROM items WHERE item_id = ?",
+                "SELECT suffix_id FROM items WHERE base_id = ?",
                 Long.class, itemId);
         assertThat(savedSuffixes).containsExactlyInAnyOrder(0L, enchId);
         String savedName = jdbcTemplate.queryForObject(
-                "SELECT name FROM items WHERE item_id = ? AND random_enchantment_id = ?",
+                "SELECT name FROM items WHERE base_id = ? AND suffix_id = ?",
                 String.class, itemId, enchId);
         assertThat(savedName).contains("of The Bear");
     }

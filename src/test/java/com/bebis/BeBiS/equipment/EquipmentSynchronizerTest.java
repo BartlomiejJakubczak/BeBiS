@@ -62,7 +62,7 @@ public class EquipmentSynchronizerTest {
                 tf, "main_hand", List.of(EquipmentTestData.enchant(2137L, "Crusader")));
 
         ItemEntity mockItem = new WeaponEntity(); // Real entity for reference check
-        mockItem.setId(new ItemEntity.CompositeKey(tf.id(), suffixId));
+        mockItem.setPk(new ItemEntity.CompositeKey(tf.id(), suffixId));
 
         Map<EquipmentResponse.ItemDTO, ItemEntity> items = new HashMap<>();
         items.put(itemDTO, mockItem);

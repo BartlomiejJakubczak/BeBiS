@@ -22,7 +22,7 @@ public class ItemMapper {
 
     public Item mapToDomain(ItemEntity entity) {
         Item.ItemMetadata meta = new Item.ItemMetadata(
-                entity.getId().getItemId(),
+                entity.getPk().getBaseId(),
                 entity.getName(),
                 entity.getInventoryType(),
                 entity.getQuality(),

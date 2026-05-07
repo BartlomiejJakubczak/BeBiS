@@ -42,14 +42,14 @@ public class ItemService {
 
         Map<ItemEntity.CompositeKey, ItemEntity> resolvedEntities = itemRepository.findAllById(pkToRepresentativeDto.keySet())
                 .stream()
-                .collect(Collectors.toMap(ItemEntity::getId, entity -> entity));
+                .collect(Collectors.toMap(ItemEntity::getPk, entity -> entity));
 
         Map<Long, ItemResponse> baseItems = new HashMap<>();
 
         for (Map.Entry<ItemEntity.CompositeKey, EquipmentResponse.ItemDTO> entry : pkToRepresentativeDto.entrySet()) {
             ItemEntity.CompositeKey pk = entry.getKey();
             if (!resolvedEntities.containsKey(pk)) {
-                long baseItemId = pk.getItemId();
+                long baseItemId = pk.getBaseId();
                 ItemResponse baseDTO = baseItems.computeIfAbsent(baseItemId, itemFetcher::fetchItem);
                 resolvedEntities.put(pk, mapAndPersist(baseDTO, entry.getValue()));
             }
