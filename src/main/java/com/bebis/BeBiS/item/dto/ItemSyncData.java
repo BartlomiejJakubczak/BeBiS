@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 public record ItemSyncData(
-        Long itemId,
-        Long randomEnchId,
+        Long baseId,
+        Long suffixId,
         String name,
         Item.Quality quality,
         Item.InventoryType inventoryType,

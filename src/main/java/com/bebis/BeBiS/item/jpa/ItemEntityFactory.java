@@ -36,7 +36,7 @@ public class ItemEntityFactory {
     }
 
     private void mapCommonMetadata(ItemEntity entity, ItemSyncData syncData) {
-        entity.setPk(new ItemEntity.CompositeKey(syncData.itemId(), syncData.randomEnchId()));
+        entity.setPk(new ItemEntity.CompositeKey(syncData.baseId(), syncData.suffixId()));
         entity.setName(syncData.name());
         entity.setQuality(syncData.quality());
         entity.setInventoryType(syncData.inventoryType());
