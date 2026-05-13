@@ -53,6 +53,12 @@ blizzard:
       service: static-classic1x-eu
     base-url: https://eu.api.blizzard.com
 
+resilience4j:
+  circuitbreaker:
+    instances:
+      blizzardFetcher:
+        register-health-indicator: true
+
 logging:
   level:
     org.springframework.security: TRACE

@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.equipment.integration;
 
-import com.bebis.BeBiS.base.BaseIntegrationTest;
+import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.Equipment;
 import com.bebis.BeBiS.equipment.EquipmentService;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
@@ -18,12 +18,8 @@ import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -33,11 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
-@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
-@Transactional // this makes sure that jdbctemplate updates are rolled back after each test
-public class EquipmentIntegrationTest extends BaseIntegrationTest {
+public class EquipmentIntegrationTest extends BaseFullStackTest {
 
     @Autowired
     private EquipmentService service;

@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.item.integration;
 
-import com.bebis.BeBiS.base.BaseIntegrationTest;
+import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
@@ -13,14 +13,10 @@ import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.Cache;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -30,11 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest // this suite will need actual Services, mappers and so on
-@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
-@Transactional // this makes sure that jdbctemplate updates are rolled back after each test
-public class ItemServiceIntegrationTest extends BaseIntegrationTest {
+public class ItemServiceIntegrationTest extends BaseFullStackTest {
 
     @Autowired
     private ItemService itemService;

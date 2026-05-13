@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile.jpa;
 
-import com.bebis.BeBiS.base.BaseDatabaseTest;
+import com.bebis.BeBiS.base.BasePersistenceTest;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.profile.ProfileMapper;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DataJpaTest
 @TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
-public class WowCharacterRepositoryTest extends BaseDatabaseTest {
+public class WowCharacterRepositoryTest extends BasePersistenceTest {
 
     @Autowired
     private WowCharacterRepository characterRepository;

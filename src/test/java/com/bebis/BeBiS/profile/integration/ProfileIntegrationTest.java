@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile.integration;
 
-import com.bebis.BeBiS.base.BaseIntegrationTest;
+import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
@@ -13,12 +13,8 @@ import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +24,7 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-@SpringBootTest
-@TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre
-@Transactional // this makes sure that jdbctemplate updates are rolled back after each test
-public class ProfileIntegrationTest extends BaseIntegrationTest {
+public class ProfileIntegrationTest extends BaseFullStackTest {
 
     @Autowired
     private ProfileService service;
