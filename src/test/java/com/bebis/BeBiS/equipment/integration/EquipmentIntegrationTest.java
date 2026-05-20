@@ -1,19 +1,19 @@
 package com.bebis.BeBiS.equipment.integration;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
-import com.bebis.BeBiS.equipment.Equipment;
 import com.bebis.BeBiS.equipment.EquipmentService;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
+import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.Item;
 import com.bebis.BeBiS.item.ItemTestData;
+import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
-import com.bebis.BeBiS.profile.WowCharacter;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;

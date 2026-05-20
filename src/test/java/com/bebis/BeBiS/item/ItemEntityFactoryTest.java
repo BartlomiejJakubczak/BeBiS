@@ -1,5 +1,8 @@
 package com.bebis.BeBiS.item;
 
+import com.bebis.BeBiS.item.domain.Armor;
+import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.Weapon;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;

@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.equipment;
 
+import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;

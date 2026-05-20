@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.item;
+package com.bebis.BeBiS.item.domain;
 
 public enum StatType {
     STRENGTH,

@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile.dto;
 
-import com.bebis.BeBiS.profile.WowCharacter;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 
 /*
     A bridge data class between my dtos and persistence level.

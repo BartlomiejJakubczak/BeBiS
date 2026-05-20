@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.item;
+package com.bebis.BeBiS.item.domain;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

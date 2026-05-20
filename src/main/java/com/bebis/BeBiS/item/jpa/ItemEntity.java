@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.item.jpa;
 
-import com.bebis.BeBiS.item.Item;
-import com.bebis.BeBiS.item.StatType;
+import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.StatType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;

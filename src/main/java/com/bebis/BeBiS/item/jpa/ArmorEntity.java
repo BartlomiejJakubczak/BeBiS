@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.item.jpa;
 
-import com.bebis.BeBiS.item.Armor;
+import com.bebis.BeBiS.item.domain.Armor;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;

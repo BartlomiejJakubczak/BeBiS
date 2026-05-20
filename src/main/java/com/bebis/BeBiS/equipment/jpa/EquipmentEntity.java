@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.equipment.jpa;
 
-import com.bebis.BeBiS.equipment.Equipment;
+import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.CascadeType;

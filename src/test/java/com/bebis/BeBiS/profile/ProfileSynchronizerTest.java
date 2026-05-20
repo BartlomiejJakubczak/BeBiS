@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.profile;
 
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntityFactory;

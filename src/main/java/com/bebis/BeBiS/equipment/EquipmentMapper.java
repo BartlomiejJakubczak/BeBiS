@@ -1,8 +1,9 @@
 package com.bebis.BeBiS.equipment;
 
+import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
-import com.bebis.BeBiS.item.Item;
 import com.bebis.BeBiS.item.ItemMapper;
+import com.bebis.BeBiS.item.domain.Item;
 import org.springframework.stereotype.Component;
 
 @Component

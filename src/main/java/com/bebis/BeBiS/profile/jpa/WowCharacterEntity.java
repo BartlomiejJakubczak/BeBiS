@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.profile.jpa;
 
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
-import com.bebis.BeBiS.profile.WowCharacter;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

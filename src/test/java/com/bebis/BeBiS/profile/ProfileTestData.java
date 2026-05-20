@@ -6,6 +6,7 @@ import com.bebis.BeBiS.integration.blizzard.dto.RealmDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowClassDTO;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -2,6 +2,11 @@ package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
+import com.bebis.BeBiS.item.domain.Armor;
+import com.bebis.BeBiS.item.domain.EquippableItem;
+import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.StatType;
+import com.bebis.BeBiS.item.domain.Weapon;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
@@ -14,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.bebis.BeBiS.item.Item.InventoryType;
-import static com.bebis.BeBiS.item.Item.Quality;
+import static com.bebis.BeBiS.item.domain.Item.InventoryType;
+import static com.bebis.BeBiS.item.domain.Item.Quality;
 
 @Component
 public class ItemMapper {

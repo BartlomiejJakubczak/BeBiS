@@ -1,6 +1,6 @@
-package com.bebis.BeBiS.equipment;
+package com.bebis.BeBiS.equipment.domain;
 
-import com.bebis.BeBiS.item.Item;
+import com.bebis.BeBiS.item.domain.Item;
 import lombok.Getter;
 import lombok.Setter;
 

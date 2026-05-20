@@ -1,9 +1,9 @@
 package com.bebis.BeBiS.item.dto;
 
-import com.bebis.BeBiS.item.Armor;
-import com.bebis.BeBiS.item.Item;
-import com.bebis.BeBiS.item.StatType;
-import com.bebis.BeBiS.item.Weapon;
+import com.bebis.BeBiS.item.domain.Armor;
+import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.StatType;
+import com.bebis.BeBiS.item.domain.Weapon;
 
 import java.util.List;
 import java.util.Map;

@@ -8,7 +8,7 @@ import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 import com.bebis.BeBiS.profile.ProfileService;
 import com.bebis.BeBiS.profile.ProfileTestData;
-import com.bebis.BeBiS.profile.WowCharacter;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;

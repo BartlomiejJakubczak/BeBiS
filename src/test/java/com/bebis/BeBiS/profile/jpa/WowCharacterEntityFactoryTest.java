@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.profile.jpa;
 
-import com.bebis.BeBiS.profile.WowCharacter;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import org.junit.jupiter.api.Test;
 
