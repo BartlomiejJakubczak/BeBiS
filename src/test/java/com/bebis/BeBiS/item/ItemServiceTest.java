@@ -4,6 +4,7 @@ import com.bebis.BeBiS.equipment.EquipmentTestData;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
+import com.bebis.BeBiS.item.event.ItemPersistedEvent;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntityFactory;
@@ -16,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 import java.util.Map;
@@ -35,9 +37,11 @@ class ItemServiceTest {
     private ItemEntityFactory entityFactory;
     @Mock
     private ItemMapper mapper;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @Captor
-    ArgumentCaptor<Iterable<ItemEntity.CompositeKey>> captor;
+    private ArgumentCaptor<Iterable<ItemEntity.CompositeKey>> captor;
 
     private ItemService service;
 
@@ -46,7 +50,7 @@ class ItemServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new ItemService(itemFetcher, repository, mapper, entityFactory);
+        service = new ItemService(itemFetcher, repository, mapper, entityFactory, eventPublisher);
     }
 
     @Test
@@ -86,15 +90,15 @@ class ItemServiceTest {
         );
 
         ItemEntity.CompositeKey pk = new ItemEntity.CompositeKey(tfDTO.item().id(), BASE_ENCH_ID);
-        ItemSyncData syncDataMock = mock(ItemSyncData.class);
         WeaponEntity newWeapon = new WeaponEntity();
+        newWeapon.setPk(pk);
 
         when(repository.findAllById(Set.of(pk))).thenReturn(List.of()); // queried item not there
 
         when(mapper.mapSuffixId(eq(tfDTO))).thenReturn(BASE_ENCH_ID);
         when(itemFetcher.fetchItem(eq(tfDTO.item().id()))).thenReturn(tfResponse);
-        when(mapper.mapToSyncData(eq(tfResponse), eq(tfDTO))).thenReturn(syncDataMock);
-        when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newWeapon);
+        when(mapper.mapToSyncData(eq(tfResponse), eq(tfDTO))).thenReturn(mock(ItemSyncData.class));
+        when(entityFactory.createItemEntity(any(ItemSyncData.class))).thenReturn(newWeapon);
         when(repository.save(newWeapon)).thenReturn(newWeapon);
 
         // when
@@ -104,17 +108,19 @@ class ItemServiceTest {
         assertThat(result.get(tfDTO)).isSameAs(newWeapon);
         verify(repository, times(1)).findAllById(Set.of(pk));
         verify(itemFetcher).fetchItem(tfDTO.item().id());
-        verify(entityFactory).createItemEntity(syncDataMock);
+        verify(entityFactory).createItemEntity(any(ItemSyncData.class));
         verify(repository).save(newWeapon);
+        verify(eventPublisher).publishEvent(any(ItemPersistedEvent.class));
     }
 
     @Test
-    void shouldTreatSuffixedVariantAsDistinctIdentity() {
+    void shouldHandleSuffixedVariantsAsDistinctEntities() {
         // given
         long itemId = 2137L;
         String itemName = "Greatseal";
         long suffixId_1 = SUFFIX_ENCH_ID;
         long suffixId_2 = SUFFIX_ENCH_ID + 1;
+
         ItemResponse itemResponse = ItemTestData.equippableItemResponse(itemId, itemName, "FINGER", null);
         EquipmentResponse.ItemDTO suffixedItemDTO_1 = EquipmentTestData.fromItemResponseSuffixed(itemResponse, "finger_1", "uncommon",
                 "of the Monkey", suffixId_1, 69, List.of(), List.of());
@@ -123,17 +129,21 @@ class ItemServiceTest {
 
         ItemEntity.CompositeKey pk_1 = new ItemEntity.CompositeKey(itemId, suffixId_1);
         ItemEntity.CompositeKey pk_2 = new ItemEntity.CompositeKey(itemId, suffixId_2);
-        ItemSyncData syncDataMock = mock(ItemSyncData.class);
-        ItemEntity newItem = new EquippableItemEntity();
+
+        ItemEntity newItem1 = new EquippableItemEntity();
+        newItem1.setPk(pk_1);
+
+        ItemEntity newItem2 = new EquippableItemEntity();
+        newItem2.setPk(pk_2);
 
         when(repository.findAllById(eq(Set.of(pk_1, pk_2)))).thenReturn(List.of());
 
         when(mapper.mapSuffixId(eq(suffixedItemDTO_1))).thenReturn(suffixId_1);
         when(mapper.mapSuffixId(eq(suffixedItemDTO_2))).thenReturn(suffixId_2);
         when(itemFetcher.fetchItem(itemId)).thenReturn(itemResponse);
-        when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(syncDataMock);
-        when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newItem);
-        when(repository.save(newItem)).thenReturn(newItem);
+        when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(mock(ItemSyncData.class));
+        when(entityFactory.createItemEntity(any(ItemSyncData.class))).thenReturn(newItem1).thenReturn(newItem2);
+        when(repository.save(any(ItemEntity.class))).thenReturn(newItem1).thenReturn(newItem2);
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = service.resolveItems(List.of(suffixedItemDTO_1, suffixedItemDTO_2));
@@ -145,33 +155,35 @@ class ItemServiceTest {
         assertThat(captor.getValue()).containsExactlyInAnyOrder(pk_1, pk_2);
 
         verify(itemFetcher, times(1)).fetchItem(itemId); // should fetch base item only once
-        verify(entityFactory, times(2)).createItemEntity(syncDataMock);
-        verify(repository, times(2)).save(newItem);
+        verify(entityFactory, times(2)).createItemEntity(any(ItemSyncData.class));
+        verify(repository, times(2)).save(any(ItemEntity.class));
+        verify(eventPublisher, times(2)).publishEvent(any(ItemPersistedEvent.class));
     }
 
     @Test
-    void shouldHandleDuplicateIdenticalItemsWithoutRedundantFetches() {
+    void shouldHandleDuplicateItemsWithoutRedundantFetches() {
         // given
         long itemId = 2137L;
         String itemName = "Greatseal";
         String suffixName = "of the Monkey";
         ItemResponse itemResponse = ItemTestData.equippableItemResponse(itemId, itemName, "FINGER", null);
+
         EquipmentResponse.ItemDTO firstRing = EquipmentTestData.fromItemResponseSuffixed(itemResponse, "finger_1", "uncommon",
                 suffixName, SUFFIX_ENCH_ID, 69, List.of(), List.of());
         EquipmentResponse.ItemDTO secondRing = EquipmentTestData.fromItemResponseSuffixed(itemResponse, "finger_2", "uncommon",
                 suffixName, SUFFIX_ENCH_ID, 69, List.of(), List.of());
 
-        ItemEntity.CompositeKey firstPk = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH_ID);
-        ItemSyncData syncDataMock = mock(ItemSyncData.class);
+        ItemEntity.CompositeKey pk = new ItemEntity.CompositeKey(itemId, SUFFIX_ENCH_ID);
         ItemEntity newItem = new EquippableItemEntity();
+        newItem.setPk(pk);
 
-        when(repository.findAllById(eq(Set.of(firstPk)))).thenReturn(List.of()); // service de-duplicates keys by using map's keyset
+        when(repository.findAllById(eq(Set.of(pk)))).thenReturn(List.of()); // service de-duplicates keys by using map's keyset
 
         when(mapper.mapSuffixId(eq(firstRing))).thenReturn(SUFFIX_ENCH_ID);
         when(mapper.mapSuffixId(eq(secondRing))).thenReturn(SUFFIX_ENCH_ID);
         when(itemFetcher.fetchItem(itemId)).thenReturn(itemResponse);
-        when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(syncDataMock);
-        when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newItem);
+        when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(mock(ItemSyncData.class));
+        when(entityFactory.createItemEntity(any(ItemSyncData.class))).thenReturn(newItem);
         when(repository.save(newItem)).thenReturn(newItem);
 
         // when
@@ -184,12 +196,13 @@ class ItemServiceTest {
         assertThat(result.keySet()).containsExactlyInAnyOrder(firstRing, secondRing);
 
         verify(repository).findAllById(captor.capture());
-        assertThat(captor.getValue()).hasSize(1).contains(firstPk); // service de-duplicates keys by using map's keyset
+        assertThat(captor.getValue()).hasSize(1).contains(pk); // service de-duplicates keys by using map's keyset
 
         verify(itemFetcher, times(1)).fetchItem(itemId); // should call blizz once,
         // be saved to db and then pull from db on the second one
-        verify(entityFactory, times(1)).createItemEntity(syncDataMock);
+        verify(entityFactory, times(1)).createItemEntity(any(ItemSyncData.class));
         verify(repository, times(1)).save(newItem);
+        verify(eventPublisher).publishEvent(any(ItemPersistedEvent.class));
     }
 
     @Test
@@ -219,8 +232,11 @@ class ItemServiceTest {
         ItemEntity existingTfEntity = new EquippableItemEntity();
         existingTfEntity.setPk(firstPk);
 
-        ItemEntity newItem = new EquippableItemEntity();
-        ItemSyncData syncDataMock = mock(ItemSyncData.class);
+        ItemEntity newItem1 = new EquippableItemEntity();
+        newItem1.setPk(secondPk);
+
+        ItemEntity newItem2 = new EquippableItemEntity();
+        newItem2.setPk(thirdPk);
 
         when(repository.findAllById(eq(Set.of(firstPk, secondPk, thirdPk)))).thenReturn(List.of(existingTfEntity));
 
@@ -228,9 +244,9 @@ class ItemServiceTest {
         when(mapper.mapSuffixId(eq(suffixedItemDTO_1))).thenReturn(suffixId_1);
         when(mapper.mapSuffixId(eq(suffixedItemDTO_2))).thenReturn(suffixId_2);
         when(itemFetcher.fetchItem(eq(itemId))).thenReturn(itemResponse);
-        when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(syncDataMock);
-        when(entityFactory.createItemEntity(syncDataMock)).thenReturn(newItem);
-        when(repository.save(newItem)).thenReturn(newItem);
+        when(mapper.mapToSyncData(any(ItemResponse.class), any(EquipmentResponse.ItemDTO.class))).thenReturn(mock(ItemSyncData.class));
+        when(entityFactory.createItemEntity(any(ItemSyncData.class))).thenReturn(newItem1).thenReturn(newItem2);
+        when(repository.save(any(ItemEntity.class))).thenReturn(newItem1).thenReturn(newItem2);
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = service.resolveItems(List.of(tfDTO, suffixedItemDTO_1, suffixedItemDTO_2));
@@ -244,8 +260,9 @@ class ItemServiceTest {
 
         verify(itemFetcher, times(1)).fetchItem(itemId); // should fetch base item only once
         verify(itemFetcher, never()).fetchItem(existingId);
-        verify(entityFactory, times(2)).createItemEntity(syncDataMock);
+        verify(entityFactory, times(2)).createItemEntity(any(ItemSyncData.class));
         verify(repository, times(2)).save(any(ItemEntity.class));
+        verify(eventPublisher, times(2)).publishEvent(any(ItemPersistedEvent.class));
     }
 
 }
