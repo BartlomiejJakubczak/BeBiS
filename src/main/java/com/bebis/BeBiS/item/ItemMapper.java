@@ -48,7 +48,6 @@ public class ItemMapper {
             );
             case ArmorEntity a -> new Armor(
                     meta,
-                    Optional.ofNullable(a.getArmorValue()).orElse(0),
                     a.getArmorType()
             );
             default -> new EquippableItem(meta);
@@ -89,9 +88,8 @@ public class ItemMapper {
                 validateRequired(equippedItemDTO.itemLevel().value(), "item_level"),
                 baseDTO.requiredLevel(),
                 mapBoolean(baseDTO.preview().uniqueEquipped() != null),
-                mapStats(equippedItemDTO),
+                mapStats(baseDTO, equippedItemDTO),
                 mapSpecialEffects(baseDTO), // those won't change even if "suffixed"
-                mapArmorValue(baseDTO, equippedItemDTO), // some weapons might have armor
                 null,
                 speed > 100 ? speed / 1000.0 : speed,
                 minDamage,
@@ -111,9 +109,8 @@ public class ItemMapper {
                 validateRequired(equippedItemDTO.itemLevel().value(), "item_level"),
                 baseDTO.requiredLevel(),
                 mapBoolean(baseDTO.preview().uniqueEquipped() != null),
-                mapStats(equippedItemDTO),
+                mapStats(baseDTO, equippedItemDTO),
                 mapSpecialEffects(baseDTO),
-                mapArmorValue(baseDTO, equippedItemDTO),
                 mapArmorType((int) baseDTO.subclass().id()),
                 null,
                 null,
@@ -133,9 +130,8 @@ public class ItemMapper {
                 validateRequired(equippedItemDTO.itemLevel().value(), "item_level"),
                 baseDTO.requiredLevel(),
                 mapBoolean(baseDTO.preview().uniqueEquipped() != null),
-                mapStats(equippedItemDTO),
+                mapStats(baseDTO, equippedItemDTO),
                 mapSpecialEffects(baseDTO),
-                mapArmorValue(baseDTO, equippedItemDTO), // some rings or trinkets might have armor
                 null,
                 null,
                 null,
@@ -165,12 +161,14 @@ public class ItemMapper {
         return (baseDTO.preview().armor() != null) ? baseDTO.preview().armor().value() : null;
     }
 
-    private Map<StatType, Integer> mapStats(EquipmentResponse.ItemDTO dto) {
+    private Map<StatType, Integer> mapStats(ItemResponse baseDTO, EquipmentResponse.ItemDTO dto) {
         List<EquipmentResponse.ItemDTO.StatDTO> statsFromDTO = dto.stats();
         if (statsFromDTO == null || statsFromDTO.isEmpty()) {
             return new HashMap<>();
         } else {
             Map<StatType, Integer> stats = new HashMap<>();
+            // include armor
+            stats.put(StatType.ARMOR, mapArmorValue(baseDTO, dto));
             statsFromDTO.forEach(s -> {
                 try {
                     stats.put(StatType.valueOf(s.type().type().toUpperCase()), s.value());

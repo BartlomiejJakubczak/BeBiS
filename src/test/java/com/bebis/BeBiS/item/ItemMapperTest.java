@@ -106,7 +106,7 @@ class ItemMapperTest {
 
         ItemSyncData result = itemMapper.mapToSyncData(response, dto);
 
-        assertEquals(expectedArmorValue, result.armorValue(), "Should capture armor even on a ring");
+        assertEquals(expectedArmorValue, result.stats().get(StatType.ARMOR), "Should capture armor even on a ring");
     }
 
     @Test
@@ -119,17 +119,19 @@ class ItemMapperTest {
         ItemSyncData result = itemMapper.mapToSyncData(base, dto);
 
         // then
-        assertThat(result.armorValue()).isNull(); // Not 0!
+        assertThat(result.stats().get(StatType.ARMOR)).isNull(); // Not 0!
     }
 
     @Test
     void shouldMapValidStatsAndIgnoreUnknownOnes() {
         // given
-        ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", 2137);
+        int armorValue = 2137;
+        int agiValue = 15;
+        ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", armorValue);
         EquipmentResponse.ItemDTO dtoWithMixedStats = EquipmentTestData.fromItemResponseSuffixed(
                 base, "FINGER_1", "UNCOMMON", "of The Monkey", 37L, base.itemLevel() + 10,
                 List.of(
-                        EquipmentTestData.stat("AGILITY", 15),
+                        EquipmentTestData.stat("AGILITY", agiValue),
                         EquipmentTestData.stat("WEIRD_BLIZZARD_STAT_99", 100) // Unknown stat
                 ),
                 List.of()
@@ -139,8 +141,11 @@ class ItemMapperTest {
         ItemSyncData result = itemMapper.mapToSyncData(base, dtoWithMixedStats);
 
         // then
-        assertThat(result.stats()).containsEntry(StatType.AGILITY, 15);
-        assertThat(result.stats()).hasSize(1);
+        assertThat(result.stats()).containsExactlyInAnyOrderEntriesOf(Map.of(
+                StatType.AGILITY, agiValue,
+                StatType.ARMOR, armorValue // armor is treated like a stat
+        ));
+        assertThat(result.stats()).hasSize(2);
     }
 
     @Test
@@ -232,7 +237,7 @@ class ItemMapperTest {
         // given
         ArmorEntity entity = new ArmorEntity();
         entity.setPk(new ItemEntity.CompositeKey(123L, 0L));
-        entity.setArmorValue(500);
+        entity.setStats(Map.of(StatType.ARMOR, 500));
         entity.setArmorType(Armor.ArmorType.PLATE);
         entity.setInventoryType(Item.InventoryType.CHEST);
 
@@ -242,7 +247,7 @@ class ItemMapperTest {
         // then
         assertInstanceOf(Armor.class, result);
         Armor a = (Armor) result;
-        assertEquals(500, a.getArmorValue());
+        assertEquals(500, a.getMetadata().stats().get(StatType.ARMOR));
         assertEquals(Item.InventoryType.CHEST, a.getMetadata().inventoryType());
     }
 

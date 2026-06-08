@@ -43,7 +43,6 @@ public class ItemEntityFactory {
         entity.setItemLevel(syncData.itemLevel());
         entity.setRequiredLevel(syncData.requiredLevel());
         entity.setUniqueEquipped(syncData.uniqueEquipped());
-        entity.setArmorValue(syncData.armorValue() != null ? syncData.armorValue() : 0);
         entity.setStats(syncData.stats() != null ? syncData.stats() : new HashMap<>());
         entity.setSpecialEffects(syncData.specialEffects() != null ? syncData.specialEffects() : new ArrayList<>());
     }

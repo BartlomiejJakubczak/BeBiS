@@ -8,12 +8,10 @@ import lombok.Setter;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 public final class Armor extends Item {
-    private int armorValue;
     private ArmorType armorType;
 
-    public Armor(ItemMetadata metadata, int armorValue, ArmorType armorType) {
+    public Armor(ItemMetadata metadata, ArmorType armorType) {
         super(metadata);
-        this.armorValue = armorValue;
         this.armorType = armorType;
     }
 

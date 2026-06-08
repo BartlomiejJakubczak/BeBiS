@@ -72,7 +72,7 @@ public class ItemEntityFactoryTest {
         return new ItemSyncData(
                 123L, 0L, "Test Item", Item.Quality.EPIC, Item.InventoryType.HEAD,
                 80, 60, true, Collections.emptyMap(), Collections.emptyList(),
-                100, aType, 2.6, 100, 200, 50.0, wType
+                aType, 2.6, 100, 200, 50.0, wType
         );
     }
 }

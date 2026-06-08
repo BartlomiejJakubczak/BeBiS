@@ -17,7 +17,6 @@ CREATE TABLE items
     item_category   VARCHAR(31)  NOT NULL,
     base_id         BIGINT       NOT NULL,
     suffix_id       BIGINT       NOT NULL,
-    armor_value     INTEGER,
     inventory_type  VARCHAR(255) NOT NULL,
     item_level      INTEGER,
     name            VARCHAR(255) NOT NULL,

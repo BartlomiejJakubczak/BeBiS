@@ -19,7 +19,6 @@ public record ItemSyncData(
         Boolean uniqueEquipped,
         Map<StatType, Integer> stats,
         List<String> specialEffects,
-        Integer armorValue,
         Armor.ArmorType armorType,
         Double speed,
         Integer minDamage,

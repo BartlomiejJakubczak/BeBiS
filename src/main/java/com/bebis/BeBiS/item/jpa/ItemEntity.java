@@ -60,9 +60,6 @@ public abstract class ItemEntity {
     @Column(name = "unique_equipped")
     private Boolean uniqueEquipped;
 
-    @Column(name = "armor_value")
-    private Integer armorValue; // Moved here because nearly any equippable can have armor
-
     @ElementCollection // Tells Hibernate this is a separate collection table, not a standard column.
     @CollectionTable(name = "item_stats", joinColumns = {
             @JoinColumn(name = "base_id"),
