@@ -55,7 +55,8 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         String charName = "Arthass";
 
         // put characterEntity into db
-        WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, Map.of());
+        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
 
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf, "main_hand", List.of());
@@ -65,7 +66,7 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         when(blizzardServiceClient.getBaseItem(tf.id())).thenReturn(tf);
 
         // when
-        callService(charKey.getId(), realmSlug, charKey.getBlizzardAccountId());
+        callService(charEntity);
 
         // then
         WowCharacterEntity persistedEntity = entityManager.find(WowCharacterEntity.class, charKey);
@@ -86,7 +87,8 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         String realmSlug = "soulseeker";
         String charName = "Arthass";
 
-        WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, Map.of());
+        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
 
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         EquipmentResponse.ItemDTO wrongDto = EquipmentTestData.fromItemResponseNoSuffix(tf, "left_hand", List.of());
@@ -101,7 +103,7 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         when(blizzardServiceClient.getBaseItem(tf.id())).thenReturn(tf);
 
         // when
-        callService(charKey.getId(), realmSlug, charKey.getBlizzardAccountId());
+        callService(charEntity);
 
         // then
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> items = entityManager
@@ -126,7 +128,8 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         String realmSlug = "soulseeker";
         String charName = "Arthass";
 
-        WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, Map.of());
+        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
 
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         String enchantName = "Crusader";
@@ -140,7 +143,7 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         when(blizzardServiceClient.getBaseItem(tf.id())).thenReturn(tf);
 
         // when
-        callService(charKey.getId(), realmSlug, charKey.getBlizzardAccountId());
+        callService(charEntity);
 
         // then
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> items = entityManager
@@ -168,7 +171,8 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> previousSnapshot = new HashMap<>();
         previousSnapshot.put(Equipment.Slot.FINGER_1, setUpEquippedItem(123L, "Ring of the Past"));
 
-        WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, previousSnapshot);
+        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, previousSnapshot);
+        WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
 
         String newItemName = "Greatseal";
         ItemResponse ring = ItemTestData.equippableItemResponse(1L, newItemName, "finger", null);
@@ -179,7 +183,7 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         when(blizzardServiceClient.getBaseItem(ring.id())).thenReturn(ring);
 
         // when
-        callService(charKey.getId(), realmSlug, charKey.getBlizzardAccountId());
+        callService(charEntity);
 
         // then
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> items = entityManager
@@ -214,12 +218,13 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         previousSnapshot.put(Equipment.Slot.FINGER_1, setUpEquippedItem(123L, "Ring of the Past"));
         previousSnapshot.put(Equipment.Slot.FINGER_2, setUpEquippedItem(456L, "Ring of the Future"));
 
-        WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, previousSnapshot);
+        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(new EquipmentResponse(List.of()));
 
         // when
-        callService(charKey.getId(), realmSlug, charKey.getBlizzardAccountId());
+        callService(charEntity);
 
         // then
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> items = entityManager
@@ -244,7 +249,7 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         String realmSlug = "soulseeker";
         String charName = "Arthass";
 
-        WowCharacterEntity.CompositeKey charKey = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, Map.of());
+        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
         ItemEntity item = setUpItemInDb(charId, "Greatseal");
         ItemResponse itemResponse = ItemTestData.equippableItemResponse(item.getPk().getBaseId(), item.getName(), "finger", null);
         EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(itemResponse, "finger_1", List.of());
@@ -252,7 +257,7 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(new EquipmentResponse(List.of(itemDTO)));
 
         // when
-        callService(charKey.getId(), realmSlug, charKey.getBlizzardAccountId());
+        callService(charEntity);
 
         // then
         verifyNoInteractions(blizzardServiceClient); // no need to pull data from blizzard for item that exists in db
@@ -278,12 +283,12 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         return item;
     }
 
-    private void callService(long charId, String realmSlug, long blizzAccountId) {
-        service.getEquipmentForCharacter(charId, realmSlug, blizzAccountId);
+    private void callService(WowCharacterEntity entity) {
+        service.getEquipmentForCharacter(entity);
         entityManager.flush();
     }
 
-    private WowCharacterEntity.CompositeKey setUpCharacterInDb(
+    private WowCharacterEntity setUpCharacterInDb(
             long charId,
             String realmSlug,
             long blizzAccountId,
@@ -302,12 +307,10 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
         equipment.setItems(items);
         equipment.setCharacter(character);
         character.setEquipment(equipment);
+
         entityManager.persist(character);
-
-        // Clear ensures the Service has to actually fetch it from the DB.
         entityManager.flush();
-        entityManager.clear();
 
-        return charKey;
+        return character;
     }
 }

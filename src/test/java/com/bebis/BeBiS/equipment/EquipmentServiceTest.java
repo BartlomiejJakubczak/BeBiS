@@ -5,14 +5,11 @@ import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
-import com.bebis.BeBiS.profile.jpa.WowCharacterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.mockito.Mockito.*;
 
@@ -21,9 +18,6 @@ public class EquipmentServiceTest {
 
     @Mock
     private BlizzardUserClient blizzardClient;
-
-    @Mock
-    private WowCharacterRepository wowCharacterRepository;
 
     @Mock
     private EquipmentSynchronizer synchronizer;
@@ -35,19 +29,13 @@ public class EquipmentServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new EquipmentService(
-                blizzardClient,
-                mapper,
-                synchronizer,
-                wowCharacterRepository
-        );
+        service = new EquipmentService(blizzardClient, mapper, synchronizer);
     }
 
     @Test
     void shouldOrchestrateEquipmentSyncForCharacter() {
         // given
-        long blizzAccountId = 1L;
-        WowCharacterEntity.CompositeKey pk = new WowCharacterEntity.CompositeKey(1, "soulseeker", blizzAccountId);
+        WowCharacterEntity.CompositeKey pk = new WowCharacterEntity.CompositeKey(1, "soulseeker", 1L);
         String stubName = "Thelamar";
 
         WowCharacterEntity stub = mock(WowCharacterEntity.class);
@@ -56,18 +44,15 @@ public class EquipmentServiceTest {
         when(stub.getName()).thenReturn(stubName);
         when(stub.getEquipment()).thenReturn(equipment);
 
-
         EquipmentResponse response = mock(EquipmentResponse.class);
 
-        when(wowCharacterRepository.findById(pk)).thenReturn(Optional.of(stub));
         when(blizzardClient.getCharacterEquipment(stub.getPk().getRealmSlug(), stub.getName())).thenReturn(response);
         when(mapper.mapToDomain(equipment)).thenReturn(new Equipment());
 
         // when
-        service.getEquipmentForCharacter(stub.getPk().getId(), stub.getPk().getRealmSlug(), blizzAccountId);
+        service.getEquipmentForCharacter(stub);
 
         // then
-        verify(wowCharacterRepository).findById(stub.getPk());
         verify(blizzardClient).getCharacterEquipment(stub.getPk().getRealmSlug(), stub.getName());
         verify(synchronizer).synchronize(response, stub.getEquipment());
         verify(mapper).mapToDomain(stub.getEquipment());

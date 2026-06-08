@@ -7,7 +7,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 @Testcontainers
-public abstract sealed class BaseContainerTest permits BaseResilienceTest, BasePersistenceTest, BaseFullStackTest {
+abstract sealed class BaseContainerTest permits BaseResilienceTest, BasePersistenceTest, BaseFullStackTest {
 
     @Container // Tells Testcontainers to start/stop this
     @ServiceConnection // Auto-configures Spring datasource to connect to this container
