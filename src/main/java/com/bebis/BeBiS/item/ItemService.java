@@ -2,7 +2,6 @@ package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.event.ItemPersistedEvent;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntityFactory;
@@ -75,8 +74,10 @@ public class ItemService {
     }
 
     private ItemEntity mapAndPersist(@NonNull ItemResponse baseDTO, @NonNull EquipmentResponse.ItemDTO equippedItemDTO) {
-        ItemSyncData syncData = itemMapper.mapToSyncData(baseDTO, equippedItemDTO);
-        ItemEntity entity = itemEntityFactory.createItemEntity(syncData);
+        return persist(itemEntityFactory.createItemEntity(itemMapper.mapToSyncData(baseDTO, equippedItemDTO)));
+    }
+
+    private ItemEntity persist(ItemEntity entity) {
         ItemEntity persistedEntity = itemRepository.save(entity);
         eventPublisher.publishEvent(new ItemPersistedEvent(entity.getPk().getBaseId(), entity.getPk().getSuffixId(), Instant.now()));
         return persistedEntity;
