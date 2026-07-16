@@ -5,8 +5,6 @@ import com.bebis.BeBiS.equipment.EquipmentService;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
-import com.bebis.BeBiS.integration.blizzard.BlizzardServiceClient;
-import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.ItemTestData;
@@ -19,7 +17,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.HashMap;
 import java.util.List;
@@ -39,12 +36,6 @@ public class EquipmentIntegrationTest extends BaseFullStackTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @MockitoBean
-    private BlizzardUserClient blizzardUserClient;
-
-    @MockitoBean
-    private BlizzardServiceClient blizzardServiceClient;
 
     @Test
     void shouldMapEquipmentToCorrectSlots() {

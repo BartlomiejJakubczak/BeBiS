@@ -1,7 +1,9 @@
 package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.config.RestClientConfig;
+import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
+import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -96,15 +98,52 @@ public class BlizzardUserClientTest {
     }
 
     @Test
-    void shouldGetProfileSummaryWithCorrectPath() throws Exception {
+    void shouldGetProfileSummaryWithCorrectPathAndOAuth2Header() throws Exception {
         // given
         ProfileSummaryResponse mockResponse = new ProfileSummaryResponse(List.of());
+
         server.expect(requestTo(baseUrl + "/profile/user/wow" + BlizzardUserClient.LOCALE_QUERY_PARAM))
                 .andExpect(header("Authorization", "Bearer fake-user-token"))
                 .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
         // when
         blizzardUserClient.getProfileSummary();
+
+        // then
+        server.verify();
+    }
+
+    @Test
+    void shouldGetCharacterEquipmentWithCorrectPathAndOAuth2Header() throws Exception {
+        // given
+        EquipmentResponse mockResponse = new EquipmentResponse(List.of());
+        String realmSlug = "soulseeker";
+        String charName = "Thelamar";
+
+        server.expect(requestTo(baseUrl + "/profile/wow/character/" + realmSlug + "/" + charName + "/equipment" + BlizzardUserClient.LOCALE_QUERY_PARAM))
+                .andExpect(header("Authorization", "Bearer fake-user-token"))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
+
+        // when
+        blizzardUserClient.getCharacterEquipment(realmSlug, charName);
+
+        // then
+        server.verify();
+    }
+
+    @Test
+    void shouldGetCharacterSpecializationWithCorrectPathAndOAuth2Header() throws Exception {
+        // given
+        String realmSlug = "soulseeker";
+        String charName = "Thelamar";
+        SpecializationResponse mockResponse = new SpecializationResponse(null, List.of(), null);
+
+        server.expect(requestTo(baseUrl + "/profile/wow/character/" + realmSlug + "/" + charName + "/specializations" + BlizzardUserClient.LOCALE_QUERY_PARAM))
+                .andExpect(header("Authorization", "Bearer fake-user-token"))
+                .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
+
+        // when
+        blizzardUserClient.getCharacterSpecialization(realmSlug, charName);
 
         // then
         server.verify();

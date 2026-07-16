@@ -3,10 +3,12 @@ package com.bebis.BeBiS.profile;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.RaceDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.RealmDTO;
+import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowClassDTO;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
+import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,6 +29,16 @@ public class ProfileTestData {
     public static final int DEFAULT_ACCOUNT_COUNT = 1;
     public static final int DEFAULT_CHAR_COUNT = 5;
     public static final int DEFAULT_CHAR_LEVEL = 60;
+
+    private static final ProfileMapper MAPPER = new ProfileMapper();
+
+    public static List<CharacterSyncData> mapToSyncData(ProfileSummaryResponse response, long accountId) {
+        return MAPPER.mapToSyncData(response, accountId);
+    }
+
+    public static CharacterSyncData fromDTO(com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO dto, long accountId) {
+        return MAPPER.fromDTO(dto, accountId);
+    }
 
     public static ProfileSummaryResponse generateProfileSummaryResponse(Integer numberOfAccounts, Integer numberOfCharactersPerAccount) {
         return new ProfileSummaryResponse(generateWowAccountDTOList(numberOfAccounts, numberOfCharactersPerAccount));
@@ -93,6 +105,32 @@ public class ProfileTestData {
 
     public static WowClassDTO getRandomWowClassDTO() {
         return classes.get((int) (Math.random() * classes.size()));
+    }
+
+    public static SpecializationResponse generateSpecializationResponse(List<String> treeNames, List<Integer> pointsSpentDistribution) {
+        List<SpecializationResponse.CharacterSpecialization> specs = new ArrayList<>();
+
+        for (int i = 0; i < treeNames.size(); i++) {
+            String name = treeNames.get(i);
+            Integer points = (i < pointsSpentDistribution.size()) ? pointsSpentDistribution.get(i) : 0;
+
+            SpecializationResponse.SpecializationReference specRef =
+                    new SpecializationResponse.SpecializationReference(null, name, (long) i);
+
+            specs.add(new SpecializationResponse.CharacterSpecialization(specRef, List.of(), points));
+        }
+
+        SpecializationResponse.CharacterReference charRef =
+                new SpecializationResponse.CharacterReference(null, "Thelamar", 1L, null);
+
+        return new SpecializationResponse(null, specs, charRef);
+    }
+
+    public static SpecializationResponse generateSpecializationResponseWithNullSpecs() {
+        SpecializationResponse.CharacterReference charRef =
+                new SpecializationResponse.CharacterReference(null, "Thelamar", 1L, null);
+
+        return new SpecializationResponse(null, null, charRef);
     }
 
     private static String generateRandomName(int length) {

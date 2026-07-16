@@ -3,7 +3,6 @@ package com.bebis.BeBiS.profile.jpa;
 import com.bebis.BeBiS.base.BasePersistenceTest;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
-import com.bebis.BeBiS.profile.ProfileMapper;
 import com.bebis.BeBiS.profile.ProfileTestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +23,6 @@ public class WowCharacterRepositoryTest extends BasePersistenceTest {
     @Autowired
     private WowCharacterRepository characterRepository;
 
-    private final ProfileMapper profileMapper = new ProfileMapper();
-
     private final WowCharacterEntityFactory characterEntityFactory = new WowCharacterEntityFactory();
 
     @Test
@@ -38,10 +35,10 @@ public class WowCharacterRepositoryTest extends BasePersistenceTest {
         long queriedBlizzardAccountId = 1L;
         long differentBlizzardAccountId = 2L;
         List<WowCharacterEntity> savedEntities = characterRepository.saveAll(
-                characterEntityFactory.createNewCharacters(profileMapper.mapToSyncData(profile1, queriedBlizzardAccountId))
+                characterEntityFactory.createNewCharacters(ProfileTestData.mapToSyncData(profile1, queriedBlizzardAccountId))
         );
         characterRepository.saveAll(
-                characterEntityFactory.createNewCharacters(profileMapper.mapToSyncData(profile2, differentBlizzardAccountId))
+                characterEntityFactory.createNewCharacters(ProfileTestData.mapToSyncData(profile2, differentBlizzardAccountId))
         );
         // when
         List<WowCharacterEntity> charactersFromRepo = characterRepository.findAllByPk_BlizzardAccountId(queriedBlizzardAccountId);
@@ -56,7 +53,7 @@ public class WowCharacterRepositoryTest extends BasePersistenceTest {
         // given
         WowCharacterEntity.CompositeKey pk = new WowCharacterEntity.CompositeKey(2137, "soulseeker", 1);
         WowCharacterEntity initial = characterEntityFactory.createNewCharacter(
-                profileMapper.fromDTO(ProfileTestData.generateWowCharacterDTO(pk.getId(), "Thelamar", pk.getRealmSlug()), pk.getBlizzardAccountId())
+                ProfileTestData.fromDTO(ProfileTestData.generateWowCharacterDTO(pk.getId(), "Thelamar", pk.getRealmSlug()), pk.getBlizzardAccountId())
         );
         characterRepository.saveAndFlush(initial); // Flush to ensure it's in the DB
 
@@ -78,10 +75,10 @@ public class WowCharacterRepositoryTest extends BasePersistenceTest {
         long characterId = 2137;
         String realmSlug = "soulseeker";
         WowCharacterEntity entity1 = characterEntityFactory.createNewCharacter(
-                profileMapper.fromDTO(ProfileTestData.generateWowCharacterDTO(characterId, "Thelemar", realmSlug), 1)
+                ProfileTestData.fromDTO(ProfileTestData.generateWowCharacterDTO(characterId, "Thelemar", realmSlug), 1)
         );
         WowCharacterEntity entity2 = characterEntityFactory.createNewCharacter(
-                profileMapper.fromDTO(ProfileTestData.generateWowCharacterDTO(characterId, "Kraghul", realmSlug), 2)
+                ProfileTestData.fromDTO(ProfileTestData.generateWowCharacterDTO(characterId, "Kraghul", realmSlug), 2)
         );
         // when
         characterRepository.saveAndFlush(entity1);
@@ -95,13 +92,13 @@ public class WowCharacterRepositoryTest extends BasePersistenceTest {
         // given
         WowCharacterEntity.CompositeKey pk = new WowCharacterEntity.CompositeKey(999, "firemaw", 1);
         WowCharacterEntity char1 = characterEntityFactory.createNewCharacter(
-                profileMapper.fromDTO(ProfileTestData.generateWowCharacterDTO(pk.getId(), "A", pk.getRealmSlug()), pk.getBlizzardAccountId())
+                ProfileTestData.fromDTO(ProfileTestData.generateWowCharacterDTO(pk.getId(), "A", pk.getRealmSlug()), pk.getBlizzardAccountId())
         );
         characterRepository.saveAndFlush(char1);
 
         // Duplicate PK
         WowCharacterEntity char2 = characterEntityFactory.createNewCharacter(
-                profileMapper.fromDTO(ProfileTestData.generateWowCharacterDTO(pk.getId(), "B", pk.getRealmSlug()), pk.getBlizzardAccountId())
+                ProfileTestData.fromDTO(ProfileTestData.generateWowCharacterDTO(pk.getId(), "B", pk.getRealmSlug()), pk.getBlizzardAccountId())
         );
 
         // when / then

@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class EquipmentSynchronizer {
+class EquipmentSynchronizer {
 
     private final ItemService itemService;
 

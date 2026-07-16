@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Component
-public class ProfileMapper {
+class ProfileMapper {
 
     public List<CharacterSyncData> mapToSyncData(ProfileSummaryResponse response, long blizzardAccountId) {
         return Optional.ofNullable(response.wowAccounts())

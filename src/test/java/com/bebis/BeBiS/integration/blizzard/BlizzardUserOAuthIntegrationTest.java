@@ -67,20 +67,75 @@ public class BlizzardUserOAuthIntegrationTest extends BaseWiremockTest {
     }
 
     @Test
-    void shouldAttachOAuth2TokenToAuthorizationCodeFlowRequest() {
+    void shouldAttachOAuth2TokenToAuthorizationCodeFlowToProfileSummaryRequest() {
         // given
-        stubFor(get(urlPathEqualTo("/profile/user/wow"))
-                .withHeader(namespaceHeader, equalTo(userNamespace))
-                .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
-                .willReturn(okJson("""
-                        {"wow_accounts": []}
-                        """)));
+        stubFor(
+                get(urlPathEqualTo("/profile/user/wow"))
+                        .withHeader(namespaceHeader, equalTo(userNamespace))
+                        .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
+                        .willReturn(okJson("""
+                                {"wow_accounts": []}
+                                """)));
 
         // when
         blizzardUserClient.getProfileSummary();
 
         // then
         verify(getRequestedFor(urlPathEqualTo("/profile/user/wow"))
+                .withHeader("Authorization", equalTo("Bearer fake-user-token")));
+    }
+
+    @Test
+    void shouldAttachOAuth2TokenToAuthorizationCodeFlowToCharacterEquipmentRequest() {
+        // given
+        String realmSlug = "soulseeker";
+        String charName = "Thelamar";
+
+        stubFor(
+                get(urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/equipment"))
+                        .withPathParam("realmSlug", equalTo(realmSlug))
+                        .withPathParam("charName", equalTo(charName))
+                        .withHeader(namespaceHeader, equalTo(userNamespace))
+                        .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
+                        .willReturn(okJson("""
+                                {"equipped_items": []}
+                                """)));
+
+        // when
+        blizzardUserClient.getCharacterEquipment(realmSlug, charName);
+
+        // then
+        verify(getRequestedFor(
+                urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/equipment"))
+                .withPathParam("realmSlug", equalTo(realmSlug))
+                .withPathParam("charName", equalTo(charName))
+                .withHeader("Authorization", equalTo("Bearer fake-user-token")));
+    }
+
+    @Test
+    void shouldAttachOAuth2TokenToAuthorizationCodeFlowToCharacterSpecializationRequest() {
+        // given
+        String realmSlug = "soulseeker";
+        String charName = "Thelamar";
+
+        stubFor(
+                get(urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/specializations"))
+                        .withPathParam("realmSlug", equalTo(realmSlug))
+                        .withPathParam("charName", equalTo(charName))
+                        .withHeader(namespaceHeader, equalTo(userNamespace))
+                        .withQueryParam("locale", equalTo(locale))
+                        .willReturn(okJson("""
+                                {"specializations": []}
+                                """)));
+
+        // when
+        blizzardUserClient.getCharacterSpecialization(realmSlug, charName);
+
+        // then
+        verify(getRequestedFor(
+                urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/specializations"))
+                .withPathParam("realmSlug", equalTo(realmSlug))
+                .withPathParam("charName", equalTo(charName))
                 .withHeader("Authorization", equalTo("Bearer fake-user-token")));
     }
 

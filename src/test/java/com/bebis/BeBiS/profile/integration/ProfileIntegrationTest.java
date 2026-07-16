@@ -2,7 +2,6 @@ package com.bebis.BeBiS.profile.integration;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
-import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
@@ -14,7 +13,6 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +32,6 @@ public class ProfileIntegrationTest extends BaseFullStackTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
-
-    @MockitoBean
-    private BlizzardUserClient blizzardUserClient;
 
     private static final long BLIZZ_ACCOUNT_ID = 1;
 
@@ -120,9 +115,9 @@ public class ProfileIntegrationTest extends BaseFullStackTest {
     private WowCharacterDTO putInExtraGeneratedDto(List<WowCharacterDTO> dtos) {
         List<Long> ids = dtos.stream().map(WowCharacterDTO::wowCharacterId).toList();
         Random rand = new Random();
-        long newId = rand.nextLong();
+        long newId = rand.nextInt();
         while (ids.contains(newId)) {
-            newId = rand.nextLong();
+            newId = rand.nextInt();
         }
         WowCharacterDTO generatedDTO = ProfileTestData.generateWowCharacterDTO((int) newId);
         dtos.add(generatedDTO);

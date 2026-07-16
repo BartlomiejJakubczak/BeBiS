@@ -54,6 +54,10 @@ public class ItemMapper {
         };
     }
 
+    public List<Item> mapToDomain(List<ItemEntity> entities) {
+        return entities.stream().map(this::mapToDomain).toList();
+    }
+
     public ItemSyncData mapToSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         int classId = baseDTO.itemClass().id();
         int subclassId = (int) baseDTO.subclass().id();

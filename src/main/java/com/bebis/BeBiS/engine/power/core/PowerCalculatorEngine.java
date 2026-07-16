@@ -1,9 +1,9 @@
 package com.bebis.BeBiS.engine.power.core;
 
-import com.bebis.BeBiS.engine.power.domain.ClassSpec;
 import com.bebis.BeBiS.engine.power.domain.StatWeights;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.domain.Weapon;
+import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.stereotype.Component;
 

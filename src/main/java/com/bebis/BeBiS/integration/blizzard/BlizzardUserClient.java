@@ -2,6 +2,7 @@ package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
+import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -29,6 +30,13 @@ public class BlizzardUserClient {
                 .uri("/profile/wow/character/" + realmSlug + "/" + characterName + "/equipment" + LOCALE_QUERY_PARAM)
                 .retrieve()
                 .body(EquipmentResponse.class);
+    }
+
+    public SpecializationResponse getCharacterSpecialization(String realmSlug, String characterName) {
+        return restClient.get()
+                .uri("/profile/wow/character/" + realmSlug + "/" + characterName + "/specializations" + LOCALE_QUERY_PARAM)
+                .retrieve()
+                .body(SpecializationResponse.class);
     }
 
 }

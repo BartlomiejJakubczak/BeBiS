@@ -7,6 +7,7 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Getter
 @Setter
@@ -45,5 +46,9 @@ public final class Equipment {
      */
     public void putItem(Slot slot, Item item, List<String> playerEnchs) {
         equipment.put(slot, new EquippedItem(item, playerEnchs));
+    }
+
+    public Optional<EquippedItem> getItem(Slot slot) {
+        return Optional.ofNullable(equipment.get(slot));
     }
 }

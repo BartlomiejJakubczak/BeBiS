@@ -7,7 +7,7 @@ import com.bebis.BeBiS.item.domain.Item;
 import org.springframework.stereotype.Component;
 
 @Component
-public class EquipmentMapper {
+class EquipmentMapper {
 
     private final ItemMapper itemMapper;
 

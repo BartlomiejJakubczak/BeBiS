@@ -4,6 +4,7 @@ import com.bebis.BeBiS.equipment.EquipmentService;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
+import com.bebis.BeBiS.profile.domain.WowTalents;
 import com.bebis.BeBiS.profile.event.CharacterSelectedEvent;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import com.bebis.BeBiS.profile.jpa.WowCharacterRepository;
@@ -30,6 +31,9 @@ public class CharacterProfileOrchestratorTest {
     private EquipmentService equipmentService;
 
     @Mock
+    private SpecializationService specService;
+
+    @Mock
     private ProfileMapper profileMapper;
 
     @Mock
@@ -39,7 +43,7 @@ public class CharacterProfileOrchestratorTest {
 
     @BeforeEach
     void setup() {
-        orchestrator = new CharacterProfileOrchestrator(eventPublisher, characterRepository, profileMapper, equipmentService);
+        orchestrator = new CharacterProfileOrchestrator(eventPublisher, characterRepository, profileMapper, equipmentService, specService);
     }
 
     @Test
@@ -47,16 +51,25 @@ public class CharacterProfileOrchestratorTest {
         // given
         long charId = 1L;
         String realmSlug = "soulseeker";
+        String characterName = "Thelamar";
         long blizzId = 1L;
 
         WowCharacterEntity.CompositeKey charPk = new WowCharacterEntity.CompositeKey(charId, realmSlug, blizzId);
 
         WowCharacterEntity mockEntity = mock(WowCharacterEntity.class);
+
         WowCharacter mockDomain = mock(WowCharacter.class);
+        when(mockDomain.name()).thenReturn(characterName);
+        when(mockDomain.wowCharacterId()).thenReturn(new WowCharacter.Id(charId, realmSlug));
+
         Equipment mockEquipment = mock(Equipment.class);
+
+        WowTalents mockTalents = mock(WowTalents.class);
+        Optional<WowTalents> talents = Optional.of(mockTalents);
 
         when(characterRepository.findById(eq(charPk))).thenReturn(Optional.ofNullable(mockEntity));
         when(profileMapper.mapToDomain(mockEntity)).thenReturn(mockDomain);
+        when(specService.getTalentsForCharacter(eq(realmSlug), eq(characterName))).thenReturn(talents);
         when(equipmentService.getEquipmentForCharacter(mockEntity)).thenReturn(mockEquipment);
 
         // when
@@ -65,9 +78,11 @@ public class CharacterProfileOrchestratorTest {
         // then
         assertThat(characterInfo.wowCharacter()).isEqualTo(mockDomain);
         assertThat(characterInfo.equipment()).isEqualTo(mockEquipment);
+        assertThat(characterInfo.talents()).isEqualTo(talents);
 
         verify(characterRepository).findById(eq(charPk));
         verify(profileMapper).mapToDomain(mockEntity);
+        verify(specService).getTalentsForCharacter(eq(realmSlug), eq(characterName));
         verify(equipmentService).getEquipmentForCharacter(mockEntity);
         verify(eventPublisher).publishEvent(any(CharacterSelectedEvent.class));
     }
