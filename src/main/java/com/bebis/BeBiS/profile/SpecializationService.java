@@ -8,12 +8,12 @@ import java.util.Optional;
 
 
 @Service
-public class SpecializationService {
+class SpecializationService {
 
     private final BlizzardUserClient blizzardClient;
     private final SpecializationMapper specMapper;
 
-    public SpecializationService(BlizzardUserClient blizzardClient, SpecializationMapper specMapper) {
+    SpecializationService(BlizzardUserClient blizzardClient, SpecializationMapper specMapper) {
         this.blizzardClient = blizzardClient;
         this.specMapper = specMapper;
     }

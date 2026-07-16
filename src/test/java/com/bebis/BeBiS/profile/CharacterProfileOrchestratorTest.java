@@ -34,6 +34,9 @@ public class CharacterProfileOrchestratorTest {
     private SpecializationService specService;
 
     @Mock
+    private ProfileService profileService;
+
+    @Mock
     private ProfileMapper profileMapper;
 
     @Mock
@@ -43,7 +46,7 @@ public class CharacterProfileOrchestratorTest {
 
     @BeforeEach
     void setup() {
-        orchestrator = new CharacterProfileOrchestrator(eventPublisher, characterRepository, profileMapper, equipmentService, specService);
+        orchestrator = new CharacterProfileOrchestrator(eventPublisher, characterRepository, profileMapper, equipmentService, specService, profileService);
     }
 
     @Test

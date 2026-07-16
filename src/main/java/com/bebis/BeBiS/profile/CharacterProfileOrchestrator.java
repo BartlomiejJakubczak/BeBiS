@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 
@@ -23,6 +24,7 @@ public class CharacterProfileOrchestrator {
 
     private final EquipmentService equipmentService;
     private final SpecializationService specService;
+    private final ProfileService profileService;
 
     private final ProfileMapper profileMapper;
     private final WowCharacterRepository characterRepository;
@@ -32,12 +34,19 @@ public class CharacterProfileOrchestrator {
             WowCharacterRepository characterRepository,
             ProfileMapper profileMapper,
             EquipmentService equipmentService,
-            SpecializationService specService) {
+            SpecializationService specService,
+            ProfileService profileService) {
         this.eventPublisher = eventPublisher;
         this.characterRepository = characterRepository;
         this.profileMapper = profileMapper;
         this.equipmentService = equipmentService;
         this.specService = specService;
+        this.profileService = profileService;
+    }
+
+    @Transactional
+    public List<WowCharacter> getProfileSummary(long blizzardAccountId) {
+        return profileService.getProfileSummary(blizzardAccountId);
     }
 
     @Transactional

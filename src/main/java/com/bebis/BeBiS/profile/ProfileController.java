@@ -14,15 +14,15 @@ import java.util.List;
 @RequestMapping("/api/profile")
 public class ProfileController {
 
-    private final ProfileService profileService;
+    private final CharacterProfileOrchestrator profileOrchestrator;
 
-    public ProfileController(ProfileService profileService) {
-        this.profileService = profileService;
+    public ProfileController(CharacterProfileOrchestrator profileOrchestrator) {
+        this.profileOrchestrator = profileOrchestrator;
     }
 
     @GetMapping(value = "/summary")
     public ResponseEntity<List<WowCharacter>> getProfileSummary(@AuthenticationPrincipal OAuth2User principal) {
-        return ResponseEntity.ok(profileService.getProfileSummary(getBlizzardAccountId(principal)));
+        return ResponseEntity.ok(profileOrchestrator.getProfileSummary(getBlizzardAccountId(principal)));
     }
 
     private long getBlizzardAccountId(OAuth2User principal) {

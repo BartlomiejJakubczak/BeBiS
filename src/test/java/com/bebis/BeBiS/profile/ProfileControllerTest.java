@@ -28,7 +28,7 @@ public class ProfileControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private ProfileService profileService;
+    private CharacterProfileOrchestrator profileOrchestrator;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -45,7 +45,7 @@ public class ProfileControllerTest {
         List<CharacterSyncData> syncData = profileMapper.mapToSyncData(expectedSummary, blizzardAccountId);
         List<WowCharacter> allCharacters = profileMapper.mapToDomain(characterEntityFactory.createNewCharacters(syncData));
         // when
-        when(profileService.getProfileSummary(blizzardAccountId)).thenReturn(allCharacters);
+        when(profileOrchestrator.getProfileSummary(blizzardAccountId)).thenReturn(allCharacters);
         // then
         mockMvc.perform(get("/api/profile/summary")
                         .with(oauth2Login() // creates the mock OAuth2User
