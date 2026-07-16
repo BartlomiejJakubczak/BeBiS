@@ -7,7 +7,6 @@ import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
-import com.bebis.BeBiS.item.jpa.ItemEntityFactory;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

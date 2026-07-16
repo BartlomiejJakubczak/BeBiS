@@ -11,13 +11,13 @@ import org.springframework.stereotype.Component;
 import static com.bebis.BeBiS.config.ResilienceConfig.ResilienceConstants.BLIZZARD_FETCHER;
 
 @Component
-public class BlizzardItemFetcher {
+class BlizzardItemFetcher {
 
     private static final Logger log = org.slf4j.LoggerFactory.getLogger(BlizzardItemFetcher.class);
 
     private final BlizzardServiceClient blizzardClient;
 
-    public BlizzardItemFetcher(BlizzardServiceClient blizzardClient) {
+    BlizzardItemFetcher(BlizzardServiceClient blizzardClient) {
         this.blizzardClient = blizzardClient;
     }
 

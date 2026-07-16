@@ -1,4 +1,4 @@
-package com.bebis.BeBiS.profile.integration;
+package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
@@ -9,8 +9,6 @@ import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.bebis.BeBiS.item.ItemTestData;
-import com.bebis.BeBiS.profile.CharacterProfileOrchestrator;
-import com.bebis.BeBiS.profile.ProfileTestData;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.domain.WowTalents;
@@ -29,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @RecordApplicationEvents
-public class CharacterProfileOrchestratorIntegrationTest extends BaseFullStackTest {
+public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
 
     @Autowired
     private CharacterProfileOrchestrator orchestrator;

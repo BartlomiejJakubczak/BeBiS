@@ -1,12 +1,9 @@
-package com.bebis.BeBiS.item.integration;
+package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.EquipmentTestData;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.BlizzardItemFetcher;
-import com.bebis.BeBiS.item.ItemService;
-import com.bebis.BeBiS.item.ItemTestData;
 import com.bebis.BeBiS.item.event.ItemPersistedEvent;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
@@ -26,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @RecordApplicationEvents
-public class ItemServiceIntegrationTest extends BaseFullStackTest {
+public class ItemServiceIT extends BaseFullStackTest {
 
     @Autowired
     private ItemService itemService;
@@ -113,7 +110,7 @@ public class ItemServiceIntegrationTest extends BaseFullStackTest {
         assertThat(tfEntity.getItemLevel()).isEqualTo(itemLevel);
 
         verifyNoInteractions(itemFetcher);
-        
+
         assertItemPersistedEventFired(0);
     }
 

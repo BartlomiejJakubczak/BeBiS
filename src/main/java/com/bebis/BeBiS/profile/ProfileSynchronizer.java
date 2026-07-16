@@ -14,12 +14,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-public class ProfileSynchronizer {
+class ProfileSynchronizer {
 
     private final WowCharacterRepository characterRepository;
     private final WowCharacterEntityFactory characterEntityFactory;
 
-    public ProfileSynchronizer(WowCharacterRepository characterRepository, WowCharacterEntityFactory characterEntityFactory) {
+    ProfileSynchronizer(WowCharacterRepository characterRepository, WowCharacterEntityFactory characterEntityFactory) {
         this.characterRepository = characterRepository;
         this.characterEntityFactory = characterEntityFactory;
     }

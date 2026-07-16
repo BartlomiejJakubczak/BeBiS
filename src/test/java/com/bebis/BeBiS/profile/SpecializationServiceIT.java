@@ -1,9 +1,7 @@
-package com.bebis.BeBiS.profile.integration;
+package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
-import com.bebis.BeBiS.profile.ProfileTestData;
-import com.bebis.BeBiS.profile.SpecializationService;
 import com.bebis.BeBiS.profile.domain.WowTalents;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-public class SpecializationIntegrationTest extends BaseFullStackTest {
+public class SpecializationServiceIT extends BaseFullStackTest {
 
     @Autowired
     private SpecializationService service;

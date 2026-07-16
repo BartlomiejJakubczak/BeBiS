@@ -1,7 +1,6 @@
-package com.bebis.BeBiS.engine.upgrade.integration;
+package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.base.BaseNonTransactionalFullstackTest;
-import com.bebis.BeBiS.engine.upgrade.IsolatedUpgradeOrchestrator;
 import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.domain.Armor;
@@ -41,7 +40,7 @@ import static org.awaitility.Awaitility.await;
 
 
 @RecordApplicationEvents
-public class IsolatedUpgradeOrchestratorIntegrationTest extends BaseNonTransactionalFullstackTest {
+public class IsolatedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
 
     @Autowired
     private IsolatedUpgradeOrchestrator orchestrator;

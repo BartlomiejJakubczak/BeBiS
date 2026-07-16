@@ -1,8 +1,6 @@
-package com.bebis.BeBiS.equipment.integration;
+package com.bebis.BeBiS.equipment;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
-import com.bebis.BeBiS.equipment.EquipmentService;
-import com.bebis.BeBiS.equipment.EquipmentTestData;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
@@ -26,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-public class EquipmentIntegrationTest extends BaseFullStackTest {
+public class EquipmentServiceIT extends BaseFullStackTest {
 
     @Autowired
     private EquipmentService service;

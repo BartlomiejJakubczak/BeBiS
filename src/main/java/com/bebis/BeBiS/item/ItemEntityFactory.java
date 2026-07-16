@@ -1,15 +1,19 @@
-package com.bebis.BeBiS.item.jpa;
+package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.item.dto.ItemSyncData;
+import com.bebis.BeBiS.item.jpa.ArmorEntity;
+import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
+import com.bebis.BeBiS.item.jpa.ItemEntity;
+import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 @Component
-public class ItemEntityFactory {
+class ItemEntityFactory {
 
-    public ItemEntity createItemEntity(ItemSyncData syncData) {
+    ItemEntity createItemEntity(ItemSyncData syncData) {
         ItemEntity entity = initializeSubtype(syncData);
         mapCommonMetadata(entity, syncData);
         return entity;

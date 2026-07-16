@@ -18,8 +18,7 @@ import java.util.List;
 import static com.bebis.BeBiS.engine.upgrade.ClassItemTypeCapabilitiesResolver.ClassItemTypeCapabilities;
 
 @Component
-public class IsolatedUpgradeOrchestrator {
-    // TODO make it and others where applicable package-private during /integration test package removal.
+class IsolatedUpgradeOrchestrator {
 
     private final ClassItemTypeCapabilitiesResolver itemTypeResolver;
     private final SlotItemTypeMatcher slotMatcher;

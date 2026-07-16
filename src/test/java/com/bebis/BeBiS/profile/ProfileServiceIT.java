@@ -1,12 +1,10 @@
-package com.bebis.BeBiS.profile.integration;
+package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.WowAccountDTO;
 import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
-import com.bebis.BeBiS.profile.ProfileService;
-import com.bebis.BeBiS.profile.ProfileTestData;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.EntityManager;
@@ -22,7 +20,7 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-public class ProfileIntegrationTest extends BaseFullStackTest {
+public class ProfileServiceIT extends BaseFullStackTest {
 
     @Autowired
     private ProfileService service;

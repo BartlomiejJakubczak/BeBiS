@@ -4,7 +4,6 @@ import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.event.ItemPersistedEvent;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
-import com.bebis.BeBiS.item.jpa.ItemEntityFactory;
 import com.bebis.BeBiS.item.jpa.ItemRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.lang.NonNull;
