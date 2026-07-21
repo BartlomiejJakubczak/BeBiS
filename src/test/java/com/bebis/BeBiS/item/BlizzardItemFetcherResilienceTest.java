@@ -52,7 +52,6 @@ public class BlizzardItemFetcherResilienceTest extends BaseResilienceTest {
         // then
         verify(serviceClient, atMost(BlizzardFetcher.INSTANCE.windowSize * 2)).getBaseItem(anyLong());
 
-        // Pro-Tip: You can also verify the state directly via the registry
         var state = circuitBreakerRegistry.circuitBreaker(BLIZZARD_FETCHER).getState();
         assertThat(state).isEqualTo(CircuitBreaker.State.OPEN);
     }

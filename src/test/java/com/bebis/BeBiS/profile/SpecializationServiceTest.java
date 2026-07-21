@@ -1,6 +1,5 @@
 package com.bebis.BeBiS.profile;
 
-import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.bebis.BeBiS.profile.domain.WowTalents;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +17,7 @@ import static org.mockito.Mockito.*;
 public class SpecializationServiceTest {
 
     @Mock
-    private BlizzardUserClient client;
+    private BlizzardSpecializationFetcher fetcher;
 
     @Mock
     private SpecializationMapper mapper;
@@ -27,7 +26,7 @@ public class SpecializationServiceTest {
 
     @BeforeEach
     void setup() {
-        service = new SpecializationService(client, mapper);
+        service = new SpecializationService(fetcher, mapper);
     }
 
     @Test
@@ -40,14 +39,14 @@ public class SpecializationServiceTest {
         WowTalents mockTalents = mock(WowTalents.class);
         Optional<WowTalents> talents = Optional.of(mockTalents);
 
-        when(client.getCharacterSpecialization(eq(realmSlug), eq(characterName))).thenReturn(response);
+        when(fetcher.fetchSpecialization(eq(realmSlug), eq(characterName))).thenReturn(response);
         when(mapper.fromDTO(eq(response))).thenReturn(talents);
 
         // when
         service.getTalentsForCharacter(realmSlug, characterName);
 
         // then
-        verify(client).getCharacterSpecialization(eq(realmSlug), eq(characterName));
+        verify(fetcher).fetchSpecialization(eq(realmSlug), eq(characterName));
         verify(mapper).fromDTO(eq(response));
     }
 }
