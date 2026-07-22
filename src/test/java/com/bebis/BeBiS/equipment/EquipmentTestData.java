@@ -47,15 +47,17 @@ public class EquipmentTestData {
             String slot,
             List<ItemDTO.EnchantmentDTO> enchs
     ) {
+        var preview = itemResponse.preview();
+
         return new ItemDTO(
                 new ItemDTO.ItemDTOReference(itemResponse.id()),
                 new ItemDTO.SlotDTO(slot),
                 itemResponse.name(),
-                new ItemDTO.QualityDTO(itemResponse.quality().type()),
+                new ItemDTO.QualityDTO(mapQuality(itemResponse.quality())),
                 new ItemDTO.LevelDTO(itemResponse.itemLevel()),
-                mapBaseStats(itemResponse.preview().stats()),
-                mapArmorDTO(itemResponse.preview().armor()),
-                mapWeaponDTO(itemResponse.preview().weapon()),
+                preview != null ? mapBaseStats(preview.stats()) : null,
+                preview != null ? mapArmorDTO(preview.armor()) : null,
+                preview != null ? mapWeaponDTO(preview.weapon()) : null,
                 enchs
         );
     }
@@ -66,6 +68,10 @@ public class EquipmentTestData {
 
     public static ItemDTO.EnchantmentDTO enchant(long id, String display) {
         return new ItemDTO.EnchantmentDTO(id, display);
+    }
+
+    private static String mapQuality(ItemResponse.QualityDTO qualityDTO) {
+        return qualityDTO != null ? qualityDTO.type() : null;
     }
 
     private static List<ItemDTO.StatDTO> mapBaseStats(List<ItemResponse.StatDTO> baseStats) {

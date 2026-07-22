@@ -69,9 +69,12 @@ public class ItemEntityFactoryTest {
     // Helper to keep the MethodSource readable
     private static ItemSyncData createSyncData(Weapon.WeaponType wType, Armor.ArmorType aType) {
         return new ItemSyncData(
-                123L, 0L, "Test Item", Item.Quality.EPIC, Item.InventoryType.HEAD,
-                80, 60, true, Collections.emptyMap(), Collections.emptyList(),
-                aType, 2.6, 100, 200, 50.0, wType
+                new ItemSyncData.ItemSyncCommonData(
+                        123L, 0L, "Test Item", Item.Quality.EPIC, Item.InventoryType.HEAD,
+                        80, 60, true, Collections.emptyMap(), Collections.emptyList()
+                ),
+                wType != null ? new ItemSyncData.WeaponSyncData(wType, 2.6, 100, 200, 50.0) : null,
+                aType != null ? new ItemSyncData.ArmorSyncData(aType) : null
         );
     }
 }

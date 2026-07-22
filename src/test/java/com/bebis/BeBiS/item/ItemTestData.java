@@ -43,7 +43,7 @@ public class ItemTestData {
 
     public static ItemResponse createDtoWithNulls() {
         // A Preview block where everything optional is explicitly null
-        var preview = new ItemResponse.PreviewItemDTO(
+        var preview = new PreviewItemDTO(
                 new ArrayList<>(), // Empty stats list
                 null,              // No weapon data
                 null,              // No armor data
@@ -54,17 +54,17 @@ public class ItemTestData {
         return new ItemResponse(
                 999L,
                 "Simple String Ring",
-                new ItemResponse.QualityDTO("COMMON"),
+                new QualityDTO("COMMON"),
                 1, 1,
-                new ItemResponse.ItemClassDTO(4, "Armor"),
-                new ItemResponse.SubclassDTO(0, "Misc"),
-                new ItemResponse.InventoryTypeDTO("FINGER"),
+                new ItemClassDTO(4, "Armor"),
+                new SubclassDTO(0, "Misc"),
+                new InventoryTypeDTO("FINGER"),
                 preview
         );
     }
 
-    public static ItemResponse createDtoWithGarbageEnums(String quality, String inventoryType) {
-        var preview = new ItemResponse.PreviewItemDTO(
+    public static ItemResponse createDtoWithGarbageEnums(String quality) {
+        var preview = new PreviewItemDTO(
                 new ArrayList<>(), // Empty stats list
                 null,              // No weapon data
                 null,              // No armor data
@@ -74,11 +74,11 @@ public class ItemTestData {
         return new ItemResponse(
                 999L,
                 "Simple String Ring",
-                new ItemResponse.QualityDTO(quality),
+                new QualityDTO(quality),
                 1, 1,
-                new ItemResponse.ItemClassDTO(4, "Armor"),
-                new ItemResponse.SubclassDTO(0, "Misc"),
-                new ItemResponse.InventoryTypeDTO(inventoryType),
+                new ItemClassDTO(4, "Armor"),
+                new SubclassDTO(0, "Misc"),
+                new InventoryTypeDTO("CHEST"),
                 preview
         );
     }
@@ -112,4 +112,50 @@ public class ItemTestData {
                 preview
         );
     }
+
+    public static ItemResponse containerResponse(long id, String name) {
+        return new ItemResponse(
+                id, name, new QualityDTO("COMMON"), 60, 1,
+                new ItemClassDTO(1, "Container"),
+                new SubclassDTO(0, "Bag"),
+                new InventoryTypeDTO("CONTAINER"),
+                emptyPreview()
+        );
+    }
+
+    public static ItemResponse responseWithNullClassAndSubclass() {
+        return new ItemResponse(
+                1L, "Broken Item", new QualityDTO("EPIC"), 60, 60,
+                null, null,
+                new InventoryTypeDTO("WEAPON"),
+                emptyPreview()
+        );
+    }
+
+    public static ItemResponse responseWithInventoryType(String inventoryType) {
+        return new ItemResponse(
+                1L, "Ring", new QualityDTO("EPIC"), 60, 1,
+                new ItemClassDTO(4, "Armor"),
+                new SubclassDTO(0, "Misc"),
+                inventoryType != null ? new InventoryTypeDTO(inventoryType) : null,
+                emptyPreview()
+        );
+    }
+
+    public static ItemResponse responseWithNullName() {
+        return new ItemResponse(
+                1L, null, new QualityDTO("EPIC"), 60, 1,
+                new ItemClassDTO(4, "Armor"),
+                new SubclassDTO(0, "Misc"),
+                new InventoryTypeDTO("FINGER"),
+                emptyPreview()
+        );
+    }
+
+    public static PreviewItemDTO emptyPreview() {
+        return new PreviewItemDTO(
+                new ArrayList<>(), null, null, new ArrayList<>(), null
+        );
+    }
+
 }

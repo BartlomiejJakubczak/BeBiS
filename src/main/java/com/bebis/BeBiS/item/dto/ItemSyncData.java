@@ -9,29 +9,37 @@ import java.util.List;
 import java.util.Map;
 
 public record ItemSyncData(
-        Long baseId,
-        Long suffixId,
-        String name,
-        Item.Quality quality,
-        Item.InventoryType inventoryType,
-        Integer itemLevel,
-        Integer requiredLevel,
-        Boolean uniqueEquipped,
-        Map<StatType, Integer> stats,
-        List<String> specialEffects,
-        Armor.ArmorType armorType,
-        Double speed,
-        Integer minDamage,
-        Integer maxDamage,
-        Double dps,
-        Weapon.WeaponType weaponType
+        ItemSyncCommonData commonData,
+        WeaponSyncData weapon,
+        ArmorSyncData armor
 ) {
+    public record ItemSyncCommonData(
+            Long baseId,
+            Long suffixId,
+            String name,
+            Item.Quality quality,
+            Item.InventoryType inventoryType,
+            Integer itemLevel,
+            Integer requiredLevel,
+            Boolean uniqueEquipped,
+            Map<StatType, Integer> stats,
+            List<String> specialEffects
+    ) {
+    }
+
+    public record WeaponSyncData(Weapon.WeaponType weaponType, Double speed, Integer minDamage, Integer maxDamage,
+                                 Double dps) {
+    }
+
+    public record ArmorSyncData(Armor.ArmorType armorType) {
+    }
+
     public boolean isWeapon() {
-        return weaponType != null;
+        return weapon != null;
     }
 
     public boolean isArmor() {
-        return armorType != null;
+        return armor != null;
     }
 
     public boolean isEquippable() {

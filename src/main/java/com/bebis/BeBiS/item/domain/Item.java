@@ -57,7 +57,6 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
         FINGER("Finger"),
         TRINKET("Trinket"),
         CLOAK("Back"),
-        UNKNOWN("Unknown"),
 
         // Weapons & Off-hands
         WEAPON("One-Hand"),

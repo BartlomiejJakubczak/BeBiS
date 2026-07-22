@@ -15,40 +15,40 @@ class ItemEntityFactory {
 
     ItemEntity createItemEntity(ItemSyncData syncData) {
         ItemEntity entity = initializeSubtype(syncData);
-        mapCommonMetadata(entity, syncData);
+        setCommonMetadata(entity, syncData);
         return entity;
     }
 
     private ItemEntity initializeSubtype(ItemSyncData syncData) {
         if (syncData.isWeapon()) {
             WeaponEntity weapon = new WeaponEntity();
-            weapon.setSpeed(syncData.speed());
-            weapon.setMinDamage(syncData.minDamage());
-            weapon.setMaxDamage(syncData.maxDamage());
-            weapon.setDps(syncData.dps());
-            weapon.setWeaponType(syncData.weaponType());
+            weapon.setSpeed(syncData.weapon().speed());
+            weapon.setMinDamage(syncData.weapon().minDamage());
+            weapon.setMaxDamage(syncData.weapon().maxDamage());
+            weapon.setDps(syncData.weapon().dps());
+            weapon.setWeaponType(syncData.weapon().weaponType());
             return weapon;
         }
 
         if (syncData.isArmor()) {
             ArmorEntity armor = new ArmorEntity();
-            armor.setArmorType(syncData.armorType());
+            armor.setArmorType(syncData.armor().armorType());
             return armor;
         }
 
         return new EquippableItemEntity();
     }
 
-    private void mapCommonMetadata(ItemEntity entity, ItemSyncData syncData) {
-        entity.setPk(new ItemEntity.CompositeKey(syncData.baseId(), syncData.suffixId()));
-        entity.setName(syncData.name());
-        entity.setQuality(syncData.quality());
-        entity.setInventoryType(syncData.inventoryType());
-        entity.setItemLevel(syncData.itemLevel());
-        entity.setRequiredLevel(syncData.requiredLevel());
-        entity.setUniqueEquipped(syncData.uniqueEquipped());
-        entity.setStats(syncData.stats() != null ? syncData.stats() : new HashMap<>());
-        entity.setSpecialEffects(syncData.specialEffects() != null ? syncData.specialEffects() : new ArrayList<>());
+    private void setCommonMetadata(ItemEntity entity, ItemSyncData syncData) {
+        entity.setPk(new ItemEntity.CompositeKey(syncData.commonData().baseId(), syncData.commonData().suffixId()));
+        entity.setName(syncData.commonData().name());
+        entity.setQuality(syncData.commonData().quality());
+        entity.setInventoryType(syncData.commonData().inventoryType());
+        entity.setItemLevel(syncData.commonData().itemLevel());
+        entity.setRequiredLevel(syncData.commonData().requiredLevel());
+        entity.setUniqueEquipped(syncData.commonData().uniqueEquipped());
+        entity.setStats(syncData.commonData().stats() != null ? syncData.commonData().stats() : new HashMap<>());
+        entity.setSpecialEffects(syncData.commonData().specialEffects() != null ? syncData.commonData().specialEffects() : new ArrayList<>());
     }
 
 }
