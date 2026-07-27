@@ -2,6 +2,7 @@ package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
+import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,10 +40,14 @@ public class ProfileServiceTest {
         long blizzardAccountId = 1L;
 
         ProfileSummaryResponse response = mock(ProfileSummaryResponse.class);
-        List<CharacterSyncData> syncData = List.of(mock(CharacterSyncData.class));
+        WowCharacterDTO singleDTO = mock(WowCharacterDTO.class);
+        List<WowCharacterDTO> dtos = List.of(singleDTO);
+        CharacterSyncData singleSyncData = mock(CharacterSyncData.class);
+        List<CharacterSyncData> syncData = List.of(singleSyncData);
 
         when(blizzardClient.getProfileSummary()).thenReturn(response);
-        when(profileMapper.mapToSyncData(response, blizzardAccountId)).thenReturn(syncData);
+        when(profileMapper.mapToDTOs(response)).thenReturn(dtos);
+        when(profileMapper.fromDTO(singleDTO, blizzardAccountId)).thenReturn(singleSyncData);
         when(synchronizer.synchronize(syncData, blizzardAccountId)).thenReturn(List.of());
 
         // when

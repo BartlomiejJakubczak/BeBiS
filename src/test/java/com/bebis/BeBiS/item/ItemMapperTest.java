@@ -222,11 +222,11 @@ class ItemMapperTest {
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(null, dto))
                     .isInstanceOf(InvalidItemException.class)
-                    .hasMessage("item and equippedItem responses cannot be both null");
+                    .hasMessage("item and equippedItem responses cannot be null for upgrade analysis purposes");
 
             assertThatThrownBy(() -> itemMapper.mapToSyncData(base, null))
                     .isInstanceOf(InvalidItemException.class)
-                    .hasMessage("item and equippedItem responses cannot be both null");
+                    .hasMessage("item and equippedItem responses cannot be null for upgrade analysis purposes");
         }
 
         @Test
@@ -238,7 +238,7 @@ class ItemMapperTest {
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseMissingClass, dto))
                     .isInstanceOf(InvalidItemException.class)
-                    .hasMessage("classId and subclassId cannot be both null");
+                    .hasMessage("classId and subclassId cannot be null for upgrade analysis purposes");
         }
 
         @Test
@@ -265,7 +265,7 @@ class ItemMapperTest {
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseNullInv, dto1))
                     .isInstanceOf(InvalidItemException.class)
-                    .hasMessage("Null inventory type");
+                    .hasMessage("inventoryType cannot be null for upgrade analysis purposes");
 
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseBadInv, dto2))
                     .isInstanceOf(InvalidItemException.class)

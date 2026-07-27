@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.integration.blizzard.dto;
 
 public record WowClassDTO(
-        int id,
+        Integer id,
         String name,
         HrefLinkDTO key
 ) {

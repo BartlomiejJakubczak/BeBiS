@@ -30,10 +30,11 @@ public class ProfileTestData {
     public static final int DEFAULT_CHAR_COUNT = 5;
     public static final int DEFAULT_CHAR_LEVEL = 60;
 
-    private static final ProfileMapper MAPPER = new ProfileMapper();
+    private static final ProfileMapper MAPPER = new ProfileMapper(); // TODO should be deleted from here and this class made a builder
 
     public static List<CharacterSyncData> mapToSyncData(ProfileSummaryResponse response, long accountId) {
-        return MAPPER.mapToSyncData(response, accountId);
+        List<WowCharacterDTO> dtos = MAPPER.mapToDTOs(response);
+        return dtos.stream().map(dto -> MAPPER.fromDTO(dto, accountId)).toList();
     }
 
     public static CharacterSyncData fromDTO(com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO dto, long accountId) {
@@ -83,7 +84,7 @@ public class ProfileTestData {
         );
     }
 
-    public static WowCharacterDTO generateWowCharacterDTO(int id) {
+    public static WowCharacterDTO generateWowCharacterDTO(long id) {
         Random rand = new Random();
         int nameLength = rand.nextInt(CHAR_MAX_NAME_LENGTH);
         int level = rand.nextInt(MAX_LEVEL);

@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ProfileSummaryResponse;
+import com.bebis.BeBiS.integration.blizzard.dto.WowCharacterDTO;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.dto.CharacterSyncData;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntityFactory;
@@ -42,7 +43,8 @@ public class ProfileControllerTest {
         // given
         ProfileSummaryResponse expectedSummary = ProfileTestData.generateProfileSummaryResponse();
         long blizzardAccountId = 1L;
-        List<CharacterSyncData> syncData = profileMapper.mapToSyncData(expectedSummary, blizzardAccountId);
+        List<WowCharacterDTO> dtos = profileMapper.mapToDTOs(expectedSummary);
+        List<CharacterSyncData> syncData = dtos.stream().map(dto -> profileMapper.fromDTO(dto, blizzardAccountId)).toList();
         List<WowCharacter> allCharacters = profileMapper.mapToDomain(characterEntityFactory.createNewCharacters(syncData));
         // when
         when(profileOrchestrator.getProfileSummary(blizzardAccountId)).thenReturn(allCharacters);

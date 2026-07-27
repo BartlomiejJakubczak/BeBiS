@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import static com.bebis.BeBiS.item.domain.Item.InventoryType;
 import static com.bebis.BeBiS.item.domain.Item.Quality;
+import static com.bebis.BeBiS.tools.MapperTools.validateRequired;
 
 @Component
 public class ItemMapper {
@@ -62,7 +63,7 @@ public class ItemMapper {
     public ItemSyncData mapToSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) throws InvalidItemException {
         if (baseDTO != null && equippedItemDTO != null) {
             if (baseDTO.itemClass() == null || baseDTO.subclass() == null) {
-                throw new InvalidItemException("classId and subclassId cannot be both null");
+                throw new InvalidItemException("classId and subclassId cannot be null for upgrade analysis purposes");
             }
 
             int classId = baseDTO.itemClass().id();
@@ -75,7 +76,7 @@ public class ItemMapper {
                 default -> throw new InvalidItemException("Invalid classId: " + classId);
             };
         } else {
-            throw new InvalidItemException("item and equippedItem responses cannot be both null");
+            throw new InvalidItemException("item and equippedItem responses cannot be null for upgrade analysis purposes");
         }
     }
 
@@ -128,13 +129,13 @@ public class ItemMapper {
 
     private ItemSyncData.ItemSyncCommonData createCommonData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         return new ItemSyncData.ItemSyncCommonData(
-                validateRequired(baseDTO.id(), "id"),
+                validateRequired(baseDTO.id(), "id", InvalidItemException::new),
                 mapSuffixId(equippedItemDTO),
-                validateRequired(equippedItemDTO.name(), "name"),
+                validateRequired(equippedItemDTO.name(), "name", InvalidItemException::new),
                 mapQuality(equippedItemDTO),
                 mapInventoryType(baseDTO),
                 mapItemLevel(equippedItemDTO),
-                validateRequired(baseDTO.requiredLevel(), "required_level"),
+                validateRequired(baseDTO.requiredLevel(), "required_level", InvalidItemException::new),
                 mapUniqueEquipped(baseDTO),
                 mapStats(baseDTO, equippedItemDTO),
                 mapSpecialEffects(baseDTO)
@@ -228,7 +229,7 @@ public class ItemMapper {
                 }
             };
         }
-        throw new InvalidItemException("Null inventory type");
+        throw new InvalidItemException("inventoryType cannot be null for upgrade analysis purposes");
     }
 
     private Quality mapQuality(EquipmentResponse.ItemDTO dto) {
@@ -247,10 +248,4 @@ public class ItemMapper {
         return baseDTO.preview() != null && baseDTO.preview().uniqueEquipped() != null; // no value means not unique
     }
 
-    private <T> T validateRequired(T value, String fieldName) {
-        if (value == null) {
-            throw new InvalidItemException("Critical data missing: " + fieldName);
-        }
-        return value;
-    }
 }

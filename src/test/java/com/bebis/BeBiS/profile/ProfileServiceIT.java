@@ -74,9 +74,9 @@ public class ProfileServiceIT extends BaseFullStackTest {
         callService();
 
         // then
-        List<Integer> savedIds = jdbcTemplate.queryForList("SELECT id FROM wow_characters WHERE blizzard_account_id = ?",
-                Integer.class, BLIZZ_ACCOUNT_ID);
-        assertThat(savedIds).doesNotContain((int) oldDTO.wowCharacterId());
+        List<Long> savedIds = jdbcTemplate.queryForList("SELECT id FROM wow_characters WHERE blizzard_account_id = ?",
+                Long.class, BLIZZ_ACCOUNT_ID);
+        assertThat(savedIds).doesNotContain(oldDTO.wowCharacterId());
     }
 
     @Test
