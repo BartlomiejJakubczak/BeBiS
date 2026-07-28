@@ -35,9 +35,8 @@ class ProfileService {
     }
 
     private List<WowCharacterEntity> syncBlizzardAccountCharacters(long blizzardAccountId) {
-        List<WowCharacterDTO> fromSummary = profileMapper.mapToDTOs(blizzardClient.getProfileSummary());
         List<CharacterSyncData> syncData = new ArrayList<>();
-        for (WowCharacterDTO dto : fromSummary) {
+        for (WowCharacterDTO dto : profileMapper.mapToDTOs(blizzardClient.getProfileSummary())) {
             try {
                 syncData.add(profileMapper.fromDTO(dto, blizzardAccountId));
             } catch (InvalidCharacterException e) {
