@@ -33,6 +33,7 @@ class BlizzardItemFetcher {
     private ItemResponse fetchItemFallback(long id, Exception e) {
         log.error("Blizzard API failed for item {}. Reason: {}", id, e.getMessage());
         // Return a 'Null Object' or a minimal DTO so the UI can at least show a '?' icon
+        // TODO should probably throw some exception instead of releasing half-baked responses in hope that the service will handle it properly
         return new ItemResponse(
                 id, null, null, null, null, null, null, null, null
         );
