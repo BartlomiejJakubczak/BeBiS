@@ -131,7 +131,7 @@ public class PowerCalculatorEngineTest {
 
     private Weapon generateWeapon(Weapon.WeaponType weaponType, Double speed, int minDamage, int maxDamage) {
         Item.ItemMetadata metadata = new Item.ItemMetadata(
-                1L, "Placeholder", Item.InventoryType.WEAPONMAINHAND, Item.Quality.COMMON, 21, 37, false, Map.of(), List.of()
+                new Item.ItemKey(21L, 37L), "Placeholder", Item.InventoryType.WEAPONMAINHAND, Item.Quality.COMMON, 21, 37, false, Map.of(), List.of()
         );
         return new Weapon(
                 metadata, speed, minDamage, maxDamage, weaponType

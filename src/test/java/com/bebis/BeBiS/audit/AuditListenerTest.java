@@ -9,7 +9,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import java.time.Instant;
 
 import static org.awaitility.Awaitility.await;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 
 @Import(AuditListener.class)
@@ -20,11 +20,17 @@ public class AuditListenerTest extends BaseAsyncListenerTest {
 
     @Test
     void shouldReceiveItemPersistedEventAsynchronously() {
+        // given
+        long expectedBaseId = 1L;
+        long expectedSuffixId = 1L;
+
         // when
-        transactionTemplate.executeWithoutResult((s) -> publisher.publishEvent(new ItemPersistedEvent(1L, 1L, Instant.now())));
+        transactionTemplate.executeWithoutResult((s) ->
+                publisher.publishEvent(new ItemPersistedEvent(expectedBaseId, expectedSuffixId, Instant.now())));
 
         // then
-        await().untilAsserted(() -> verify(listener).onItemPersistedEvent(any(ItemPersistedEvent.class)));
+        await().untilAsserted(() -> verify(listener).onItemPersistedEvent(argThat(event ->
+                event.baseId() == expectedBaseId && event.suffixId() == expectedSuffixId)));
     }
 
 }

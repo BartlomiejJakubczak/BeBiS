@@ -29,15 +29,15 @@ public class ItemMapper {
 
     public Item mapToDomain(ItemEntity entity) {
         Item.ItemMetadata meta = new Item.ItemMetadata(
-                entity.getPk().getBaseId(),
+                new Item.ItemKey(entity.getPk().getBaseId(), entity.getPk().getSuffixId()),
                 entity.getName(),
                 entity.getInventoryType(),
                 entity.getQuality(),
                 Optional.ofNullable(entity.getItemLevel()).orElse(0),
                 Optional.ofNullable(entity.getRequiredLevel()).orElse(0),
                 Optional.ofNullable(entity.getUniqueEquipped()).orElse(false),
-                entity.getStats() != null ? new HashMap<>(entity.getStats()) : new HashMap<>(),
-                entity.getSpecialEffects() != null ? new ArrayList<>(entity.getSpecialEffects()) : new ArrayList<>()
+                Map.copyOf(entity.getStats()),
+                List.copyOf(entity.getSpecialEffects())
         );
 
         return switch (entity) {
@@ -146,30 +146,25 @@ public class ItemMapper {
         return (equippedItemDTO.itemLevel()) != null ? equippedItemDTO.itemLevel().value() : null;
     }
 
-    private Integer mapArmorValue(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
-        if (equippedItemDTO.armor() != null) return equippedItemDTO.armor().value();
+    private Optional<Integer> mapArmorValue(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
+        if (equippedItemDTO.armor() != null) return Optional.of(equippedItemDTO.armor().value());
         return mapArmorValueFromBase(baseDTO);
     }
 
-    private Integer mapArmorValueFromBase(ItemResponse baseDTO) {
-        return (baseDTO.preview().armor() != null) ? baseDTO.preview().armor().value() : null;
+    private Optional<Integer> mapArmorValueFromBase(ItemResponse baseDTO) {
+        return (baseDTO.preview().armor() != null) ? Optional.of(baseDTO.preview().armor().value()) : Optional.empty();
     }
 
     private Map<StatType, Integer> mapStats(ItemResponse baseDTO, EquipmentResponse.ItemDTO dto) {
         Map<StatType, Integer> stats = new HashMap<>();
-        stats.put(StatType.ARMOR, mapArmorValue(baseDTO, dto));
 
-        List<EquipmentResponse.ItemDTO.StatDTO> statsFromDTO = dto.stats();
-        if (statsFromDTO == null || statsFromDTO.isEmpty()) {
-            return stats;
-        }
+        mapArmorValue(baseDTO, dto).ifPresent(value -> stats.put(StatType.ARMOR, value)); // has to go first for gray / white items coverage
 
-        statsFromDTO.forEach(s -> {
-            try {
-                stats.put(StatType.valueOf(s.type().type().toUpperCase()), s.value());
-            } catch (IllegalArgumentException ignored) {
-            }
-        });
+        List<EquipmentResponse.ItemDTO.StatDTO> statsFromDTO = dto.stats() != null ? dto.stats() : List.of();
+
+        statsFromDTO.forEach(statDTO ->
+                StatType.getStatType(statDTO.type().type()).ifPresent(statType -> stats.put(statType, statDTO.value())));
+        
         return stats;
     }
 

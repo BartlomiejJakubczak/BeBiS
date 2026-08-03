@@ -84,7 +84,7 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         Equipment equipmentFromSelected = selectedCharacter.equipment();
         EquippedItem equippedItem = equipmentFromSelected.getEquipment().get(Equipment.Slot.MAIN_HAND);
         assertThat(equippedItem).isNotNull();
-        assertThat(equippedItem.item().getMetadata().id()).isEqualTo(tfResponse.id());
+        assertThat(equippedItem.item().getMetadata().key().baseId()).isEqualTo(tfResponse.id());
         assertThat(equippedItem.item().getMetadata().name()).isEqualTo(tfResponse.name());
 
         List<CharacterSelectedEvent> eventsFired = applicationEvents.stream(CharacterSelectedEvent.class).toList();

@@ -375,7 +375,7 @@ public class IsolatedUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
     private Armor createArmor(long id, String name, Item.InventoryType inventoryType, int requiredLevel, boolean uniqueEquipped,
                               Map<StatType, Integer> stats, Armor.ArmorType armorType) {
         Item.ItemMetadata metadata = new Item.ItemMetadata(
-                id, name, inventoryType, Item.Quality.UNCOMMON, 21, requiredLevel, uniqueEquipped, stats, List.of()
+                new Item.ItemKey(id, 0L), name, inventoryType, Item.Quality.UNCOMMON, 21, requiredLevel, uniqueEquipped, stats, List.of()
         );
         return new Armor(metadata, armorType);
     }
@@ -428,7 +428,7 @@ public class IsolatedUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
     private static @NonNull EquippableItemEntity getEquippableItemEntity(EquippableItem equippableItem) {
         Item.ItemMetadata metadata = equippableItem.getMetadata();
         EquippableItemEntity entity = new EquippableItemEntity();
-        entity.setPk(new ItemEntity.CompositeKey(metadata.id(), 0L));
+        entity.setPk(new ItemEntity.CompositeKey(metadata.key().baseId(), 0L));
         entity.setName(metadata.name());
         entity.setQuality(metadata.quality());
         entity.setInventoryType(metadata.inventoryType());
@@ -443,7 +443,7 @@ public class IsolatedUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
     private static @NonNull ArmorEntity getArmorEntity(Armor armor) {
         Item.ItemMetadata metadata = armor.getMetadata();
         ArmorEntity entity = new ArmorEntity();
-        entity.setPk(new ItemEntity.CompositeKey(metadata.id(), 0L));
+        entity.setPk(new ItemEntity.CompositeKey(metadata.key().baseId(), 0L));
         entity.setName(metadata.name());
         entity.setQuality(metadata.quality());
         entity.setInventoryType(metadata.inventoryType());

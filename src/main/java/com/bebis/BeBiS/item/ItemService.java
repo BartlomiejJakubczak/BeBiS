@@ -104,7 +104,8 @@ public class ItemService {
         return transactionTemplate.execute((s) -> {
             ItemEntity persistedEntity = itemRepository.save(itemEntityFactory.createItemEntity(syncData));
             // event publishing also has to be inside the transaction for any @TransactionalEventListener listening.
-            eventPublisher.publishEvent(new ItemPersistedEvent(persistedEntity.getPk().getBaseId(), persistedEntity.getPk().getSuffixId(), Instant.now()));
+            eventPublisher.publishEvent(new ItemPersistedEvent(persistedEntity.getPk().getBaseId(),
+                    persistedEntity.getPk().getSuffixId(), Instant.now()));
             return persistedEntity;
         });
     }

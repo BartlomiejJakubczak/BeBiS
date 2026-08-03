@@ -12,8 +12,11 @@ import java.util.Map;
 @EqualsAndHashCode
 public abstract sealed class Item permits Weapon, Armor, EquippableItem {
 
+    public record ItemKey(long baseId, long suffixId) {
+    }
+
     public record ItemMetadata(
-            long id,
+            ItemKey key,
             String name,
             InventoryType inventoryType,
             Quality quality,

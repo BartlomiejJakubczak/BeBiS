@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +61,7 @@ public class EquipmentEntity {
     })
     @MapKeyEnumerated(EnumType.STRING)
     @MapKeyColumn(name = "slot_name") // This column goes into 'equipped_items' to store 'HEAD', 'CHEST', etc.
-    Map<Equipment.Slot, EquippedItem> items;
+    private Map<Equipment.Slot, EquippedItem> items = new HashMap<>();
 
     @Entity
     @Table(name = "equipped_items")
