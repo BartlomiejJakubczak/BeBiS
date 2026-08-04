@@ -12,6 +12,7 @@ import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
+import com.bebis.BeBiS.tools.EnumTools;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -163,7 +164,7 @@ public class ItemMapper {
         List<EquipmentResponse.ItemDTO.StatDTO> statsFromDTO = dto.stats() != null ? dto.stats() : List.of();
 
         statsFromDTO.forEach(statDTO ->
-                StatType.fromString(statDTO.type().type()).ifPresent(statType -> stats.put(statType, statDTO.value())));
+                EnumTools.fromString(StatType.class, statDTO.type().type()).ifPresent(statType -> stats.put(statType, statDTO.value())));
 
         return stats;
     }

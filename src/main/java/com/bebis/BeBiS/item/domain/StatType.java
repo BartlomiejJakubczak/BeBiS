@@ -1,7 +1,5 @@
 package com.bebis.BeBiS.item.domain;
 
-import java.util.Optional;
-
 public enum StatType {
     STRENGTH,
     AGILITY,
@@ -24,13 +22,5 @@ public enum StatType {
     BLOCK_VALUE,
     ARMOR,
     WEAPON_DPS,
-    WEAPON_SPEED;
-
-    public static Optional<StatType> fromString(String type) {
-        try {
-            return Optional.of(StatType.valueOf(type.toUpperCase()));
-        } catch (IllegalArgumentException ignored) {
-            return Optional.empty();
-        }
-    }
+    WEAPON_SPEED
 }

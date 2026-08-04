@@ -5,6 +5,7 @@ import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.item.ItemMapper;
 import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.tools.EnumTools;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -38,7 +39,7 @@ class EquipmentMapper {
 
     public Optional<Equipment.Slot> mapSlot(EquipmentResponse.ItemDTO dto) {
         if (dto.slot() != null && !dto.slot().type().isEmpty()) {
-            return Equipment.Slot.fromString(dto.slot().type());
+            return EnumTools.fromString(Equipment.Slot.class, dto.slot().type());
         }
         return Optional.empty();
     }

@@ -269,7 +269,7 @@ public class EquipmentServiceIT extends BaseFullStackTest {
 
         EquipmentEntity.EquippedItem equippedItem = items.get(Equipment.Slot.FINGER_1);
 
-        assertThat(equippedItem.getId()).isEqualTo(ringResponse.id());
+        assertThat(equippedItem.getItem().getPk().getBaseId()).isEqualTo(ringResponse.id());
     }
 
     private EquipmentEntity.EquippedItem setUpEquippedItem(long id, String name) {
