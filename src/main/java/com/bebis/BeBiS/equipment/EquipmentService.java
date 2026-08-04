@@ -3,7 +3,6 @@ package com.bebis.BeBiS.equipment;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.BlizzardUserClient;
-import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +23,10 @@ public class EquipmentService {
     }
 
     public Equipment getEquipmentForCharacter(WowCharacterEntity characterEntity) {
-        EquipmentEntity equipment = characterEntity.getEquipment();
-        // freshEquipment is the source of truth for current char's gear
-        EquipmentResponse freshEquipment = blizzardUserClient.getCharacterEquipment(characterEntity.getPk().getRealmSlug(), characterEntity.getName());
-        equipmentSynchronizer.synchronize(freshEquipment, equipment); // no need to call eqRepo.save, because equipment is in managed state
-        return equipmentMapper.mapToDomain(equipment);
+        EquipmentEntity currentEquipment = characterEntity.getEquipment();
+        equipmentSynchronizer.synchronize(blizzardUserClient.getCharacterEquipment(characterEntity.getPk().getRealmSlug(),
+                characterEntity.getName()), currentEquipment); // no need to call eqRepo.save, because equipment is in managed state
+        return equipmentMapper.mapToDomain(currentEquipment);
     }
 
 }

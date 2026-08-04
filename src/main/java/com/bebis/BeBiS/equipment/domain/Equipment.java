@@ -37,7 +37,15 @@ public final class Equipment {
         TRINKET_2,
         MAIN_HAND,
         OFF_HAND,
-        RANGED
+        RANGED;
+
+        public static Optional<Slot> fromString(String s) {
+            try {
+                return Optional.of(Slot.valueOf(s.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                return Optional.empty();
+            }
+        }
     }
 
     /*

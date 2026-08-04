@@ -1,58 +1,32 @@
 package com.bebis.BeBiS.equipment;
 
-import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.item.ItemService;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Component
 class EquipmentSynchronizer {
 
     private final ItemService itemService;
+    private final EquipmentMapper mapper;
 
-    public EquipmentSynchronizer(ItemService itemService) {
+    public EquipmentSynchronizer(ItemService itemService, EquipmentMapper mapper) {
         this.itemService = itemService;
+        this.mapper = mapper;
     }
 
     public void synchronize(EquipmentResponse response, EquipmentEntity equipment) {
         equipment.getItems().clear(); // a fresh snapshot
         Map<EquipmentResponse.ItemDTO, ItemEntity> resolvedItems = itemService.resolveItems(response.equipment());
-        for (EquipmentResponse.ItemDTO itemDTO : response.equipment()) {
-            Optional<Equipment.Slot> slot = extractSlot(itemDTO);
-            if (slot.isEmpty()) {
-                continue; // Skip the rest of the loop for this item
-            }
-
-            EquipmentEntity.EquippedItem freshItem = new EquipmentEntity.EquippedItem();
-            ItemEntity baseItem = resolvedItems.get(itemDTO);
-            freshItem.setItem(baseItem);
-            freshItem.setPlayerEnchants(extractPlayerEnchantStrings(itemDTO, baseItem.getPk().getSuffixId()));
-
-            equipment.getItems().put(slot.get(), freshItem);
-        }
-    }
-
-    private Optional<Equipment.Slot> extractSlot(EquipmentResponse.ItemDTO itemDTO) {
-        try {
-            // Convert "finger_1" -> "FINGER_1" to match your Enum exactly
-            return Optional.of(Equipment.Slot.valueOf(itemDTO.slot().type().toUpperCase()));
-        } catch (IllegalArgumentException | NullPointerException e) {
-            // Log it: "Warning: Unknown slot type received from Blizzard: " + itemDTO.slot().type()
-            return Optional.empty();
-        }
-    }
-
-    private List<String> extractPlayerEnchantStrings(EquipmentResponse.ItemDTO equippedItemDTO, long suffixId) {
-        if (equippedItemDTO.enchantments() == null) return List.of();
-        return equippedItemDTO.enchantments().stream()
-                .filter(ench -> ench.enchantmentId() != suffixId)
-                .map(EquipmentResponse.ItemDTO.EnchantmentDTO::displayString)
-                .toList();
+        resolvedItems.forEach((dto, entity) -> mapper.mapSlot(dto).ifPresent(slot -> {
+            EquipmentEntity.EquippedItem equippedItem = new EquipmentEntity.EquippedItem();
+            equippedItem.setItem(entity);
+            equippedItem.setPlayerEnchants(mapper.mapPlayerEnchants(dto, entity.getPk().getSuffixId()));
+            equipment.getItems().put(slot, equippedItem);
+        }));
     }
 }

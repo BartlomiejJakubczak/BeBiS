@@ -26,7 +26,7 @@ public enum StatType {
     WEAPON_DPS,
     WEAPON_SPEED;
 
-    public static Optional<StatType> getStatType(String type) {
+    public static Optional<StatType> fromString(String type) {
         try {
             return Optional.of(StatType.valueOf(type.toUpperCase()));
         } catch (IllegalArgumentException ignored) {

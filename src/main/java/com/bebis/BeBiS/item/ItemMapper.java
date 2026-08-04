@@ -163,8 +163,8 @@ public class ItemMapper {
         List<EquipmentResponse.ItemDTO.StatDTO> statsFromDTO = dto.stats() != null ? dto.stats() : List.of();
 
         statsFromDTO.forEach(statDTO ->
-                StatType.getStatType(statDTO.type().type()).ifPresent(statType -> stats.put(statType, statDTO.value())));
-        
+                StatType.fromString(statDTO.type().type()).ifPresent(statType -> stats.put(statType, statDTO.value())));
+
         return stats;
     }
 

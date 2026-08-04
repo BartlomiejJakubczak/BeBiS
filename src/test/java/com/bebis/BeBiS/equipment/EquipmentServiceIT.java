@@ -38,14 +38,10 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     @Test
     void shouldMapEquipmentToCorrectSlots() {
         // given
-        long charId = 1L;
-        long blizzAccountId = 2L;
-        String realmSlug = "soulseeker";
-        String charName = "Arthass";
-
-        // put characterEntity into db
-        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity charEntity = setUpCharacterInDb(new HashMap<>());
         WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
+        String realmSlug = charEntity.getPk().getRealmSlug();
+        String charName = charEntity.getName();
 
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf, "main_hand", List.of());
@@ -71,13 +67,10 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     @Test
     void shouldSkipBadSlotButPersistTheRestOfEquipment() {
         // given
-        long charId = 1L;
-        long blizzAccountId = 2L;
-        String realmSlug = "soulseeker";
-        String charName = "Arthass";
-
-        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity charEntity = setUpCharacterInDb(new HashMap<>());
         WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
+        String realmSlug = charEntity.getPk().getRealmSlug();
+        String charName = charEntity.getName();
 
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         EquipmentResponse.ItemDTO wrongDto = EquipmentTestData.fromItemResponseNoSuffix(tf, "left_hand", List.of());
@@ -112,13 +105,10 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     @Test
     void shouldPersistPlayerEnchants() {
         // given
-        long charId = 1L;
-        long blizzAccountId = 2L;
-        String realmSlug = "soulseeker";
-        String charName = "Arthass";
-
-        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity charEntity = setUpCharacterInDb(new HashMap<>());
         WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
+        String realmSlug = charEntity.getPk().getRealmSlug();
+        String charName = charEntity.getName();
 
         ItemResponse tf = ItemTestData.thunderfuryResponse();
         String enchantName = "Crusader";
@@ -151,17 +141,13 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     @Test
     void shouldClearOldEquippedItemsFromDbWhenReplaced() {
         // given
-        long charId = 1L;
-        long blizzAccountId = 2L;
-        String realmSlug = "soulseeker";
-        String charName = "Arthass";
-
-        // put a character with previously snapshot items
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> previousSnapshot = new HashMap<>();
         previousSnapshot.put(Equipment.Slot.FINGER_1, setUpEquippedItem(123L, "Ring of the Past"));
 
-        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, previousSnapshot);
+        WowCharacterEntity charEntity = setUpCharacterInDb(previousSnapshot);
         WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
+        String realmSlug = charEntity.getPk().getRealmSlug();
+        String charName = charEntity.getName();
 
         String newItemName = "Greatseal";
         ItemResponse ring = ItemTestData.equippableItemResponse(1L, newItemName, "finger", null);
@@ -197,20 +183,17 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     @Test
     void shouldClearOldEquippedItemsFromDbWhenEmptyResponse() {
         // given
-        long charId = 1L;
-        long blizzAccountId = 2L;
-        String realmSlug = "soulseeker";
-        String charName = "Arthass";
-
-        // put a character with previously snapshot items
         Map<Equipment.Slot, EquipmentEntity.EquippedItem> previousSnapshot = new HashMap<>();
         previousSnapshot.put(Equipment.Slot.FINGER_1, setUpEquippedItem(123L, "Ring of the Past"));
         previousSnapshot.put(Equipment.Slot.FINGER_2, setUpEquippedItem(456L, "Ring of the Future"));
 
-        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
+        WowCharacterEntity charEntity = setUpCharacterInDb(previousSnapshot);
         WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
+        String realmSlug = charEntity.getPk().getRealmSlug();
+        String charName = charEntity.getName();
 
-        when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(new EquipmentResponse(List.of()));
+        when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName)))
+                .thenReturn(new EquipmentResponse(List.of()));
 
         // when
         callService(charEntity);
@@ -233,23 +216,60 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     @Test
     void shouldPullBaseDataOfEquippedItemFromDbWhenItemExists() {
         // given
-        long charId = 1L;
-        long blizzAccountId = 2L;
-        String realmSlug = "soulseeker";
-        String charName = "Arthass";
+        WowCharacterEntity charEntity = setUpCharacterInDb(new HashMap<>());
+        ItemEntity item = setUpItemInDb(1L, "Greatseal");
 
-        WowCharacterEntity charEntity = setUpCharacterInDb(charId, realmSlug, blizzAccountId, charName, new HashMap<>());
-        ItemEntity item = setUpItemInDb(charId, "Greatseal");
         ItemResponse itemResponse = ItemTestData.equippableItemResponse(item.getPk().getBaseId(), item.getName(), "finger", null);
         EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(itemResponse, "finger_1", List.of());
 
-        when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(new EquipmentResponse(List.of(itemDTO)));
+        when(blizzardUserClient.getCharacterEquipment(eq(charEntity.getPk().getRealmSlug()), eq(charEntity.getName())))
+                .thenReturn(new EquipmentResponse(List.of(itemDTO)));
 
         // when
         callService(charEntity);
 
         // then
         verifyNoInteractions(blizzardServiceClient); // no need to pull data from blizzard for item that exists in db
+    }
+
+    @Test
+    void shouldPersistValidItemsWhenOneItemFailsToResolve() {
+        // given
+        WowCharacterEntity charEntity = setUpCharacterInDb(new HashMap<>());
+        WowCharacterEntity.CompositeKey charKey = charEntity.getPk();
+        String realmSlug = charEntity.getPk().getRealmSlug();
+        String charName = charEntity.getName();
+
+        ItemResponse ringResponse = ItemTestData.equippableItemResponse(1L, "Greatseal", "finger", null);
+        EquipmentResponse.ItemDTO validDTO = EquipmentTestData.fromItemResponseNoSuffix(ringResponse, "finger_1", List.of());
+
+        ItemResponse trinketResponse = ItemTestData.equippableItemResponse(2L, null, "trinket", null); // null name
+        EquipmentResponse.ItemDTO corruptDTO = EquipmentTestData.fromItemResponseNoSuffix(trinketResponse, "trinket", List.of());
+
+        when(blizzardServiceClient.getBaseItem(ringResponse.id())).thenReturn(ringResponse);
+        when(blizzardServiceClient.getBaseItem(trinketResponse.id())).thenReturn(trinketResponse);
+
+        when(blizzardUserClient.getCharacterEquipment(realmSlug, charName)).thenReturn(new EquipmentResponse(List.of(validDTO, corruptDTO)));
+
+        // when
+        callService(charEntity);
+
+        // then
+        Map<Equipment.Slot, EquipmentEntity.EquippedItem> items = entityManager
+                .find(WowCharacterEntity.class, charKey)
+                .getEquipment()
+                .getItems();
+
+        verify(blizzardUserClient).getCharacterEquipment(eq(realmSlug), eq(charName));
+        verify(blizzardServiceClient).getBaseItem(ringResponse.id());
+        verify(blizzardServiceClient).getBaseItem(trinketResponse.id()); // the bad item was tried
+
+        assertThat(items.size()).isEqualTo(1);
+        assertThat(items.get(Equipment.Slot.FINGER_1)).isNotNull();
+
+        EquipmentEntity.EquippedItem equippedItem = items.get(Equipment.Slot.FINGER_1);
+
+        assertThat(equippedItem.getId()).isEqualTo(ringResponse.id());
     }
 
     private EquipmentEntity.EquippedItem setUpEquippedItem(long id, String name) {
@@ -275,20 +295,15 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     private void callService(WowCharacterEntity entity) {
         service.getEquipmentForCharacter(entity);
         entityManager.flush();
+        entityManager.clear(); // detaches the entity, clears it from Hibernate's cache
     }
 
-    private WowCharacterEntity setUpCharacterInDb(
-            long charId,
-            String realmSlug,
-            long blizzAccountId,
-            String charName,
-            Map<Equipment.Slot, EquipmentEntity.EquippedItem> items
-    ) {
+    private WowCharacterEntity setUpCharacterInDb(Map<Equipment.Slot, EquipmentEntity.EquippedItem> items) {
         WowCharacterEntity character = new WowCharacterEntity();
         WowCharacterEntity.CompositeKey charKey =
-                new WowCharacterEntity.CompositeKey(charId, realmSlug, blizzAccountId);
+                new WowCharacterEntity.CompositeKey(1L, "soulseeker", 1L);
         character.setPk(charKey);
-        character.setName(charName);
+        character.setName("Thelamar");
         character.setRace(WowCharacter.Race.HUMAN);
         character.setWowClass(WowCharacter.WowClass.PALADIN);
         character.setRealmName("Soulseeker");
