@@ -5,8 +5,8 @@ import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.ItemMapper;
+import com.bebis.BeBiS.item.ItemResponseBuilder;
 import com.bebis.BeBiS.item.ItemService;
-import com.bebis.BeBiS.item.ItemTestData;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,13 +60,19 @@ public class EquipmentSynchronizerTest {
         entity.setItems(new HashMap<>());
         entity.getItems().put(Equipment.Slot.HEAD, new EquipmentEntity.EquippedItem());
 
-        ItemResponse fingerResponse = ItemTestData.equippableItemResponse(1L, "Greatseal", "FINGER", null);
+        ItemResponse fingerResponse = ItemResponseBuilder.newEquippableInstance().build();
         EquipmentResponse.ItemDTO fingerDTO = EquipmentTestData.fromItemResponseNoSuffix(fingerResponse, "FINGER_1", List.of());
 
-        ItemResponse chestResponse = ItemTestData.armorResponse(2L, "Breastplate", 100);
+        ItemResponse chestResponse = ItemResponseBuilder.newArmorInstance()
+                .withId(2L)
+                .withName("Breastplate")
+                .build();
         EquipmentResponse.ItemDTO chestDTO = EquipmentTestData.fromItemResponseNoSuffix(chestResponse, "CHEST", List.of());
 
-        ItemResponse legsResponse = ItemTestData.armorResponse(3L, "Leggings", 60);
+        ItemResponse legsResponse = ItemResponseBuilder.newArmorInstance()
+                .withId(3L)
+                .withName("Leggings")
+                .build();
         EquipmentResponse.ItemDTO legsDTO = EquipmentTestData.fromItemResponseNoSuffix(legsResponse, "LEGS", List.of());
 
         EquipmentResponse response = mock(EquipmentResponse.class);
@@ -87,10 +93,13 @@ public class EquipmentSynchronizerTest {
         String slotOfValidItem = "FINGER_1";
         String slotOfInvalidItem = "CHEST";
 
-        ItemResponse fingerResponse = ItemTestData.equippableItemResponse(1L, "Greatseal", "FINGER", null);
+        ItemResponse fingerResponse = ItemResponseBuilder.newEquippableInstance().build();
         EquipmentResponse.ItemDTO fingerDTO = EquipmentTestData.fromItemResponseNoSuffix(fingerResponse, slotOfValidItem, List.of());
 
-        ItemResponse chestResponse = ItemTestData.armorResponse(2L, "Breastplate", 200);
+        ItemResponse chestResponse = ItemResponseBuilder.newArmorInstance()
+                .withId(2L)
+                .withName("Breastplate")
+                .build();
         EquipmentResponse.ItemDTO chestDTO = EquipmentTestData.fromItemResponseNoSuffix(chestResponse, slotOfInvalidItem, List.of());
 
         EquipmentResponse response = mock(EquipmentResponse.class);

@@ -53,7 +53,7 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldFetchFromBlizzardAndPersistEntityWhenNotInRepo() {
         // given
-        ItemResponse response = ItemTestData.thunderfuryResponse();
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
         long baseId = response.id();
         long suffixId = 0L;
 
@@ -90,7 +90,7 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldGetFromRepoWhenEntityExists() {
         // given
-        ItemResponse response = ItemTestData.thunderfuryResponse();
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
         long baseId = response.id();
         long suffixId = 0L;
         int itemLevel = response.itemLevel();
@@ -98,7 +98,8 @@ public class ItemServiceIT extends BaseFullStackTest {
         jdbcTemplate.update(
                 "INSERT INTO items (base_id, suffix_id, name, item_level, quality, inventory_type, item_category) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                baseId, suffixId, response.name(), itemLevel, "LEGENDARY", "WEAPON", "WEAPON"
+                baseId, suffixId, response.name(), itemLevel, response.quality().type().toUpperCase(),
+                response.inventoryType().type().toUpperCase(), "WEAPON"
         );
 
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
@@ -127,7 +128,7 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldFetchTwoDifferentItemsSameItemId() {
         // given
-        ItemResponse response = ItemTestData.equippableItemResponse(21L, "Greatseal", "FINGER", 150);
+        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
         long baseId = response.id();
         long suffixId = 37L;
 
@@ -172,8 +173,13 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldIgnoreInvalidItemWhenResolving() {
         // given
-        ItemResponse response = ItemTestData.equippableItemResponse(21L, "Greatseal", "FINGER", 150);
-        ItemResponse brokenResponse = ItemTestData.equippableItemResponse(37L, null, "FINGER", 450); // null name
+        ItemResponse response = ItemResponseBuilder.newEquippableInstance()
+                .withId(1L)
+                .build();
+        ItemResponse brokenResponse = ItemResponseBuilder.newArmorInstance()
+                .withId(2L)
+                .withName(null) // null name
+                .build();
 
         when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
         when(blizzardServiceClient.getBaseItem(brokenResponse.id())).thenReturn(brokenResponse);
@@ -193,16 +199,17 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldHandleGettingItemsFromBothDbAndBlizzardSimultaneously() {
         // given
-        ItemResponse responseFromDb = ItemTestData.thunderfuryResponse();
+        ItemResponse responseFromDb = ItemResponseBuilder.newWeaponInstance().build();
 
         // save tf into db
         jdbcTemplate.update(
                 "INSERT INTO items (base_id, suffix_id, name, item_level, quality, inventory_type, item_category) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-                responseFromDb.id(), 0L, responseFromDb.name(), responseFromDb.itemLevel(), "LEGENDARY", "WEAPON", "WEAPON"
+                responseFromDb.id(), 0L, responseFromDb.name(), responseFromDb.itemLevel(), responseFromDb.quality().type().toUpperCase(),
+                responseFromDb.inventoryType().type().toUpperCase(), "WEAPON"
         );
 
-        ItemResponse responseFromBlizz = ItemTestData.equippableItemResponse(21L, "Greatseal", "FINGER", 150);
+        ItemResponse responseFromBlizz = ItemResponseBuilder.newEquippableInstance().build();
 
         EquipmentResponse.ItemDTO dbDTO = EquipmentTestData.fromItemResponseNoSuffix(responseFromDb, "MAIN_HAND", List.of());
         EquipmentResponse.ItemDTO blizzDTO = EquipmentTestData.fromItemResponseNoSuffix(responseFromBlizz, "FINGER_1", List.of());
@@ -228,7 +235,7 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldHandleDuplicateItems_NotUniqueEquipped() {
         // given
-        ItemResponse response = ItemTestData.equippableItemResponse(21L, "Greatseal", "FINGER", 150);
+        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
         when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
         EquipmentResponse.ItemDTO ring1DTO = EquipmentTestData.fromItemResponseSuffixed(response, "FINGER_1", "RARE",
@@ -263,7 +270,7 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldHandleExternalFetcherFailures() {
         // given
-        ItemResponse response = ItemTestData.equippableItemResponse(21L, "Greatseal", "FINGER", 150);
+        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "FINGER_1", List.of());
 
         when(blizzardServiceClient.getBaseItem(response.id())).thenThrow(RestClientException.class); // api is down
@@ -283,7 +290,7 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldPersistCacheItemInRedis() {
         // given
-        ItemResponse response = ItemTestData.thunderfuryResponse();
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
         long itemId = response.id();
 
         when(blizzardServiceClient.getBaseItem(itemId)).thenReturn(response);

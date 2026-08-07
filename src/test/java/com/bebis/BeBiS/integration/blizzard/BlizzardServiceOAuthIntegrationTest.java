@@ -1,7 +1,6 @@
 package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.base.BaseWiremockTest;
-import com.bebis.BeBiS.item.ItemTestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,22 +21,24 @@ public class BlizzardServiceOAuthIntegrationTest extends BaseWiremockTest {
     @Test
     void shouldFetchItem() {
         // given
+        long itemId = 19019L;
+
         stubFor(post("/token").willReturn(okJson("""
                 {"access_token": "fake-token", "token_type": "bearer", "expires_in": 3600}""")));
 
-        stubFor(get(urlPathEqualTo("/data/wow/item/" + ItemTestData.THUNDERFURY_ID))
+        stubFor(get(urlPathEqualTo("/data/wow/item/" + itemId))
                 .withHeader(namespaceHeader, equalTo(serviceNamespace))
                 .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
                 .willReturn(okJson("""
                         {"id": 19019, "name": "Thunderfury"}""")));
 
         // when
-        var item = blizzardClient.getBaseItem(ItemTestData.THUNDERFURY_ID);
+        var item = blizzardClient.getBaseItem(itemId);
 
         // then
         assertTrue(item.name().contains("Thunderfury"));
         // Verify the OAuth interceptor actually sent the token
-        verify(getRequestedFor(urlPathEqualTo("/data/wow/item/" + ItemTestData.THUNDERFURY_ID))
+        verify(getRequestedFor(urlPathEqualTo("/data/wow/item/" + itemId))
                 .withHeader("Authorization", equalTo("Bearer fake-token")));
     }
 }

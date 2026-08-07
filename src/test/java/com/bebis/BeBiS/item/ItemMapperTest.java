@@ -35,7 +35,7 @@ class ItemMapperTest {
         @Test
         void shouldMapWeaponSyncDataCorrectly() {
             // given
-            ItemResponse base = ItemTestData.thunderfuryResponse();
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance().build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
 
             // when
@@ -43,41 +43,34 @@ class ItemMapperTest {
 
             // then
             assertTrue(result.isWeapon());
-            assertEquals(1.9, result.weapon().speed());
-            assertEquals(Weapon.WeaponType.SWORD, result.weapon().weaponType());
+            assertEquals(base.preview().weapon().attackSpeed().value(), result.weapon().speed());
+            assertEquals(base.subclass().name().toUpperCase(), result.weapon().weaponType().name());
         }
 
         @Test
         void shouldNormalizeHighWeaponSpeed() {
             // given
-            ItemResponse base = ItemTestData.thunderfuryResponse();
-            EquipmentResponse.ItemDTO highSpeedDto = new EquipmentResponse.ItemDTO(
-                    new EquipmentResponse.ItemDTO.ItemDTOReference(base.id()),
-                    new EquipmentResponse.ItemDTO.SlotDTO("MAIN_HAND"),
-                    "Thunderfury",
-                    new EquipmentResponse.ItemDTO.QualityDTO("LEGENDARY"),
-                    new EquipmentResponse.ItemDTO.LevelDTO(80),
-                    List.of(),
-                    null,
-                    new EquipmentResponse.ItemDTO.WeaponDTO(
-                            new EquipmentResponse.ItemDTO.WeaponDTO.DamageDTO(44, 115),
-                            new EquipmentResponse.ItemDTO.WeaponDTO.AttackSpeedDTO(1900.0), // High speed in ms
-                            new EquipmentResponse.ItemDTO.WeaponDTO.DpsDTO(53.9)
-                    ),
-                    List.of()
-            );
+            double speedToNormalize = 3600.0;
+            double expectedNormalizedSpeed = speedToNormalize / 1000;
+
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance()
+                    .withAttackSpeed(3600.0) // speed in thousands
+                    .build();
+            EquipmentResponse.ItemDTO highSpeedDto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, highSpeedDto);
 
             // then
-            assertEquals(1.9, result.weapon().speed(), "Should divide by 1000 if speed is > 100");
+            assertEquals(expectedNormalizedSpeed, result.weapon().speed(), "Should divide by 1000 if speed is > 100");
         }
 
         @Test
         void shouldMapArmorSyncDataCorrectly() {
             // given
-            ItemResponse base = ItemTestData.armorResponse(1L, "Breastplate", 2137);
+            ItemResponse base = ItemResponseBuilder.newArmorInstance()
+                    .withSubClass(new ItemResponseBuilder.SubClass(4, "PLATE"))
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "CHEST", List.of());
 
             // when
@@ -91,7 +84,7 @@ class ItemMapperTest {
         @Test
         void shouldMapEquippableItemSyncDataCorrectly() {
             // given
-            ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", null);
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance().build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
 
             // when
@@ -105,9 +98,11 @@ class ItemMapperTest {
         void shouldCaptureArmorOnNonArmorItems() {
             // given
             Integer expectedArmorValue = 150;
-            ItemResponse response = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", expectedArmorValue);
+            ItemResponse response = ItemResponseBuilder.newEquippableInstance()
+                    .withArmorValue(expectedArmorValue)
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
-                    response, "FINGER_1", "UNCOMMON", "of The Monkey",
+                    response, "FINGER_1", response.quality().type().toUpperCase(), "of The Monkey",
                     37L, response.itemLevel() + 10, List.of(EquipmentTestData.stat("AGILITY", 5)), List.of()
             );
 
@@ -121,7 +116,7 @@ class ItemMapperTest {
         @Test
         void shouldKeepArmorNullWhenMissingInResponse() {
             // given
-            ItemResponse base = ItemTestData.thunderfuryResponse();
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance().build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
 
             // when
@@ -137,7 +132,9 @@ class ItemMapperTest {
         void shouldFallbackToBaseItemArmorWhenEquippedArmorIsNull() {
             // given
             int expectedArmor = 150;
-            ItemResponse base = ItemTestData.equippableItemResponse(100L, "Shielding Ring", "FINGER", expectedArmor);
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withArmorValue(expectedArmor)
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
 
             // when
@@ -152,9 +149,11 @@ class ItemMapperTest {
             // given
             int armorValue = 2137;
             int agiValue = 15;
-            ItemResponse base = ItemTestData.equippableItemResponse(123, "Greatseal", "FINGER", armorValue);
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withArmorValue(armorValue)
+                    .build();
             EquipmentResponse.ItemDTO dtoWithMixedStats = EquipmentTestData.fromItemResponseSuffixed(
-                    base, "FINGER_1", "UNCOMMON", "of The Monkey", 37L, base.itemLevel() + 10,
+                    base, "FINGER_1", base.quality().type().toUpperCase(), "of The Monkey", 37L, base.itemLevel() + 10,
                     List.of(
                             EquipmentTestData.stat("AGILITY", agiValue),
                             EquipmentTestData.stat("WEIRD_BLIZZARD_STAT_99", 100)
@@ -176,7 +175,9 @@ class ItemMapperTest {
         @Test
         void shouldMapNullUniqueEquippedToFalse() {
             // given
-            ItemResponse base = ItemTestData.createDtoWithNulls();
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withUniqueEquipped(null)
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
 
             // when
@@ -189,7 +190,9 @@ class ItemMapperTest {
         @Test
         void shouldFallbackToUnknownForBadEnums() {
             // given
-            ItemResponse base = ItemTestData.createDtoWithGarbageEnums("WEIRD_QUALITY");
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withQuality("WERID_QUALITY")
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
 
             // when
@@ -202,14 +205,18 @@ class ItemMapperTest {
         @Test
         void shouldMapSpecialEffectsCorrectly() {
             // given
-            ItemResponse base = ItemTestData.thunderfuryResponse();
+            String weaponEffect = "Cool effect";
+
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance()
+                    .withSpells(List.of(weaponEffect))
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
 
             // then
-            assertThat(result.commonData().specialEffects()).containsExactly(ItemTestData.TF_EFFECT);
+            assertThat(result.commonData().specialEffects()).containsExactly(weaponEffect);
         }
     }
 
@@ -219,7 +226,7 @@ class ItemMapperTest {
         @Test
         void shouldThrowExceptionWhenTopLevelInputsAreNull() {
             // given
-            ItemResponse base = ItemTestData.thunderfuryResponse();
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance().build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
 
             // when / then
@@ -235,7 +242,10 @@ class ItemMapperTest {
         @Test
         void shouldThrowExceptionWhenClassOrSubclassIsNull() {
             // given
-            ItemResponse baseMissingClass = ItemTestData.responseWithNullClassAndSubclass();
+            ItemResponse baseMissingClass = ItemResponseBuilder.newEquippableInstance()
+                    .withItemClass(null)
+                    .withSubClass(null)
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(baseMissingClass, "MAIN_HAND", List.of());
 
             // when / then
@@ -247,22 +257,30 @@ class ItemMapperTest {
         @Test
         void shouldThrowExceptionForUnsupportedClassId() {
             // given
-            ItemResponse baseContainer = ItemTestData.containerResponse(1L, "Bag");
+            ItemResponseBuilder.ItemClass notSupportedItemClass = new ItemResponseBuilder.ItemClass(1, "Bag");
+
+            ItemResponse baseContainer = ItemResponseBuilder.newEquippableInstance()
+                    .withItemClass(notSupportedItemClass)
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(baseContainer, "BAG", List.of());
 
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseContainer, dto))
                     .isInstanceOf(InvalidItemException.class)
-                    .hasMessage("Invalid classId: 1");
+                    .hasMessage("Invalid classId: " + notSupportedItemClass.id());
         }
 
         @Test
         void shouldThrowExceptionWhenInventoryTypeIsMissingOrInvalid() {
             // given
-            ItemResponse baseNullInv = ItemTestData.responseWithInventoryType(null);
+            ItemResponse baseNullInv = ItemResponseBuilder.newEquippableInstance()
+                    .withInventoryType(null)
+                    .build();
             EquipmentResponse.ItemDTO dto1 = EquipmentTestData.fromItemResponseNoSuffix(baseNullInv, "FINGER_1", List.of());
 
-            ItemResponse baseBadInv = ItemTestData.responseWithInventoryType("GARBAGE_SLOT_123");
+            ItemResponse baseBadInv = ItemResponseBuilder.newEquippableInstance()
+                    .withInventoryType("WEIRD_TYPE")
+                    .build();
             EquipmentResponse.ItemDTO dto2 = EquipmentTestData.fromItemResponseNoSuffix(baseBadInv, "FINGER_1", List.of());
 
             // when / then
@@ -278,7 +296,9 @@ class ItemMapperTest {
         @Test
         void shouldThrowInvalidItemExceptionWhenNameIsMissing() {
             // given
-            ItemResponse baseNoName = ItemTestData.responseWithNullName();
+            ItemResponse baseNoName = ItemResponseBuilder.newEquippableInstance()
+                    .withName(null)
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(baseNoName, "FINGER_1", List.of());
 
             // when / then
@@ -393,9 +413,11 @@ class ItemMapperTest {
         void shouldReturnSuffixIdWhenNameEndsWithOfSuffix() {
             // given
             long suffixId = 123L;
-            ItemResponse base = ItemTestData.armorResponse(1L, "Bracers", 10);
+            ItemResponse base = ItemResponseBuilder.newArmorInstance()
+                    .withName("Bracers")
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
-                    base, "WRISTS", "UNCOMMON", "of the Whale", suffixId, 20, List.of(), List.of()
+                    base, "WRISTS", "RARE", "of the Whale", suffixId, 20, List.of(), List.of()
             );
 
             // when
@@ -408,7 +430,7 @@ class ItemMapperTest {
         @Test
         void shouldReturnZeroWhenEnchantmentDoesNotStartWithOf() {
             // given
-            ItemResponse base = ItemTestData.armorResponse(1L, "Stamina Bracers", 10);
+            ItemResponse base = ItemResponseBuilder.newArmorInstance().build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(
                     base, "WRISTS", List.of(EquipmentTestData.enchant(999L, "+7 Stamina"))
             );
@@ -423,7 +445,9 @@ class ItemMapperTest {
         @Test
         void shouldReturnZeroWhenNameDoesNotEndWithEnchantment() {
             // given
-            ItemResponse base = ItemTestData.armorResponse(1L, "Bracers", 10);
+            ItemResponse base = ItemResponseBuilder.newArmorInstance()
+                    .withName("Bracers")
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(
                     base, "WRISTS", List.of(EquipmentTestData.enchant(123L, "of the Tiger"))
             );
@@ -458,9 +482,11 @@ class ItemMapperTest {
         void shouldMatchSpecificSuffixAmongMultipleEnchantments() {
             // given
             long suffixId = 123L;
-            ItemResponse base = ItemTestData.armorResponse(1L, "Bracers", 10);
+            ItemResponse base = ItemResponseBuilder.newArmorInstance()
+                    .withName("Bracers")
+                    .build();
             EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
-                    base, "WRISTS", "UNCOMMON", "of the Bear", suffixId, 20,
+                    base, "WRISTS", "RARE", "of the Bear", suffixId, 20,
                     List.of(),
                     List.of(EquipmentTestData.enchant(2137L, "Crusader"))
             );

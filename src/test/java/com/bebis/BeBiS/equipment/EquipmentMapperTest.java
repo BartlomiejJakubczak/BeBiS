@@ -4,7 +4,7 @@ import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.ItemMapper;
-import com.bebis.BeBiS.item.ItemTestData;
+import com.bebis.BeBiS.item.ItemResponseBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -22,8 +22,8 @@ public class EquipmentMapperTest {
     @ValueSource(strings = {"BELT", ""})
     void shouldReturnEmptyOptionalWhenSlotIs(String slot) {
         // given
-        ItemResponse tf = ItemTestData.thunderfuryResponse();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf, slot, List.of());
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, slot, List.of());
 
         // when
         Optional<Equipment.Slot> result = mapper.mapSlot(dto);
@@ -37,8 +37,8 @@ public class EquipmentMapperTest {
         // given
         String correctSlot = "MAIN_HAND";
 
-        ItemResponse tf = ItemTestData.thunderfuryResponse();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf, correctSlot, List.of());
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, correctSlot, List.of());
 
         // when
         Optional<Equipment.Slot> result = mapper.mapSlot(dto);
@@ -51,8 +51,8 @@ public class EquipmentMapperTest {
     @Test
     void shouldReturnEmptyOptionalWhenEnchantmentsAreNull() {
         // given
-        ItemResponse tf = ItemTestData.thunderfuryResponse();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf, "MAIN_HAND", null);
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", null);
 
         // when
         List<String> result = mapper.mapPlayerEnchants(dto, 0L);
@@ -68,7 +68,7 @@ public class EquipmentMapperTest {
         List<String> expectedEnchantments = List.of("Crusader"); // suffixId is counted by Blizz as an enchantment,
         // so it has to be omitted by the mapper explicitly
 
-        ItemResponse response = ItemTestData.equippableItemResponse(21L, "Greatseal", "FINGER", null);
+        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
         EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(response, "FINGER_1", "RARE",
                 "of The Bear", suffixId, 60, List.of(), List.of(EquipmentTestData.enchant(69L, expectedEnchantments.getFirst())));
 

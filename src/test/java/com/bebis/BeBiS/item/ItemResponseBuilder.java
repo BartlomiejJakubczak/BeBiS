@@ -9,21 +9,21 @@ import static com.bebis.BeBiS.integration.blizzard.dto.ItemResponse.*;
 
 public class ItemResponseBuilder {
 
-    private record ItemClass(int id, String type) {
+    public record ItemClass(int id, String type) {
     }
 
-    private record SubClass(int id, String type) {
+    public record SubClass(int id, String type) {
     }
 
     private long id;
     private String name;
     private String quality;
-    private int itemLevel;
-    private int requiredLevel;
+    private Integer itemLevel;
+    private Integer requiredLevel;
     private ItemClass itemClass;
     private SubClass subClass;
     private String inventoryType;
-    private boolean uniqueEquipped;
+    private Boolean uniqueEquipped;
 
     private Map<String, Integer> stats;
     private List<String> spells;
@@ -80,7 +80,7 @@ public class ItemResponseBuilder {
         builder.itemLevel = 59;
         builder.requiredLevel = 54;
         builder.itemClass = new ItemClass(4, "Armor");
-        builder.subClass = new SubClass(3, "Misc");
+        builder.subClass = new SubClass(0, "Misc");
         builder.inventoryType = "FINGER";
         builder.uniqueEquipped = false; // "true" irl, but I need good defaults for testing
         builder.stats = Map.of("AGILITY", 15);
@@ -139,7 +139,7 @@ public class ItemResponseBuilder {
     }
 
     private String uniqueEquipped() {
-        return this.uniqueEquipped ? "Whatever string that they put in to indicate uniqueness" : null;
+        return this.uniqueEquipped != null ? "Whatever string that they put in to indicate uniqueness" : null;
     }
 
     public ItemResponseBuilder withId(long id) {
@@ -157,23 +157,23 @@ public class ItemResponseBuilder {
         return this;
     }
 
-    public ItemResponseBuilder withItemLevel(int itemLevel) {
+    public ItemResponseBuilder withItemLevel(Integer itemLevel) {
         this.itemLevel = itemLevel;
         return this;
     }
 
-    public ItemResponseBuilder withRequiredLevel(int requiredLevel) {
+    public ItemResponseBuilder withRequiredLevel(Integer requiredLevel) {
         this.requiredLevel = requiredLevel;
         return this;
     }
 
-    public ItemResponseBuilder withItemClass(int itemClass, String type) {
-        this.itemClass = new ItemClass(itemClass, type);
+    public ItemResponseBuilder withItemClass(ItemClass itemClass) {
+        this.itemClass = itemClass;
         return this;
     }
 
-    public ItemResponseBuilder withSubClass(int subClass, String type) {
-        this.subClass = new SubClass(subClass, type);
+    public ItemResponseBuilder withSubClass(SubClass subClass) {
+        this.subClass = subClass;
         return this;
     }
 
@@ -182,7 +182,7 @@ public class ItemResponseBuilder {
         return this;
     }
 
-    public ItemResponseBuilder withUniqueEquipped(boolean uniqueEquipped) {
+    public ItemResponseBuilder withUniqueEquipped(Boolean uniqueEquipped) {
         this.uniqueEquipped = uniqueEquipped;
         return this;
     }

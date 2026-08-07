@@ -8,7 +8,7 @@ import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
-import com.bebis.BeBiS.item.ItemTestData;
+import com.bebis.BeBiS.item.ItemResponseBuilder;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.domain.WowTalents;
@@ -56,10 +56,10 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         );
         when(blizzardUserClient.getCharacterSpecialization(realmSlug, charName)).thenReturn(specResponse);
 
-        ItemResponse tfResponse = ItemTestData.thunderfuryResponse();
-        when(blizzardServiceClient.getBaseItem(tfResponse.id())).thenReturn(tfResponse);
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
-        EquipmentResponse eqResponse = new EquipmentResponse(List.of(EquipmentTestData.fromItemResponseNoSuffix(tfResponse, "main_hand", List.of())));
+        EquipmentResponse eqResponse = new EquipmentResponse(List.of(EquipmentTestData.fromItemResponseNoSuffix(response, "main_hand", List.of())));
         when(blizzardUserClient.getCharacterEquipment(realmSlug, charName)).thenReturn(eqResponse);
 
         // when
@@ -84,8 +84,8 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         Equipment equipmentFromSelected = selectedCharacter.equipment();
         EquippedItem equippedItem = equipmentFromSelected.getEquipment().get(Equipment.Slot.MAIN_HAND);
         assertThat(equippedItem).isNotNull();
-        assertThat(equippedItem.item().getMetadata().key().baseId()).isEqualTo(tfResponse.id());
-        assertThat(equippedItem.item().getMetadata().name()).isEqualTo(tfResponse.name());
+        assertThat(equippedItem.item().getMetadata().key().baseId()).isEqualTo(response.id());
+        assertThat(equippedItem.item().getMetadata().name()).isEqualTo(response.name());
 
         List<CharacterSelectedEvent> eventsFired = applicationEvents.stream(CharacterSelectedEvent.class).toList();
         assertThat(eventsFired.size()).isEqualTo(1);

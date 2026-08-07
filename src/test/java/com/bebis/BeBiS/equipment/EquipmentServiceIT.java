@@ -5,7 +5,7 @@ import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.ItemTestData;
+import com.bebis.BeBiS.item.ItemResponseBuilder;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
@@ -43,12 +43,12 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String realmSlug = charEntity.getPk().getRealmSlug();
         String charName = charEntity.getName();
 
-        ItemResponse tf = ItemTestData.thunderfuryResponse();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf, "main_hand", List.of());
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "main_hand", List.of());
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(dto));
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(eqResponse);
-        when(blizzardServiceClient.getBaseItem(tf.id())).thenReturn(tf);
+        when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
         // when
         callService(charEntity);
@@ -60,7 +60,7 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         assertThat(items).hasSize(1);
         assertThat(items).containsKey(Equipment.Slot.MAIN_HAND);
 
-        verify(blizzardServiceClient).getBaseItem(tf.id());
+        verify(blizzardServiceClient).getBaseItem(response.id());
         verify(blizzardUserClient).getCharacterEquipment(eq(realmSlug), eq(charName));
     }
 
@@ -72,17 +72,17 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String realmSlug = charEntity.getPk().getRealmSlug();
         String charName = charEntity.getName();
 
-        ItemResponse tf = ItemTestData.thunderfuryResponse();
-        EquipmentResponse.ItemDTO wrongDto = EquipmentTestData.fromItemResponseNoSuffix(tf, "left_hand", List.of());
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        EquipmentResponse.ItemDTO wrongDto = EquipmentTestData.fromItemResponseNoSuffix(response, "left_hand", List.of());
 
-        ItemResponse ring = ItemTestData.equippableItemResponse(1L, "Greatseal", "finger", null);
+        ItemResponse ring = ItemResponseBuilder.newEquippableInstance().build();
         EquipmentResponse.ItemDTO ringDto = EquipmentTestData.fromItemResponseNoSuffix(ring, "finger_1", List.of());
 
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(wrongDto, ringDto));
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(eqResponse);
         when(blizzardServiceClient.getBaseItem(ring.id())).thenReturn(ring);
-        when(blizzardServiceClient.getBaseItem(tf.id())).thenReturn(tf);
+        when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
         // when
         callService(charEntity);
@@ -110,16 +110,16 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String realmSlug = charEntity.getPk().getRealmSlug();
         String charName = charEntity.getName();
 
-        ItemResponse tf = ItemTestData.thunderfuryResponse();
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+
         String enchantName = "Crusader";
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(tf,
-                "main_hand",
-                List.of(EquipmentTestData.enchant(1L, enchantName))
-        );
+        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "main_hand",
+                List.of(EquipmentTestData.enchant(1L, enchantName)));
+
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(dto));
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(eqResponse);
-        when(blizzardServiceClient.getBaseItem(tf.id())).thenReturn(tf);
+        when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
         // when
         callService(charEntity);
@@ -134,7 +134,7 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         assertThat(items).containsKey(Equipment.Slot.MAIN_HAND);
         assertThat(items.get(Equipment.Slot.MAIN_HAND).getPlayerEnchants()).containsExactly(enchantName);
 
-        verify(blizzardServiceClient).getBaseItem(tf.id());
+        verify(blizzardServiceClient).getBaseItem(response.id());
         verify(blizzardUserClient).getCharacterEquipment(eq(realmSlug), eq(charName));
     }
 
@@ -150,8 +150,11 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String charName = charEntity.getName();
 
         String newItemName = "Greatseal";
-        ItemResponse ring = ItemTestData.equippableItemResponse(1L, newItemName, "finger", null);
+        ItemResponse ring = ItemResponseBuilder.newEquippableInstance()
+                .withName(newItemName)
+                .build();
         EquipmentResponse.ItemDTO ringDto = EquipmentTestData.fromItemResponseNoSuffix(ring, "finger_1", List.of());
+
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(ringDto));
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(eqResponse);
@@ -219,7 +222,11 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         WowCharacterEntity charEntity = setUpCharacterInDb(new HashMap<>());
         ItemEntity item = setUpItemInDb(1L, "Greatseal");
 
-        ItemResponse itemResponse = ItemTestData.equippableItemResponse(item.getPk().getBaseId(), item.getName(), "finger", null);
+        ItemResponse itemResponse = ItemResponseBuilder.newEquippableInstance()
+                .withId(item.getPk().getBaseId())
+                .withName(item.getName())
+                .build();
+
         EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(itemResponse, "finger_1", List.of());
 
         when(blizzardUserClient.getCharacterEquipment(eq(charEntity.getPk().getRealmSlug()), eq(charEntity.getName())))
@@ -240,10 +247,12 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String realmSlug = charEntity.getPk().getRealmSlug();
         String charName = charEntity.getName();
 
-        ItemResponse ringResponse = ItemTestData.equippableItemResponse(1L, "Greatseal", "finger", null);
+        ItemResponse ringResponse = ItemResponseBuilder.newEquippableInstance().build();
         EquipmentResponse.ItemDTO validDTO = EquipmentTestData.fromItemResponseNoSuffix(ringResponse, "finger_1", List.of());
 
-        ItemResponse trinketResponse = ItemTestData.equippableItemResponse(2L, null, "trinket", null); // null name
+        ItemResponse trinketResponse = ItemResponseBuilder.newEquippableInstance()
+                .withName(null) // null name
+                .build();
         EquipmentResponse.ItemDTO corruptDTO = EquipmentTestData.fromItemResponseNoSuffix(trinketResponse, "trinket", List.of());
 
         when(blizzardServiceClient.getBaseItem(ringResponse.id())).thenReturn(ringResponse);

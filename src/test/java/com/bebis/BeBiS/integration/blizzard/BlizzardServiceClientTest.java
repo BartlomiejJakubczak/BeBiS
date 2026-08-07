@@ -2,7 +2,7 @@ package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.config.RestClientConfig;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.ItemTestData;
+import com.bebis.BeBiS.item.ItemResponseBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -94,18 +94,18 @@ class BlizzardServiceClientTest {
     @Test
     void shouldGetBaseItemWithCorrectPath() throws Exception {
         // given
-        ItemResponse thunderfury = ItemTestData.thunderfuryResponse();
-        String jsonResponse = objectMapper.writeValueAsString(thunderfury);
+        ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
+        String jsonResponse = objectMapper.writeValueAsString(response);
 
         // when
-        server.expect(requestTo(baseUrl + "/data/wow/item/" + thunderfury.id() + BlizzardServiceClient.LOCALE_QUERY_PARAM))
+        server.expect(requestTo(baseUrl + "/data/wow/item/" + response.id() + BlizzardServiceClient.LOCALE_QUERY_PARAM))
                 .andExpect(header("Authorization", "Bearer fake-service-token"))
                 .andRespond(withSuccess(jsonResponse, MediaType.APPLICATION_JSON));
 
-        ItemResponse result = blizzardClient.getBaseItem(thunderfury.id());
+        ItemResponse result = blizzardClient.getBaseItem(response.id());
 
         // then
-        assertEquals(thunderfury, result);
+        assertEquals(response, result);
         server.verify();
     }
 }
