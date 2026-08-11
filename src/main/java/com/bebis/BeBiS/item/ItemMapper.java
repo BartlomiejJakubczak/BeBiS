@@ -99,10 +99,10 @@ public class ItemMapper {
         int maxDamage = 0;
         double dps = 0.0;
         if (weaponData != null) {
-            speed = weaponData.attackSpeed().value();
-            minDamage = weaponData.damage().minValue();
-            maxDamage = weaponData.damage().maxValue();
-            dps = weaponData.dps().value();
+            speed = weaponData.attackSpeed().value(); // TODO nested calls and no null guards
+            minDamage = weaponData.damage().minValue(); // TODO nested calls and no null guards
+            maxDamage = weaponData.damage().maxValue(); // TODO nested calls and no null guards
+            dps = weaponData.dps().value(); // TODO nested calls and no null guards
         }
         // Blizzard API sometimes returns speed in ms (1900) instead of seconds (1.9)
         return new ItemSyncData(

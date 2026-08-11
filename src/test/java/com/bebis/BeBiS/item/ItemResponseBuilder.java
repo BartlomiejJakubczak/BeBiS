@@ -15,7 +15,7 @@ public class ItemResponseBuilder {
     public record SubClass(int id, String type) {
     }
 
-    private long id;
+    private Long id;
     private String name;
     private String quality;
     private Integer itemLevel;
@@ -142,7 +142,7 @@ public class ItemResponseBuilder {
         return this.uniqueEquipped != null ? "Whatever string that they put in to indicate uniqueness" : null;
     }
 
-    public ItemResponseBuilder withId(long id) {
+    public ItemResponseBuilder withId(Long id) {
         this.id = id;
         return this;
     }
