@@ -100,9 +100,11 @@ public class EquipmentResponseBuilder {
     private WeaponDTO weaponDTO() {
         if (this.minDamage == null && this.maxDamage == null && this.dps == null && this.attackSpeed == null)
             return null;
-        return new WeaponDTO(new WeaponDTO.DamageDTO(this.minDamage, this.maxDamage),
-                new WeaponDTO.AttackSpeedDTO(this.attackSpeed),
-                new WeaponDTO.DpsDTO(this.dps));
+        return new WeaponDTO(
+                this.minDamage != null && this.maxDamage != null ? new WeaponDTO.DamageDTO(this.minDamage, this.maxDamage) : null,
+                this.attackSpeed != null ? new WeaponDTO.AttackSpeedDTO(this.attackSpeed) : null,
+                this.dps != null ? new WeaponDTO.DpsDTO(this.dps) : null
+        );
     }
 
     private List<EnchantmentDTO> enchantments() {

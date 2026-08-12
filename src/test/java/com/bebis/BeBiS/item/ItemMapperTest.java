@@ -339,6 +339,85 @@ class ItemMapperTest {
                     .isInstanceOf(InvalidItemException.class)
                     .hasMessage("Critical data missing: name");
         }
+
+        @Test
+        void shouldThrowInvalidItemExceptionWhenWeaponDataIsMissing() {
+            // given
+            ItemResponse weaponResponse = ItemResponseBuilder.newWeaponInstance().build();
+
+            EquipmentResponse.ItemDTO weaponDTO = EquipmentResponseBuilder.newInstance(weaponResponse)
+                    .withAttackSpeed(null)
+                    .withDps(null)
+                    .withMinDamage(null)
+                    .withMaxDamage(null)
+                    // all 4 null result in null weaponDTO
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(weaponResponse, weaponDTO))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessage("weapon data cannot be null for weapon upgrade analysis purposes");
+        }
+
+        @Test
+        void shouldThrowInvalidItemExceptionWhenAttackSpeedDataIsMissing() {
+            // given
+            ItemResponse weaponResponse = ItemResponseBuilder.newWeaponInstance().build();
+
+            EquipmentResponse.ItemDTO weaponDTO = EquipmentResponseBuilder.newInstance(weaponResponse)
+                    .withAttackSpeed(null)
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(weaponResponse, weaponDTO))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessage("weapon speed cannot be null for weapon upgrade analysis purposes");
+        }
+
+        @Test
+        void shouldThrowInvalidItemExceptionWhenMinDamageDataIsMissing() {
+            // given
+            ItemResponse weaponResponse = ItemResponseBuilder.newWeaponInstance().build();
+
+            EquipmentResponse.ItemDTO weaponDTO = EquipmentResponseBuilder.newInstance(weaponResponse)
+                    .withMinDamage(null)
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(weaponResponse, weaponDTO))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessage("weapon damage cannot be null for weapon upgrade analysis purposes");
+        }
+
+        @Test
+        void shouldThrowInvalidItemExceptionWhenMaxDamageDataIsMissing() {
+            // given
+            ItemResponse weaponResponse = ItemResponseBuilder.newWeaponInstance().build();
+
+            EquipmentResponse.ItemDTO weaponDTO = EquipmentResponseBuilder.newInstance(weaponResponse)
+                    .withMaxDamage(null)
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(weaponResponse, weaponDTO))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessage("weapon damage cannot be null for weapon upgrade analysis purposes");
+        }
+
+        @Test
+        void shouldThrowInvalidItemExceptionWhenDpsDataIsMissing() {
+            // given
+            ItemResponse weaponResponse = ItemResponseBuilder.newWeaponInstance().build();
+
+            EquipmentResponse.ItemDTO weaponDTO = EquipmentResponseBuilder.newInstance(weaponResponse)
+                    .withDps(null)
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(weaponResponse, weaponDTO))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessage("weapon dps cannot be null for weapon upgrade analysis purposes");
+        }
     }
 
     @Nested

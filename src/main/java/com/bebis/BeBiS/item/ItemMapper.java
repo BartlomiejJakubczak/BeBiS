@@ -94,26 +94,32 @@ public class ItemMapper {
 
     private ItemSyncData createWeaponSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
         var weaponData = equippedItemDTO.weapon();
-        double speed = 0.0;
-        int minDamage = 0;
-        int maxDamage = 0;
-        double dps = 0.0;
-        if (weaponData != null) {
-            speed = weaponData.attackSpeed().value(); // TODO nested calls and no null guards
-            minDamage = weaponData.damage().minValue(); // TODO nested calls and no null guards
-            maxDamage = weaponData.damage().maxValue(); // TODO nested calls and no null guards
-            dps = weaponData.dps().value(); // TODO nested calls and no null guards
-        }
-        // Blizzard API sometimes returns speed in ms (1900) instead of seconds (1.9)
+
+        if (weaponData == null)
+            throw new InvalidItemException("weapon data cannot be null for weapon upgrade analysis purposes");
+        if (weaponData.damage() == null)
+            throw new InvalidItemException("weapon damage cannot be null for weapon upgrade analysis purposes");
+        if (weaponData.attackSpeed() == null)
+            throw new InvalidItemException("weapon speed cannot be null for weapon upgrade analysis purposes");
+        if (weaponData.dps() == null)
+            throw new InvalidItemException("weapon dps cannot be null for weapon upgrade analysis purposes");
+
         return new ItemSyncData(
                 createCommonData(baseDTO, equippedItemDTO),
                 new ItemSyncData.WeaponSyncData(
                         mapWeaponType((int) baseDTO.subclass().id()),
-                        speed > 100 ? speed / 1000.0 : speed,
-                        minDamage, maxDamage, dps
+                        normalizeSpeed(weaponData.attackSpeed().value()),
+                        weaponData.damage().minValue(),
+                        weaponData.damage().minValue(),
+                        weaponData.dps().value()
                 ),
                 null
         );
+    }
+
+    private Double normalizeSpeed(double speed) {
+        // Blizzard API sometimes returns speed in ms (1900) instead of seconds (1.9)
+        return speed > 100 ? speed / 1000.0 : speed;
     }
 
     private ItemSyncData createArmorSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) {
