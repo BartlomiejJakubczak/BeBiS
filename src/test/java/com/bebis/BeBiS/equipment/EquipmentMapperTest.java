@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,7 +24,9 @@ public class EquipmentMapperTest {
     void shouldReturnEmptyOptionalWhenSlotIs(String slot) {
         // given
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, slot, List.of());
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot(slot)
+                .build();
 
         // when
         Optional<Equipment.Slot> result = mapper.mapSlot(dto);
@@ -38,7 +41,9 @@ public class EquipmentMapperTest {
         String correctSlot = "MAIN_HAND";
 
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, correctSlot, List.of());
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot(correctSlot)
+                .build();
 
         // when
         Optional<Equipment.Slot> result = mapper.mapSlot(dto);
@@ -52,7 +57,10 @@ public class EquipmentMapperTest {
     void shouldReturnEmptyOptionalWhenEnchantmentsAreNull() {
         // given
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", null);
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("MAIN_HAND")
+                .withEnchantments(null)
+                .build();
 
         // when
         List<String> result = mapper.mapPlayerEnchants(dto, 0L);
@@ -69,9 +77,13 @@ public class EquipmentMapperTest {
         // so it has to be omitted by the mapper explicitly
 
         ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(response, "FINGER_1", "RARE",
-                "of The Bear", suffixId, 60, List.of(), List.of(EquipmentTestData.enchant(69L, expectedEnchantments.getFirst())));
 
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, "of the Bear"))
+                .withEnchantments(Map.of(69L, expectedEnchantments.getFirst()))
+                .withSlot("FINGER_1")
+                .build();
+        
         // when
         List<String> result = mapper.mapPlayerEnchants(dto, suffixId);
 

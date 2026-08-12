@@ -6,18 +6,17 @@ import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse.ItemDTO.*;
 
 public class EquipmentResponseBuilder {
 
-    public record Suffix(int id, String name) {
+    public record Suffix(long id, String name) {
     }
 
-    private ItemResponse base;
-
     private Long id;
-    private String name;
+    private String fullName;
     private Suffix suffix;
     private String slot;
     private String quality;
@@ -32,35 +31,63 @@ public class EquipmentResponseBuilder {
     private Integer minDamage;
     private Integer maxDamage;
 
-    private Map<Integer, String> enchantments;
+    private Map<Long, String> enchantments;
 
-    private EquipmentResponseBuilder(ItemResponse base) {
-        this.base = base;
+    private EquipmentResponseBuilder() {
     }
 
-    public static EquipmentResponseBuilder newInstance(ItemResponse item) {
-        return new EquipmentResponseBuilder(item);
+    public static EquipmentResponseBuilder newInstance(ItemResponse base) {
+        EquipmentResponseBuilder builder = new EquipmentResponseBuilder();
+        builder.id = base.id();
+        builder.fullName = base.name();
+        builder.quality = base.quality() != null ? base.quality().type() : null;
+        builder.itemLevel = base.itemLevel() != null ? base.itemLevel() : null;
+        builder.stats = mapStatsFromBase(base);
+        builder.armorValue = mapArmorFromBase(base);
+        mapWeaponFromBase(builder, base);
+        return builder;
+    }
+
+    private static Map<String, Integer> mapStatsFromBase(ItemResponse base) {
+        if (base.preview() == null || base.preview().stats() == null) return null;
+        return base.preview().stats().stream()
+                .collect(Collectors.toMap(
+                        (stat) -> stat.type().type(),
+                        ItemResponse.StatDTO::value
+                ));
+    }
+
+    private static Integer mapArmorFromBase(ItemResponse base) {
+        if (base.preview() == null || base.preview().armor() == null) return null;
+        return base.preview().armor().value();
+    }
+
+    private static void mapWeaponFromBase(EquipmentResponseBuilder builder, ItemResponse base) {
+        if (base.preview() != null && base.preview().weapon() != null) {
+            builder.attackSpeed = base.preview().weapon().attackSpeed().value();
+            builder.dps = base.preview().weapon().dps().value();
+            builder.minDamage = base.preview().weapon().damage().minValue();
+            builder.maxDamage = base.preview().weapon().damage().maxValue();
+        }
     }
 
     public EquipmentResponse.ItemDTO build() {
         return new EquipmentResponse.ItemDTO(
-                this.id != null ? new ItemDTOReference(id) : new ItemDTOReference(base.id()),
+                this.id != null ? new ItemDTOReference(id) : null,
                 new SlotDTO(this.slot),
                 fullName(),
                 new QualityDTO(this.quality),
-                new LevelDTO(this.itemLevel),
+                this.itemLevel != null ? new LevelDTO(this.itemLevel) : null,
                 stats(),
-                new ArmorDTO(this.armorValue),
+                this.armorValue != null ? new ArmorDTO(this.armorValue) : null,
                 weaponDTO(),
                 enchantments()
         );
     }
 
     private String fullName() {
-        if (name == null) {
-            return this.suffix != null ? this.base.name() + " " + this.suffix.name() : this.base.name();
-        }
-        return name;
+        if (fullName == null) return null;
+        return this.suffix != null ? this.fullName + " " + this.suffix.name() : this.fullName;
     }
 
     private List<StatDTO> stats() {
@@ -97,8 +124,8 @@ public class EquipmentResponseBuilder {
         return this;
     }
 
-    public EquipmentResponseBuilder withName(String name) {
-        this.name = name;
+    public EquipmentResponseBuilder withFullName(String fullName) {
+        this.fullName = fullName;
         return this;
     }
 
@@ -147,7 +174,7 @@ public class EquipmentResponseBuilder {
         return this;
     }
 
-    public EquipmentResponseBuilder withEnchantments(Map<Integer, String> enchs) {
+    public EquipmentResponseBuilder withEnchantments(Map<Long, String> enchs) {
         if (enchs != null) {
             if (this.enchantments == null) this.enchantments = new HashMap<>();
             this.enchantments.putAll(enchs);

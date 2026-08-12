@@ -61,19 +61,25 @@ public class EquipmentSynchronizerTest {
         entity.getItems().put(Equipment.Slot.HEAD, new EquipmentEntity.EquippedItem());
 
         ItemResponse fingerResponse = ItemResponseBuilder.newEquippableInstance().build();
-        EquipmentResponse.ItemDTO fingerDTO = EquipmentTestData.fromItemResponseNoSuffix(fingerResponse, "FINGER_1", List.of());
+        EquipmentResponse.ItemDTO fingerDTO = EquipmentResponseBuilder.newInstance(fingerResponse)
+                .withSlot("FINGER_1")
+                .build();
 
         ItemResponse chestResponse = ItemResponseBuilder.newArmorInstance()
                 .withId(2L)
                 .withName("Breastplate")
                 .build();
-        EquipmentResponse.ItemDTO chestDTO = EquipmentTestData.fromItemResponseNoSuffix(chestResponse, "CHEST", List.of());
+        EquipmentResponse.ItemDTO chestDTO = EquipmentResponseBuilder.newInstance(chestResponse)
+                .withSlot("CHEST")
+                .build();
 
         ItemResponse legsResponse = ItemResponseBuilder.newArmorInstance()
                 .withId(3L)
                 .withName("Leggings")
                 .build();
-        EquipmentResponse.ItemDTO legsDTO = EquipmentTestData.fromItemResponseNoSuffix(legsResponse, "LEGS", List.of());
+        EquipmentResponse.ItemDTO legsDTO = EquipmentResponseBuilder.newInstance(legsResponse)
+                .withSlot("LEGS")
+                .build();
 
         EquipmentResponse response = mock(EquipmentResponse.class);
         when(response.equipment()).thenReturn(List.of(fingerDTO, chestDTO, legsDTO));
@@ -90,17 +96,20 @@ public class EquipmentSynchronizerTest {
     @Test
     void shouldNotAssignAnInvalidItemToTheSlot() {
         // given
-        String slotOfValidItem = "FINGER_1";
-        String slotOfInvalidItem = "CHEST";
-
         ItemResponse fingerResponse = ItemResponseBuilder.newEquippableInstance().build();
-        EquipmentResponse.ItemDTO fingerDTO = EquipmentTestData.fromItemResponseNoSuffix(fingerResponse, slotOfValidItem, List.of());
+
+        EquipmentResponse.ItemDTO fingerDTO = EquipmentResponseBuilder.newInstance(fingerResponse)
+                .withSlot("FINGER_1")
+                .build();
 
         ItemResponse chestResponse = ItemResponseBuilder.newArmorInstance()
                 .withId(2L)
-                .withName("Breastplate")
+                .withName(null) // null name
                 .build();
-        EquipmentResponse.ItemDTO chestDTO = EquipmentTestData.fromItemResponseNoSuffix(chestResponse, slotOfInvalidItem, List.of());
+
+        EquipmentResponse.ItemDTO chestDTO = EquipmentResponseBuilder.newInstance(chestResponse)
+                .withSlot("CHEST")
+                .build();
 
         EquipmentResponse response = mock(EquipmentResponse.class);
         when(response.equipment()).thenReturn(List.of(fingerDTO, chestDTO));

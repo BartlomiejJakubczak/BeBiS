@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
-import com.bebis.BeBiS.equipment.EquipmentTestData;
+import com.bebis.BeBiS.equipment.EquipmentResponseBuilder;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
@@ -59,7 +59,7 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
         when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
-        EquipmentResponse eqResponse = new EquipmentResponse(List.of(EquipmentTestData.fromItemResponseNoSuffix(response, "main_hand", List.of())));
+        EquipmentResponse eqResponse = new EquipmentResponse(List.of(EquipmentResponseBuilder.newInstance(response).withSlot("MAIN_HAND").build()));
         when(blizzardUserClient.getCharacterEquipment(realmSlug, charName)).thenReturn(eqResponse);
 
         // when

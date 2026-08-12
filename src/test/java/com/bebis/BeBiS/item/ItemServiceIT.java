@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
-import com.bebis.BeBiS.equipment.EquipmentTestData;
+import com.bebis.BeBiS.equipment.EquipmentResponseBuilder;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.event.ItemPersistedEvent;
@@ -61,7 +61,9 @@ public class ItemServiceIT extends BaseFullStackTest {
 
         assertThatItemNotInDb(baseId, suffixId);
 
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("MAIN_HAND")
+                .build();
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = callServiceForDbChecks(dto);
@@ -102,7 +104,9 @@ public class ItemServiceIT extends BaseFullStackTest {
                 response.inventoryType().type().toUpperCase(), "WEAPON"
         );
 
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("MAIN_HAND")
+                .build();
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = service.resolveItems(List.of(dto));
@@ -131,17 +135,21 @@ public class ItemServiceIT extends BaseFullStackTest {
         ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
         long baseId = response.id();
         long suffixId = 37L;
+        String suffixName = "of the Bear";
 
         when(blizzardServiceClient.getBaseItem(baseId)).thenReturn(response);
 
         assertThatItemNotInDb(baseId, suffixId);
 
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "FINGER_1", List.of());
-        EquipmentResponse.ItemDTO suffixedDTO = EquipmentTestData.fromItemResponseSuffixed(
-                response, "FINGER_2", "RARE", "of The Bear", suffixId, response.itemLevel() + 10,
-                List.of(EquipmentTestData.stat("STRENGTH", 9), EquipmentTestData.stat("STAMINA", 9)),
-                List.of()
-        );
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("FINGER_1")
+                .build();
+
+        EquipmentResponse.ItemDTO suffixedDTO = EquipmentResponseBuilder.newInstance(response)
+                .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, suffixName))
+                .withSlot("FINGER_2")
+                .withItemLevel(response.itemLevel() + 10)
+                .build();
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = callServiceForDbChecks(dto, suffixedDTO);
@@ -158,7 +166,7 @@ public class ItemServiceIT extends BaseFullStackTest {
         String savedName = jdbcTemplate.queryForObject(
                 "SELECT name FROM items WHERE base_id = ? AND suffix_id = ?",
                 String.class, baseId, suffixId);
-        assertThat(savedName).contains("of The Bear");
+        assertThat(savedName).contains(suffixName);
 
         verify(itemFetcher).fetchItem(eq(baseId)); // the second time was pulled from the cache
         verify(blizzardServiceClient, times(1)).getBaseItem(baseId); // should pull from cache the second time
@@ -184,8 +192,13 @@ public class ItemServiceIT extends BaseFullStackTest {
         when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
         when(blizzardServiceClient.getBaseItem(brokenResponse.id())).thenReturn(brokenResponse);
 
-        EquipmentResponse.ItemDTO goodResponseDTO = EquipmentTestData.fromItemResponseNoSuffix(response, "FINGER_1", List.of());
-        EquipmentResponse.ItemDTO brokenResponseDTO = EquipmentTestData.fromItemResponseNoSuffix(brokenResponse, "CHEST", List.of());
+        EquipmentResponse.ItemDTO goodResponseDTO = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("FINGER_1")
+                .build();
+
+        EquipmentResponse.ItemDTO brokenResponseDTO = EquipmentResponseBuilder.newInstance(brokenResponse)
+                .withSlot("CHEST")
+                .build();
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = service.resolveItems(List.of(goodResponseDTO, brokenResponseDTO));
@@ -211,8 +224,13 @@ public class ItemServiceIT extends BaseFullStackTest {
 
         ItemResponse responseFromBlizz = ItemResponseBuilder.newEquippableInstance().build();
 
-        EquipmentResponse.ItemDTO dbDTO = EquipmentTestData.fromItemResponseNoSuffix(responseFromDb, "MAIN_HAND", List.of());
-        EquipmentResponse.ItemDTO blizzDTO = EquipmentTestData.fromItemResponseNoSuffix(responseFromBlizz, "FINGER_1", List.of());
+        EquipmentResponse.ItemDTO dbDTO = EquipmentResponseBuilder.newInstance(responseFromDb)
+                .withSlot("MAIN_HAND")
+                .build();
+
+        EquipmentResponse.ItemDTO blizzDTO = EquipmentResponseBuilder.newInstance(responseFromBlizz)
+                .withSlot("FINGER_1")
+                .build();
 
         when(blizzardServiceClient.getBaseItem(responseFromBlizz.id())).thenReturn(responseFromBlizz);
 
@@ -235,16 +253,21 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldHandleDuplicateItems_NotUniqueEquipped() {
         // given
+        long suffixId = 37L;
+        String suffixName = "of the Bear";
+
         ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
         when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
-        EquipmentResponse.ItemDTO ring1DTO = EquipmentTestData.fromItemResponseSuffixed(response, "FINGER_1", "RARE",
-                "of The Bear", 37L, 60,
-                List.of(EquipmentTestData.stat("STRENGTH", 9), EquipmentTestData.stat("STAMINA", 9)), List.of());
+        EquipmentResponse.ItemDTO ring1DTO = EquipmentResponseBuilder.newInstance(response)
+                .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, suffixName))
+                .withSlot("FINGER_1")
+                .build();
 
-        EquipmentResponse.ItemDTO ring2DTO = EquipmentTestData.fromItemResponseSuffixed(response, "FINGER_2", "RARE",
-                "of The Bear", 37L, 60,
-                List.of(EquipmentTestData.stat("STRENGTH", 9), EquipmentTestData.stat("STAMINA", 9)), List.of());
+        EquipmentResponse.ItemDTO ring2DTO = EquipmentResponseBuilder.newInstance(response)
+                .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, suffixName))
+                .withSlot("FINGER_2")
+                .build();
 
         // when
         Map<EquipmentResponse.ItemDTO, ItemEntity> result = callServiceForDbChecks(ring1DTO, ring2DTO);
@@ -271,7 +294,10 @@ public class ItemServiceIT extends BaseFullStackTest {
     void shouldHandleExternalFetcherFailures() {
         // given
         ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "FINGER_1", List.of());
+
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("FINGER_1")
+                .build();
 
         when(blizzardServiceClient.getBaseItem(response.id())).thenThrow(RestClientException.class); // api is down
 
@@ -295,7 +321,9 @@ public class ItemServiceIT extends BaseFullStackTest {
 
         when(blizzardServiceClient.getBaseItem(itemId)).thenReturn(response);
 
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "MAIN_HAND", List.of());
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("MAIN_HAND")
+                .build();
 
         // when
         service.resolveItems(List.of(dto));

@@ -44,7 +44,9 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String charName = charEntity.getName();
 
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "main_hand", List.of());
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("MAIN_HAND")
+                .build();
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(dto));
 
         when(blizzardUserClient.getCharacterEquipment(eq(realmSlug), eq(charName))).thenReturn(eqResponse);
@@ -73,10 +75,14 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String charName = charEntity.getName();
 
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
-        EquipmentResponse.ItemDTO wrongDto = EquipmentTestData.fromItemResponseNoSuffix(response, "left_hand", List.of());
+        EquipmentResponse.ItemDTO wrongDto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("LEFT_HAND")
+                .build();
 
         ItemResponse ring = ItemResponseBuilder.newEquippableInstance().build();
-        EquipmentResponse.ItemDTO ringDto = EquipmentTestData.fromItemResponseNoSuffix(ring, "finger_1", List.of());
+        EquipmentResponse.ItemDTO ringDto = EquipmentResponseBuilder.newInstance(ring)
+                .withSlot("FINGER_1")
+                .build();
 
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(wrongDto, ringDto));
 
@@ -113,8 +119,11 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
 
         String enchantName = "Crusader";
-        EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(response, "main_hand",
-                List.of(EquipmentTestData.enchant(1L, enchantName)));
+
+        EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSlot("main_hand")
+                .withEnchantments(Map.of(1L, enchantName))
+                .build();
 
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(dto));
 
@@ -153,7 +162,9 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         ItemResponse ring = ItemResponseBuilder.newEquippableInstance()
                 .withName(newItemName)
                 .build();
-        EquipmentResponse.ItemDTO ringDto = EquipmentTestData.fromItemResponseNoSuffix(ring, "finger_1", List.of());
+        EquipmentResponse.ItemDTO ringDto = EquipmentResponseBuilder.newInstance(ring)
+                .withSlot("finger_1")
+                .build();
 
         EquipmentResponse eqResponse = new EquipmentResponse(List.of(ringDto));
 
@@ -227,7 +238,9 @@ public class EquipmentServiceIT extends BaseFullStackTest {
                 .withName(item.getName())
                 .build();
 
-        EquipmentResponse.ItemDTO itemDTO = EquipmentTestData.fromItemResponseNoSuffix(itemResponse, "finger_1", List.of());
+        EquipmentResponse.ItemDTO itemDTO = EquipmentResponseBuilder.newInstance(itemResponse)
+                .withSlot("finger_1")
+                .build();
 
         when(blizzardUserClient.getCharacterEquipment(eq(charEntity.getPk().getRealmSlug()), eq(charEntity.getName())))
                 .thenReturn(new EquipmentResponse(List.of(itemDTO)));
@@ -247,13 +260,20 @@ public class EquipmentServiceIT extends BaseFullStackTest {
         String realmSlug = charEntity.getPk().getRealmSlug();
         String charName = charEntity.getName();
 
-        ItemResponse ringResponse = ItemResponseBuilder.newEquippableInstance().build();
-        EquipmentResponse.ItemDTO validDTO = EquipmentTestData.fromItemResponseNoSuffix(ringResponse, "finger_1", List.of());
+        ItemResponse ringResponse = ItemResponseBuilder.newEquippableInstance()
+                .withId(1L)
+                .build();
+        EquipmentResponse.ItemDTO validDTO = EquipmentResponseBuilder.newInstance(ringResponse)
+                .withSlot("finger_1")
+                .build();
 
         ItemResponse trinketResponse = ItemResponseBuilder.newEquippableInstance()
-                .withName(null) // null name
+                .withId(2L)
                 .build();
-        EquipmentResponse.ItemDTO corruptDTO = EquipmentTestData.fromItemResponseNoSuffix(trinketResponse, "trinket", List.of());
+        EquipmentResponse.ItemDTO corruptDTO = EquipmentResponseBuilder.newInstance(trinketResponse)
+                .withSlot("trinket_1")
+                .withFullName(null)
+                .build();
 
         when(blizzardServiceClient.getBaseItem(ringResponse.id())).thenReturn(ringResponse);
         when(blizzardServiceClient.getBaseItem(trinketResponse.id())).thenReturn(trinketResponse);

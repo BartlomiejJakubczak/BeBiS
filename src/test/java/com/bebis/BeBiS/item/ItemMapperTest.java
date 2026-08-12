@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.item;
 
-import com.bebis.BeBiS.equipment.EquipmentTestData;
+import com.bebis.BeBiS.equipment.EquipmentResponseBuilder;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.domain.Armor;
@@ -14,7 +14,6 @@ import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +35,9 @@ class ItemMapperTest {
         void shouldMapWeaponSyncDataCorrectly() {
             // given
             ItemResponse base = ItemResponseBuilder.newWeaponInstance().build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -56,7 +57,9 @@ class ItemMapperTest {
             ItemResponse base = ItemResponseBuilder.newWeaponInstance()
                     .withAttackSpeed(3600.0) // speed in thousands
                     .build();
-            EquipmentResponse.ItemDTO highSpeedDto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
+            EquipmentResponse.ItemDTO highSpeedDto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, highSpeedDto);
@@ -71,7 +74,9 @@ class ItemMapperTest {
             ItemResponse base = ItemResponseBuilder.newArmorInstance()
                     .withSubClass(new ItemResponseBuilder.SubClass(4, "PLATE"))
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "CHEST", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("CHEST")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -85,7 +90,9 @@ class ItemMapperTest {
         void shouldMapEquippableItemSyncDataCorrectly() {
             // given
             ItemResponse base = ItemResponseBuilder.newEquippableInstance().build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -101,10 +108,12 @@ class ItemMapperTest {
             ItemResponse response = ItemResponseBuilder.newEquippableInstance()
                     .withArmorValue(expectedArmorValue)
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
-                    response, "FINGER_1", response.quality().type().toUpperCase(), "of The Monkey",
-                    37L, response.itemLevel() + 10, List.of(EquipmentTestData.stat("AGILITY", 5)), List.of()
-            );
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                    .withSuffix(new EquipmentResponseBuilder.Suffix(37, "of The Monkey"))
+                    .withSlot("FINGER_1")
+                    .withItemLevel(response.itemLevel() + 10)
+                    .withStats(Map.of("AGILITY", 20))
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(response, dto);
@@ -117,7 +126,9 @@ class ItemMapperTest {
         void shouldKeepArmorNullWhenMissingInResponse() {
             // given
             ItemResponse base = ItemResponseBuilder.newWeaponInstance().build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -126,8 +137,6 @@ class ItemMapperTest {
             assertThat(result.commonData().stats().get(StatType.ARMOR)).isNull();
         }
 
-        @Disabled
-        // TODO this test is broken and should be fixed by test data refactor (atm fromItemResponseNoSuffix just takes armor from base)
         @Test
         void shouldFallbackToBaseItemArmorWhenEquippedArmorIsNull() {
             // given
@@ -135,7 +144,9 @@ class ItemMapperTest {
             ItemResponse base = ItemResponseBuilder.newEquippableInstance()
                     .withArmorValue(expectedArmor)
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -149,17 +160,17 @@ class ItemMapperTest {
             // given
             int armorValue = 2137;
             int agiValue = 15;
+
             ItemResponse base = ItemResponseBuilder.newEquippableInstance()
                     .withArmorValue(armorValue)
                     .build();
-            EquipmentResponse.ItemDTO dtoWithMixedStats = EquipmentTestData.fromItemResponseSuffixed(
-                    base, "FINGER_1", base.quality().type().toUpperCase(), "of The Monkey", 37L, base.itemLevel() + 10,
-                    List.of(
-                            EquipmentTestData.stat("AGILITY", agiValue),
-                            EquipmentTestData.stat("WEIRD_BLIZZARD_STAT_99", 100)
-                    ),
-                    List.of()
-            );
+
+            EquipmentResponse.ItemDTO dtoWithMixedStats = EquipmentResponseBuilder.newInstance(base)
+                    .withSuffix(new EquipmentResponseBuilder.Suffix(37, "of The Monkey"))
+                    .withSlot("FINGER_1")
+                    .withItemLevel(base.itemLevel() + 10)
+                    .withStats(Map.of("AGILITY", agiValue, "WEIRD_BLIZZARD_STAT_99", 100))
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dtoWithMixedStats);
@@ -178,7 +189,10 @@ class ItemMapperTest {
             ItemResponse base = ItemResponseBuilder.newEquippableInstance()
                     .withUniqueEquipped(null)
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -190,10 +204,12 @@ class ItemMapperTest {
         @Test
         void shouldFallbackToUnknownForBadEnums() {
             // given
-            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
-                    .withQuality("WERID_QUALITY")
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance().build();
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .withQuality("WEIRD_QUALITY")
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "FINGER_1", List.of());
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -210,7 +226,9 @@ class ItemMapperTest {
             ItemResponse base = ItemResponseBuilder.newWeaponInstance()
                     .withSpells(List.of(weaponEffect))
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
 
             // when
             ItemSyncData result = itemMapper.mapToSyncData(base, dto);
@@ -227,7 +245,9 @@ class ItemMapperTest {
         void shouldThrowExceptionWhenTopLevelInputsAreNull() {
             // given
             ItemResponse base = ItemResponseBuilder.newWeaponInstance().build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(base, "MAIN_HAND", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
 
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(null, dto))
@@ -246,7 +266,9 @@ class ItemMapperTest {
                     .withItemClass(null)
                     .withSubClass(null)
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(baseMissingClass, "MAIN_HAND", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(baseMissingClass)
+                    .withSlot("MAIN_HAND")
+                    .build();
 
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseMissingClass, dto))
@@ -262,7 +284,9 @@ class ItemMapperTest {
             ItemResponse baseContainer = ItemResponseBuilder.newEquippableInstance()
                     .withItemClass(notSupportedItemClass)
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(baseContainer, "BAG", List.of());
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(baseContainer)
+                    .withSlot("BAG")
+                    .build();
 
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseContainer, dto))
@@ -276,12 +300,18 @@ class ItemMapperTest {
             ItemResponse baseNullInv = ItemResponseBuilder.newEquippableInstance()
                     .withInventoryType(null)
                     .build();
-            EquipmentResponse.ItemDTO dto1 = EquipmentTestData.fromItemResponseNoSuffix(baseNullInv, "FINGER_1", List.of());
+
+            EquipmentResponse.ItemDTO dto1 = EquipmentResponseBuilder.newInstance(baseNullInv)
+                    .withSlot("FINGER_1")
+                    .build();
 
             ItemResponse baseBadInv = ItemResponseBuilder.newEquippableInstance()
                     .withInventoryType("WEIRD_TYPE")
                     .build();
-            EquipmentResponse.ItemDTO dto2 = EquipmentTestData.fromItemResponseNoSuffix(baseBadInv, "FINGER_1", List.of());
+
+            EquipmentResponse.ItemDTO dto2 = EquipmentResponseBuilder.newInstance(baseBadInv)
+                    .withSlot("FINGER_1")
+                    .build();
 
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseNullInv, dto1))
@@ -299,7 +329,10 @@ class ItemMapperTest {
             ItemResponse baseNoName = ItemResponseBuilder.newEquippableInstance()
                     .withName(null)
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(baseNoName, "FINGER_1", List.of());
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(baseNoName)
+                    .withSlot("FINGER_1")
+                    .build();
 
             // when / then
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseNoName, dto))
@@ -413,12 +446,15 @@ class ItemMapperTest {
         void shouldReturnSuffixIdWhenNameEndsWithOfSuffix() {
             // given
             long suffixId = 123L;
+
             ItemResponse base = ItemResponseBuilder.newArmorInstance()
                     .withName("Bracers")
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
-                    base, "WRISTS", "RARE", "of the Whale", suffixId, 20, List.of(), List.of()
-            );
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, "of the Whale"))
+                    .withSlot("WRISTS")
+                    .build();
 
             // when
             long result = itemMapper.mapSuffixId(dto);
@@ -431,9 +467,11 @@ class ItemMapperTest {
         void shouldReturnZeroWhenEnchantmentDoesNotStartWithOf() {
             // given
             ItemResponse base = ItemResponseBuilder.newArmorInstance().build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(
-                    base, "WRISTS", List.of(EquipmentTestData.enchant(999L, "+7 Stamina"))
-            );
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("WRISTS")
+                    .withEnchantments(Map.of(123L, "+9 Stamina"))
+                    .build();
 
             // when
             long result = itemMapper.mapSuffixId(dto);
@@ -448,9 +486,10 @@ class ItemMapperTest {
             ItemResponse base = ItemResponseBuilder.newArmorInstance()
                     .withName("Bracers")
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseNoSuffix(
-                    base, "WRISTS", List.of(EquipmentTestData.enchant(123L, "of the Tiger"))
-            );
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("WRISTS")
+                    .withEnchantments(Map.of(123L, "+of the Tiger"))
+                    .build();
 
             // when
             long result = itemMapper.mapSuffixId(dto);
@@ -482,14 +521,16 @@ class ItemMapperTest {
         void shouldMatchSpecificSuffixAmongMultipleEnchantments() {
             // given
             long suffixId = 123L;
+
             ItemResponse base = ItemResponseBuilder.newArmorInstance()
                     .withName("Bracers")
                     .build();
-            EquipmentResponse.ItemDTO dto = EquipmentTestData.fromItemResponseSuffixed(
-                    base, "WRISTS", "RARE", "of the Bear", suffixId, 20,
-                    List.of(),
-                    List.of(EquipmentTestData.enchant(2137L, "Crusader"))
-            );
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, "of the Bear"))
+                    .withSlot("WRISTS")
+                    .withEnchantments(Map.of(2137L, "Crusader"))
+                    .build();
 
             // when
             long result = itemMapper.mapSuffixId(dto);
