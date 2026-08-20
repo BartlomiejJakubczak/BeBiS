@@ -48,12 +48,28 @@ public class ItemResponseBuilder {
         builder.itemClass = new ItemClass(2, "Weapon"); // weapon class
         builder.subClass = new SubClass(1, "Axe"); // 2h axe subclass
         builder.inventoryType = "TWO_HAND";
-        builder.uniqueEquipped = false;
         builder.stats = Map.of("STRENGTH", 15, "STAMINA", 14);
         builder.attackSpeed = 3.6;
         builder.minDamage = 82;
         builder.maxDamage = 124;
         builder.dps = 28.61;
+        return builder;
+    }
+
+    public static ItemResponseBuilder newSuffixableWeaponInstance() {
+        ItemResponseBuilder builder = new ItemResponseBuilder();
+        builder.id = 13018L;
+        builder.name = "Gigantic Axe";
+        builder.quality = "UNCOMMON";
+        builder.itemLevel = 43;
+        builder.requiredLevel = 38;
+        builder.itemClass = new ItemClass(2, "Weapon"); // weapon class
+        builder.subClass = new SubClass(1, "Axe"); // 2h axe subclass
+        builder.inventoryType = "TWO_HAND";
+        builder.attackSpeed = 3.4;
+        builder.minDamage = 75;
+        builder.maxDamage = 113;
+        builder.dps = 27.65;
         return builder;
     }
 
@@ -63,12 +79,26 @@ public class ItemResponseBuilder {
         builder.name = "Scarlet Chestpiece";
         builder.quality = "RARE";
         builder.itemLevel = 43;
-        builder.requiredLevel = 38;
+        builder.requiredLevel = 34;
         builder.itemClass = new ItemClass(4, "Armor");
         builder.subClass = new SubClass(3, "Mail");
         builder.inventoryType = "CHEST";
-        builder.uniqueEquipped = false;
-        builder.stats = Map.of("STRENGTH", 11, "STAMINA", 12);
+        builder.stats = Map.of("STRENGTH", 8, "STAMINA", 19);
+        builder.armorValue = 250;
+        return builder;
+    }
+
+    public static ItemResponseBuilder newSuffixableArmorInstance() {
+        ItemResponseBuilder builder = new ItemResponseBuilder();
+        builder.id = 3829L;
+        builder.name = "Brigandine Chestpiece";
+        builder.quality = "UNCOMMON";
+        builder.itemLevel = 32;
+        builder.requiredLevel = 27;
+        builder.itemClass = new ItemClass(4, "Armor");
+        builder.subClass = new SubClass(3, "Mail");
+        builder.inventoryType = "CHEST";
+        builder.armorValue = 231;
         return builder;
     }
 
@@ -82,8 +112,20 @@ public class ItemResponseBuilder {
         builder.itemClass = new ItemClass(4, "Armor");
         builder.subClass = new SubClass(0, "Misc");
         builder.inventoryType = "FINGER";
-        builder.uniqueEquipped = false; // "true" irl, but I need good defaults for testing
         builder.stats = Map.of("AGILITY", 15);
+        return builder;
+    }
+
+    public static ItemResponseBuilder newSuffixableEquippableInstance() {
+        ItemResponseBuilder builder = new ItemResponseBuilder();
+        builder.id = 12022L;
+        builder.name = "Gold Ring";
+        builder.quality = "UNCOMMON";
+        builder.itemLevel = 40;
+        builder.requiredLevel = 35;
+        builder.itemClass = new ItemClass(4, "Armor");
+        builder.subClass = new SubClass(0, "Misc");
+        builder.inventoryType = "FINGER";
         return builder;
     }
 
@@ -139,7 +181,7 @@ public class ItemResponseBuilder {
     }
 
     private String uniqueEquipped() {
-        return this.uniqueEquipped != null ? "Whatever string that they put in to indicate uniqueness" : null;
+        return this.uniqueEquipped != null && this.uniqueEquipped ? "Whatever string that they put in to indicate uniqueness" : null;
     }
 
     public ItemResponseBuilder withId(Long id) {

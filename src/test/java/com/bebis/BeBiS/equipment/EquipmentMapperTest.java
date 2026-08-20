@@ -76,14 +76,14 @@ public class EquipmentMapperTest {
         List<String> expectedEnchantments = List.of("Crusader"); // suffixId is counted by Blizz as an enchantment,
         // so it has to be omitted by the mapper explicitly
 
-        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
+        ItemResponse response = ItemResponseBuilder.newSuffixableWeaponInstance().build();
 
         EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
                 .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, "of the Bear"))
                 .withEnchantments(Map.of(69L, expectedEnchantments.getFirst()))
-                .withSlot("FINGER_1")
+                .withSlot("MAIN_HAND")
                 .build();
-        
+
         // when
         List<String> result = mapper.mapPlayerEnchants(dto, suffixId);
 

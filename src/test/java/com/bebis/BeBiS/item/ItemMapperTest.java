@@ -105,7 +105,7 @@ class ItemMapperTest {
         void shouldCaptureArmorOnNonArmorItems() {
             // given
             Integer expectedArmorValue = 150;
-            ItemResponse response = ItemResponseBuilder.newEquippableInstance()
+            ItemResponse response = ItemResponseBuilder.newSuffixableEquippableInstance()
                     .withArmorValue(expectedArmorValue)
                     .build();
             EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
@@ -161,7 +161,7 @@ class ItemMapperTest {
             int armorValue = 2137;
             int agiValue = 15;
 
-            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+            ItemResponse base = ItemResponseBuilder.newSuffixableEquippableInstance()
                     .withArmorValue(armorValue)
                     .build();
 
@@ -526,7 +526,7 @@ class ItemMapperTest {
             // given
             long suffixId = 123L;
 
-            ItemResponse base = ItemResponseBuilder.newArmorInstance()
+            ItemResponse base = ItemResponseBuilder.newSuffixableArmorInstance()
                     .withName("Bracers")
                     .build();
 
@@ -601,7 +601,7 @@ class ItemMapperTest {
             // given
             long suffixId = 123L;
 
-            ItemResponse base = ItemResponseBuilder.newArmorInstance()
+            ItemResponse base = ItemResponseBuilder.newSuffixableArmorInstance()
                     .withName("Bracers")
                     .build();
 

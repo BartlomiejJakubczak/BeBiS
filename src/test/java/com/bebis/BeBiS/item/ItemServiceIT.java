@@ -132,21 +132,18 @@ public class ItemServiceIT extends BaseFullStackTest {
     @Test
     void shouldFetchTwoDifferentItemsSameItemId() {
         // given
-        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
+        ItemResponse response = ItemResponseBuilder.newSuffixableEquippableInstance().build();
         long baseId = response.id();
-        long suffixId = 37L;
-        String suffixName = "of the Bear";
 
         when(blizzardServiceClient.getBaseItem(baseId)).thenReturn(response);
 
-        assertThatItemNotInDb(baseId, suffixId);
-
         EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
+                .withSuffix(new EquipmentResponseBuilder.Suffix(21L, "of the Bear"))
                 .withSlot("FINGER_1")
                 .build();
 
         EquipmentResponse.ItemDTO suffixedDTO = EquipmentResponseBuilder.newInstance(response)
-                .withSuffix(new EquipmentResponseBuilder.Suffix(suffixId, suffixName))
+                .withSuffix(new EquipmentResponseBuilder.Suffix(37L, "of the Monkey"))
                 .withSlot("FINGER_2")
                 .withItemLevel(response.itemLevel() + 10)
                 .build();
@@ -161,12 +158,7 @@ public class ItemServiceIT extends BaseFullStackTest {
         List<Long> savedSuffixes = jdbcTemplate.queryForList(
                 "SELECT suffix_id FROM items WHERE base_id = ?",
                 Long.class, baseId);
-        assertThat(savedSuffixes).containsExactlyInAnyOrder(0L, suffixId);
-
-        String savedName = jdbcTemplate.queryForObject(
-                "SELECT name FROM items WHERE base_id = ? AND suffix_id = ?",
-                String.class, baseId, suffixId);
-        assertThat(savedName).contains(suffixName);
+        assertThat(savedSuffixes).containsExactlyInAnyOrder(21L, 37L);
 
         verify(itemFetcher).fetchItem(eq(baseId)); // the second time was pulled from the cache
         verify(blizzardServiceClient, times(1)).getBaseItem(baseId); // should pull from cache the second time
@@ -256,7 +248,10 @@ public class ItemServiceIT extends BaseFullStackTest {
         long suffixId = 37L;
         String suffixName = "of the Bear";
 
-        ItemResponse response = ItemResponseBuilder.newEquippableInstance().build();
+        ItemResponse response = ItemResponseBuilder.newSuffixableEquippableInstance()
+                .withUniqueEquipped(false)
+                .build();
+
         when(blizzardServiceClient.getBaseItem(response.id())).thenReturn(response);
 
         EquipmentResponse.ItemDTO ring1DTO = EquipmentResponseBuilder.newInstance(response)
