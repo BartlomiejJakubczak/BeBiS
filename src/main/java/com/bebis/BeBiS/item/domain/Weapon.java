@@ -11,13 +11,15 @@ public final class Weapon extends Item {
     private double speed;
     private int minDamage;
     private int maxDamage;
+    private double dps;
     private WeaponType weaponType;
 
-    public Weapon(ItemMetadata itemMetadata, double speed, int minDamage, int maxDamage, WeaponType weaponType) {
+    public Weapon(ItemMetadata itemMetadata, double speed, int minDamage, int maxDamage, double dps, WeaponType weaponType) {
         super(itemMetadata);
         this.speed = speed;
         this.minDamage = minDamage;
         this.maxDamage = maxDamage;
+        this.dps = dps;
         this.weaponType = weaponType;
     }
 

@@ -24,8 +24,6 @@ public final class Equipment {
         SHOULDER,
         BACK,
         CHEST,
-        SHIRT,
-        TABARD,
         WRIST,
         HANDS,
         WAIST,

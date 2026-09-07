@@ -7,7 +7,7 @@ import java.time.Instant;
 
 public sealed interface UpgradeEvent {
 
-    record BiSAlreadyEquippedEvent(Equipment.Slot slot, Instant timestamp) implements UpgradeEvent {
+    record BiSAlreadyEquippedEvent(Equipment.Slot slot, Item bis, Instant timestamp) implements UpgradeEvent {
     }
 
     record UpgradeFoundEvent(Equipment.Slot slot, Item upgrade, Instant timestamp) implements UpgradeEvent {

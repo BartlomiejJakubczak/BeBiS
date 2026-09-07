@@ -1,12 +1,13 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
+import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
-import com.bebis.BeBiS.item.domain.Armor;
+import com.bebis.BeBiS.item.ItemBuilder;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
-import com.bebis.BeBiS.profile.domain.WowRealm;
+import com.bebis.BeBiS.profile.domain.WowCharacterBuilder;
 import com.bebis.BeBiS.profile.domain.WowTalents;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,26 +36,29 @@ public class IsolatedUpgradeFinderTest {
 
     private IsolatedUpgradeFinder finder;
 
+    @Captor
+    private ArgumentCaptor<Item> calculationCaptor;
+
     @BeforeEach
     void setup() {
-        finder = new IsolatedUpgradeFinder(powerCalculator);
+        finder = new IsolatedUpgradeFinder(powerCalculator, new UpgradeResultEvaluator());
     }
 
     @Test
     void shouldSignalUpgradeFoundResult_EmptyEquippedItem() {
         // given
-        WowCharacter wowCharacter = getWowCharacter();
+        WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
         Optional<WowTalents> talents = Optional.of(getTalents());
 
         ClassSpec classSpec = ClassSpec.getClassSpec(wowCharacter.wowClass(), talents);
 
-        Item worseItemMock = mock(Armor.class);
-        Item betterItemMock = mock(Armor.class);
+        Item worseItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
+        Item betterItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
 
-        when(powerCalculator.calculate(worseItemMock, classSpec, wowCharacter.race())).thenReturn(21.0);
-        when(powerCalculator.calculate(betterItemMock, classSpec, wowCharacter.race())).thenReturn(37.0);
+        when(powerCalculator.calculate(worseItem, classSpec, wowCharacter.race())).thenReturn(21.0);
+        when(powerCalculator.calculate(betterItem, classSpec, wowCharacter.race())).thenReturn(37.0);
 
-        List<Item> itemPool = List.of(worseItemMock, betterItemMock);
+        List<Item> itemPool = List.of(worseItem, betterItem);
 
         // when
         UpgradeResult result = finder.findUpgrade(Optional.empty(), wowCharacter, talents, itemPool);
@@ -61,16 +67,17 @@ public class IsolatedUpgradeFinderTest {
         assertThat(result).isInstanceOf(UpgradeResult.UpgradeFoundResult.class);
         UpgradeResult.UpgradeFoundResult upgradeFoundResult = (UpgradeResult.UpgradeFoundResult) result;
 
-        assertThat(upgradeFoundResult.item()).isEqualTo(betterItemMock);
+        assertThat(upgradeFoundResult.item()).isEqualTo(betterItem);
 
         // since equippedItem is null the finder should have only run calculation as many times as number of items in the pool
-        verify(powerCalculator, times(itemPool.size())).calculate(any(Item.class), eq(classSpec), eq(wowCharacter.race()));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(itemPool);
     }
 
     @Test
     void shouldSignalNoItemsAvailableResult_EmptyItemPool() {
         // given
-        WowCharacter wowCharacter = getWowCharacter();
+        WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
         Optional<WowTalents> talents = Optional.of(getTalents());
 
         ClassSpec classSpec = ClassSpec.getClassSpec(wowCharacter.wowClass(), talents);
@@ -89,82 +96,73 @@ public class IsolatedUpgradeFinderTest {
     @Test
     void shouldSignalUpgradeFoundResult_EquippedItemWorseThanBestItemInPool() {
         // given
-        WowCharacter wowCharacter = getWowCharacter();
+        WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
         Optional<WowTalents> talents = Optional.of(getTalents());
 
         ClassSpec classSpec = ClassSpec.getClassSpec(wowCharacter.wowClass(), talents);
 
-        EquippedItem equippedItemMock = mock(EquippedItem.class);
-        Item currentItemMock = mock(Armor.class);
-        when(equippedItemMock.item()).thenReturn(currentItemMock);
+        Item currentItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
+        EquippedItem equippedItem = new EquippedItem(currentItem, List.of());
 
-        Item otherItemMock1 = mock(Armor.class);
-        Item bestItemMock = mock(Armor.class);
+        Item otherItem1 = ItemBuilder.newEquippableItem().withBaseId(2L).build();
+        Item bestItem = ItemBuilder.newEquippableItem().withBaseId(3L).build();
 
-        when(powerCalculator.calculate(currentItemMock, classSpec, wowCharacter.race())).thenReturn(21.0);
-        when(powerCalculator.calculate(otherItemMock1, classSpec, wowCharacter.race())).thenReturn(37.0);
-        when(powerCalculator.calculate(bestItemMock, classSpec, wowCharacter.race())).thenReturn(69.0);
+        when(powerCalculator.calculate(currentItem, classSpec, wowCharacter.race())).thenReturn(21.0);
+        when(powerCalculator.calculate(otherItem1, classSpec, wowCharacter.race())).thenReturn(37.0);
+        when(powerCalculator.calculate(bestItem, classSpec, wowCharacter.race())).thenReturn(69.0);
 
-        List<Item> itemPool = List.of(currentItemMock, otherItemMock1, bestItemMock);
+        List<Item> itemPool = List.of(currentItem, otherItem1, bestItem);
 
         // when
-        UpgradeResult result = finder.findUpgrade(Optional.of(equippedItemMock), wowCharacter, talents, itemPool);
+        UpgradeResult result = finder.findUpgrade(Optional.of(equippedItem), wowCharacter, talents, itemPool);
 
         // then
         assertThat(result).isInstanceOf(UpgradeResult.UpgradeFoundResult.class);
         UpgradeResult.UpgradeFoundResult upgradeFoundResult = (UpgradeResult.UpgradeFoundResult) result;
 
-        assertThat(upgradeFoundResult.item()).isEqualTo(bestItemMock);
+        assertThat(upgradeFoundResult.item()).isEqualTo(bestItem);
 
         // additional 1 calculation for the equipped item comparison logic
-        verify(powerCalculator, times(itemPool.size() + 1)).calculate(any(Item.class), eq(classSpec), eq(wowCharacter.race()));
+        verify(powerCalculator, times(itemPool.size() + 1)).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        // currentItem is a part of the itemPool and is calculated again during evaluation
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentItem, currentItem, otherItem1, bestItem));
     }
 
     @ParameterizedTest
     @MethodSource("scoreProvider")
     void shouldSignalAlreadyBiSResult_EquippedItemIsBiSOrEqualToAnotherItemInPool(double eqItemScore, double otherItemScore) {
         // given
-        WowCharacter wowCharacter = getWowCharacter();
+        WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
         Optional<WowTalents> talents = Optional.of(getTalents());
 
         ClassSpec classSpec = ClassSpec.getClassSpec(wowCharacter.wowClass(), talents);
 
-        EquippedItem equippedItemMock = mock(EquippedItem.class);
-        Item currentItemMock = mock(Armor.class);
-        when(equippedItemMock.item()).thenReturn(currentItemMock);
+        Item currentItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
+        EquippedItem equippedItem = new EquippedItem(currentItem, List.of());
 
-        Item otherItemMock = mock(Armor.class);
+        Item otherItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
 
-        when(powerCalculator.calculate(currentItemMock, classSpec, wowCharacter.race())).thenReturn(eqItemScore);
-        when(powerCalculator.calculate(otherItemMock, classSpec, wowCharacter.race())).thenReturn(otherItemScore);
+        when(powerCalculator.calculate(currentItem, classSpec, wowCharacter.race())).thenReturn(eqItemScore);
+        when(powerCalculator.calculate(otherItem, classSpec, wowCharacter.race())).thenReturn(otherItemScore);
 
-        List<Item> itemPool = List.of(currentItemMock, otherItemMock);
+        List<Item> itemPool = List.of(currentItem, otherItem);
 
         // when
-        UpgradeResult result = finder.findUpgrade(Optional.of(equippedItemMock), wowCharacter, talents, itemPool);
+        UpgradeResult result = finder.findUpgrade(Optional.of(equippedItem), wowCharacter, talents, itemPool);
 
         // then
         assertThat(result).isInstanceOf(UpgradeResult.AlreadyBiSResult.class);
 
         // additional 1 calculation for the equipped item comparison logic
-        verify(powerCalculator, times(itemPool.size() + 1)).calculate(any(Item.class), eq(classSpec), eq(wowCharacter.race()));
+        verify(powerCalculator, times(itemPool.size() + 1)).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        // currentItem is a part of the itemPool and is calculated again during evaluation
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentItem, currentItem, otherItem));
     }
 
     private static Stream<Arguments> scoreProvider() {
         return Stream.of(
                 Arguments.of(37.0, 21.0),
                 Arguments.of(21.0, 21.0)
-        );
-    }
-
-    private WowCharacter getWowCharacter() {
-        return new WowCharacter(
-                new WowCharacter.Id(1L, "soulseeker"),
-                "Thelamar",
-                60,
-                WowCharacter.Race.NIGHT_ELF,
-                WowCharacter.WowClass.ROGUE,
-                new WowRealm("Soulseeker", "soulseeker")
         );
     }
 

@@ -1,15 +1,14 @@
 package com.bebis.BeBiS.item.domain;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Getter
 @Setter
-@EqualsAndHashCode
 public abstract sealed class Item permits Weapon, Armor, EquippableItem {
 
     public record ItemKey(long baseId, long suffixId) {
@@ -82,5 +81,16 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
         public String getDisplayName() {
             return displayName;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Item item)) return false;
+        return Objects.equals(metadata.key(), item.metadata.key());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(metadata.key());
     }
 }

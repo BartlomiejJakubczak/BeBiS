@@ -47,6 +47,7 @@ public class ItemMapper {
                     Optional.ofNullable(w.getSpeed()).orElse(0.0),
                     Optional.ofNullable(w.getMinDamage()).orElse(0),
                     Optional.ofNullable(w.getMaxDamage()).orElse(0),
+                    Optional.ofNullable(w.getDps()).orElse(0.0),
                     w.getWeaponType()
             );
             case ArmorEntity a -> new Armor(
