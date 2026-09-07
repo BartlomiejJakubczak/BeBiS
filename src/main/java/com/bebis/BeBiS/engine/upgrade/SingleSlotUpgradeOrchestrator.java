@@ -14,14 +14,14 @@ import java.util.List;
 @Component
 class SingleSlotUpgradeOrchestrator {
 
-    private final SingleSlotUpgradeFinder singleSlotUpgradeFinder;
+    private final SingleSlotUpgradeFinder upgradeFinder;
     private final ItemPoolProvider itemPoolProvider;
 
     private final ApplicationEventPublisher publisher;
 
-    SingleSlotUpgradeOrchestrator(SingleSlotUpgradeFinder singleSlotUpgradeFinder, ItemPoolProvider itemPoolProvider,
+    SingleSlotUpgradeOrchestrator(SingleSlotUpgradeFinder upgradeFinder, ItemPoolProvider itemPoolProvider,
                                   ApplicationEventPublisher publisher) {
-        this.singleSlotUpgradeFinder = singleSlotUpgradeFinder;
+        this.upgradeFinder = upgradeFinder;
         this.itemPoolProvider = itemPoolProvider;
         this.publisher = publisher;
     }
@@ -29,7 +29,7 @@ class SingleSlotUpgradeOrchestrator {
     @Async
     public void findUpgrade(Equipment.Slot slot, CharacterInfo info) {
         List<Item> itemPool = itemPoolProvider.getItemPool(slot, info.wowCharacter().level(), info.wowCharacter().wowClass());
-        switch (singleSlotUpgradeFinder.findUpgrade(info.equipment().getItem(slot), info.wowCharacter(), info.talents(), itemPool)) {
+        switch (upgradeFinder.findUpgrade(info.equipment().getItem(slot), info.wowCharacter(), info.talents(), itemPool)) {
             case UpgradeResult.UpgradeFoundResult result ->
                     publisher.publishEvent(new UpgradeEvent.UpgradeFoundEvent(slot, result.item(), result.timestamp()));
             case UpgradeResult.AlreadyBiSResult result ->

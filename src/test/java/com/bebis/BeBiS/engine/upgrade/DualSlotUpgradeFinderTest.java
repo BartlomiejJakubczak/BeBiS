@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
-import com.bebis.BeBiS.engine.upgrade.PairedUpgradeFinder.ItemPair;
+import com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeFinder.ItemPair;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
@@ -30,12 +30,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PairedUpgradeFinderTest {
+public class DualSlotUpgradeFinderTest {
 
     @Mock
     private PowerCalculatorEngine powerCalculator;
 
-    private PairedUpgradeFinder finder;
+    private DualSlotUpgradeFinder finder;
 
     @Captor
     private ArgumentCaptor<Item> calculationCaptor;
@@ -49,7 +49,7 @@ public class PairedUpgradeFinderTest {
 
     @BeforeEach
     void setUp() {
-        finder = new PairedUpgradeFinder(powerCalculator, new UpgradeResultEvaluator());
+        finder = new DualSlotUpgradeFinder(powerCalculator, new UpgradeResultEvaluator());
     }
 
     @Test

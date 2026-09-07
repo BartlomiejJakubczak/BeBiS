@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.engine.upgrade;
 
-import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
+import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import org.springframework.stereotype.Service;
@@ -15,23 +15,23 @@ public class UpgradeFinderService {
     private static final List<Equipment.Slot> ISOLATED_SLOTS = List.of(HEAD, NECK, SHOULDER, BACK, CHEST, WRIST, HANDS,
             WAIST, LEGS, FEET, RANGED);
 
-    private static final List<SlotPair> PAIRED_SLOTS = List.of(
-            new SlotPair(TRINKET_1, TRINKET_2),
-            new SlotPair(FINGER_1, FINGER_2)
+    private static final List<DualSlot> PAIRED_SLOTS = List.of(
+            new DualSlot(TRINKET_1, TRINKET_2),
+            new DualSlot(FINGER_1, FINGER_2)
     );
 
-    private final SingleSlotUpgradeOrchestrator singleSlotUpgradeOrchestrator;
-    private final PairedUpgradeOrchestrator pairedOrchestrator;
+    private final SingleSlotUpgradeOrchestrator singleSlotOrchestrator;
+    private final DualSlotUpgradeOrchestrator dualSlotOrchestrator;
 
-    public UpgradeFinderService(SingleSlotUpgradeOrchestrator singleSlotUpgradeOrchestrator, PairedUpgradeOrchestrator pairedOrchestrator) {
-        this.singleSlotUpgradeOrchestrator = singleSlotUpgradeOrchestrator;
-        this.pairedOrchestrator = pairedOrchestrator;
+    public UpgradeFinderService(SingleSlotUpgradeOrchestrator singleSlotOrchestrator, DualSlotUpgradeOrchestrator dualSlotOrchestrator) {
+        this.singleSlotOrchestrator = singleSlotOrchestrator;
+        this.dualSlotOrchestrator = dualSlotOrchestrator;
     }
 
     public void findUpgradesFor(CharacterInfo info) {
-        PAIRED_SLOTS.forEach(pair -> pairedOrchestrator.findUpgrades(pair, info));
+        PAIRED_SLOTS.forEach(pair -> dualSlotOrchestrator.findUpgrades(pair, info));
         // TODO main / off hand finder left
 
-        ISOLATED_SLOTS.forEach((slot) -> singleSlotUpgradeOrchestrator.findUpgrade(slot, info));
+        ISOLATED_SLOTS.forEach((slot) -> singleSlotOrchestrator.findUpgrade(slot, info));
     }
 }

@@ -1,6 +1,6 @@
 package com.bebis.BeBiS.engine.upgrade;
 
-import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
+import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
@@ -13,29 +13,29 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebis.BeBiS.engine.upgrade.PairedUpgradeFinder.ItemPair;
+import static com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeFinder.ItemPair;
 
 @Component
-class PairedUpgradeOrchestrator {
+class DualSlotUpgradeOrchestrator {
 
+    private final DualSlotUpgradeFinder upgradeFinder;
     private final ItemPoolProvider itemPoolProvider;
-    private final PairedUpgradeFinder pairedUpgradeFinder;
 
     private final ApplicationEventPublisher publisher;
 
-    PairedUpgradeOrchestrator(ItemPoolProvider itemPoolProvider, PairedUpgradeFinder pairedUpgradeFinder,
-                              ApplicationEventPublisher publisher) {
+    DualSlotUpgradeOrchestrator(ItemPoolProvider itemPoolProvider, DualSlotUpgradeFinder upgradeFinder,
+                                ApplicationEventPublisher publisher) {
         this.itemPoolProvider = itemPoolProvider;
-        this.pairedUpgradeFinder = pairedUpgradeFinder;
+        this.upgradeFinder = upgradeFinder;
         this.publisher = publisher;
     }
 
     @Async
-    public void findUpgrades(SlotPair slots, CharacterInfo info) {
+    public void findUpgrades(DualSlot slots, CharacterInfo info) {
         // both paired slots go to the same InventoryType, hence the same itemPool for both slots
         List<Item> itemPool = itemPoolProvider.getItemPool(slots.slot1(), info.wowCharacter().level(), info.wowCharacter().wowClass());
 
-        Map<Equipment.Slot, UpgradeResult> results = pairedUpgradeFinder.findUpgrades(ItemPair.from(slots, info.equipment()),
+        Map<Equipment.Slot, UpgradeResult> results = upgradeFinder.findUpgrades(ItemPair.from(slots, info.equipment()),
                 info.wowCharacter(), info.talents(), itemPool);
 
         evaluateResults(results);

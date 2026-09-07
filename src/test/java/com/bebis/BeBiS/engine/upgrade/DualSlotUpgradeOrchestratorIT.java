@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.base.BaseNonTransactionalFullstackTest;
-import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
+import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.ItemBuilder;
@@ -33,10 +33,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @RecordApplicationEvents
-public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
+public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
 
     @Autowired
-    private PairedUpgradeOrchestrator orchestrator;
+    private DualSlotUpgradeOrchestrator orchestrator;
 
     @MockitoSpyBean
     private ItemPoolProvider itemPoolProvider;
@@ -60,30 +60,30 @@ public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTe
     void shouldSignalUpgradeNotAvailableEventForBothSlots_EmptyItemPool() {
         // given
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().withLevel(9).build();
-        SlotPair slotPair = new SlotPair(FINGER_1, FINGER_2);
+        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // when
-        orchestrator.findUpgrades(slotPair, new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
+        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeNotAvailableEvent.class))
                 .map(UpgradeEvent.UpgradeNotAvailableEvent::slot).containsExactlyInAnyOrder(FINGER_1, FINGER_2));
 
-        verify(itemPoolProvider).getItemPool(eq(slotPair.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
     }
 
     @Test
     void shouldSignalUpgradeFoundEventForBothSlots() {
         // given
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
-        SlotPair slotPair = new SlotPair(FINGER_1, FINGER_2);
+        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // save an eligible ring to db
         Item theOneRing = ItemBuilder.newEquippableItem().withBaseId(1L).withInventoryType("FINGER").build();
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(theOneRing)));
 
         // when
-        orchestrator.findUpgrades(slotPair, new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
+        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeFoundEvent.class))
@@ -94,7 +94,7 @@ public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTe
                 )
         );
 
-        verify(itemPoolProvider).getItemPool(eq(slotPair.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
     }
 
     @Test
@@ -122,10 +122,10 @@ public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTe
 
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(worseRing, bisRing)));
 
-        SlotPair slotPair = new SlotPair(FINGER_1, FINGER_2);
+        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // when
-        orchestrator.findUpgrades(slotPair, new CharacterInfo(wowCharacter, eq, Optional.empty()));
+        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, eq, Optional.empty()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.BiSAlreadyEquippedEvent.class))
@@ -136,7 +136,7 @@ public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTe
                 )
         );
 
-        verify(itemPoolProvider).getItemPool(eq(slotPair.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
     }
 
     @Test
@@ -163,10 +163,10 @@ public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTe
 
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(worseRing, bisRing)));
 
-        SlotPair slotPair = new SlotPair(FINGER_1, FINGER_2);
+        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // when
-        orchestrator.findUpgrades(slotPair, new CharacterInfo(wowCharacter, eq, Optional.empty()));
+        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, eq, Optional.empty()));
 
         // then
 
@@ -179,7 +179,7 @@ public class PairedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTe
                     .containsExactly(tuple(FINGER_2, bisRing));
         });
 
-        verify(itemPoolProvider).getItemPool(eq(slotPair.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass())
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass())
         );
     }
 

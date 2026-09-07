@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
-import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
+import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
@@ -16,11 +16,11 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-class PairedUpgradeFinder extends UpgradeFinder {
+class DualSlotUpgradeFinder extends UpgradeFinder {
 
     private final UpgradeResultEvaluator evaluator;
 
-    PairedUpgradeFinder(PowerCalculatorEngine calculator, UpgradeResultEvaluator evaluator) {
+    DualSlotUpgradeFinder(PowerCalculatorEngine calculator, UpgradeResultEvaluator evaluator) {
         super(calculator);
         this.evaluator = evaluator;
     }
@@ -30,7 +30,7 @@ class PairedUpgradeFinder extends UpgradeFinder {
         record Item(Equipment.Slot slot, Optional<EquippedItem> equippedItem) {
         }
 
-        static ItemPair from(SlotPair slots, Equipment equipment) {
+        static ItemPair from(DualSlot slots, Equipment equipment) {
             return new ItemPair(
                     new ItemPair.Item(slots.slot1(), equipment.getItem(slots.slot1())),
                     new ItemPair.Item(slots.slot2(), equipment.getItem(slots.slot2()))
