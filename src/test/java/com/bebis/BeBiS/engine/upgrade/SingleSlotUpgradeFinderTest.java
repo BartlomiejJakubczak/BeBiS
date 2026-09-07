@@ -29,19 +29,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class IsolatedUpgradeFinderTest {
+public class SingleSlotUpgradeFinderTest {
 
     @Mock
     private PowerCalculatorEngine powerCalculator;
 
-    private IsolatedUpgradeFinder finder;
+    private SingleSlotUpgradeFinder finder;
 
     @Captor
     private ArgumentCaptor<Item> calculationCaptor;
 
     @BeforeEach
     void setup() {
-        finder = new IsolatedUpgradeFinder(powerCalculator, new UpgradeResultEvaluator());
+        finder = new SingleSlotUpgradeFinder(powerCalculator, new UpgradeResultEvaluator());
     }
 
     @Test

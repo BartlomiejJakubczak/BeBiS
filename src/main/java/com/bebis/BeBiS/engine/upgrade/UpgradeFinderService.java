@@ -20,11 +20,11 @@ public class UpgradeFinderService {
             new SlotPair(FINGER_1, FINGER_2)
     );
 
-    private final IsolatedUpgradeOrchestrator isolatedOrchestrator;
+    private final SingleSlotUpgradeOrchestrator singleSlotUpgradeOrchestrator;
     private final PairedUpgradeOrchestrator pairedOrchestrator;
 
-    public UpgradeFinderService(IsolatedUpgradeOrchestrator isolatedOrchestrator, PairedUpgradeOrchestrator pairedOrchestrator) {
-        this.isolatedOrchestrator = isolatedOrchestrator;
+    public UpgradeFinderService(SingleSlotUpgradeOrchestrator singleSlotUpgradeOrchestrator, PairedUpgradeOrchestrator pairedOrchestrator) {
+        this.singleSlotUpgradeOrchestrator = singleSlotUpgradeOrchestrator;
         this.pairedOrchestrator = pairedOrchestrator;
     }
 
@@ -32,6 +32,6 @@ public class UpgradeFinderService {
         PAIRED_SLOTS.forEach(pair -> pairedOrchestrator.findUpgrades(pair, info));
         // TODO main / off hand finder left
 
-        ISOLATED_SLOTS.forEach((slot) -> isolatedOrchestrator.findUpgrade(slot, info));
+        ISOLATED_SLOTS.forEach((slot) -> singleSlotUpgradeOrchestrator.findUpgrade(slot, info));
     }
 }

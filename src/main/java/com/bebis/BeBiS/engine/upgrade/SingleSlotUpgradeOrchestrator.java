@@ -12,16 +12,16 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-class IsolatedUpgradeOrchestrator {
+class SingleSlotUpgradeOrchestrator {
 
-    private final IsolatedUpgradeFinder isolatedUpgradeFinder;
+    private final SingleSlotUpgradeFinder singleSlotUpgradeFinder;
     private final ItemPoolProvider itemPoolProvider;
 
     private final ApplicationEventPublisher publisher;
 
-    IsolatedUpgradeOrchestrator(IsolatedUpgradeFinder isolatedUpgradeFinder, ItemPoolProvider itemPoolProvider,
-                                ApplicationEventPublisher publisher) {
-        this.isolatedUpgradeFinder = isolatedUpgradeFinder;
+    SingleSlotUpgradeOrchestrator(SingleSlotUpgradeFinder singleSlotUpgradeFinder, ItemPoolProvider itemPoolProvider,
+                                  ApplicationEventPublisher publisher) {
+        this.singleSlotUpgradeFinder = singleSlotUpgradeFinder;
         this.itemPoolProvider = itemPoolProvider;
         this.publisher = publisher;
     }
@@ -29,7 +29,7 @@ class IsolatedUpgradeOrchestrator {
     @Async
     public void findUpgrade(Equipment.Slot slot, CharacterInfo info) {
         List<Item> itemPool = itemPoolProvider.getItemPool(slot, info.wowCharacter().level(), info.wowCharacter().wowClass());
-        switch (isolatedUpgradeFinder.findUpgrade(info.equipment().getItem(slot), info.wowCharacter(), info.talents(), itemPool)) {
+        switch (singleSlotUpgradeFinder.findUpgrade(info.equipment().getItem(slot), info.wowCharacter(), info.talents(), itemPool)) {
             case UpgradeResult.UpgradeFoundResult result ->
                     publisher.publishEvent(new UpgradeEvent.UpgradeFoundEvent(slot, result.item(), result.timestamp()));
             case UpgradeResult.AlreadyBiSResult result ->

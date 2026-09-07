@@ -14,11 +14,11 @@ import java.util.Optional;
 
 
 @Component
-class IsolatedUpgradeFinder extends UpgradeFinder {
+class SingleSlotUpgradeFinder extends UpgradeFinder {
 
     private final UpgradeResultEvaluator evaluator;
 
-    IsolatedUpgradeFinder(PowerCalculatorEngine calculator, UpgradeResultEvaluator evaluator) {
+    SingleSlotUpgradeFinder(PowerCalculatorEngine calculator, UpgradeResultEvaluator evaluator) {
         super(calculator);
         this.evaluator = evaluator;
     }

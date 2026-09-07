@@ -40,10 +40,10 @@ import static org.awaitility.Awaitility.await;
 
 
 @RecordApplicationEvents
-public class IsolatedUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
+public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
 
     @Autowired
-    private IsolatedUpgradeOrchestrator orchestrator;
+    private SingleSlotUpgradeOrchestrator orchestrator;
 
     @Autowired
     private EntityManager entityManager;
