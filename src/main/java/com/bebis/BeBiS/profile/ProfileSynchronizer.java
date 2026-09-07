@@ -14,7 +14,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
-class ProfileSynchronizer {
+final class ProfileSynchronizer {
 
     private final WowCharacterRepository characterRepository;
     private final WowCharacterEntityFactory characterEntityFactory;

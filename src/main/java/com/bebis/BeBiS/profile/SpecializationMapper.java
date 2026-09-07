@@ -11,7 +11,7 @@ import static com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
 
 
 @Component
-class SpecializationMapper {
+final class SpecializationMapper {
 
     public Optional<WowTalents> fromDTO(SpecializationResponse response) {
         if (response == null || response.specializations() == null) {

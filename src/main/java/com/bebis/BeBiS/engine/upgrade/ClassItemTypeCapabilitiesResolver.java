@@ -12,7 +12,7 @@ import static com.bebis.BeBiS.item.domain.Armor.ArmorType;
 import static com.bebis.BeBiS.item.domain.Weapon.WeaponType;
 
 @Component
-class ClassItemTypeCapabilitiesResolver {
+final class ClassItemTypeCapabilitiesResolver {
 
     private static final int ARMOR_TRANSITION_LEVEL = 40;
 

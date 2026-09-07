@@ -26,7 +26,7 @@ import static com.bebis.BeBiS.item.domain.Item.Quality;
 import static com.bebis.BeBiS.tools.MapperTools.validateRequired;
 
 @Component
-public class ItemMapper {
+public final class ItemMapper {
 
     public Item mapToDomain(ItemEntity entity) {
         Item.ItemMetadata meta = new Item.ItemMetadata(

@@ -17,7 +17,7 @@ import java.util.Optional;
 import static com.bebis.BeBiS.tools.MapperTools.validateRequired;
 
 @Component
-class ProfileMapper {
+final class ProfileMapper {
 
     public List<WowCharacterDTO> mapToDTOs(ProfileSummaryResponse response) {
         if (response == null) return List.of();

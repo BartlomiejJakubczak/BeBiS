@@ -16,7 +16,7 @@ import static com.bebis.BeBiS.item.domain.Weapon.WeaponType.*;
 import static com.bebis.BeBiS.profile.domain.WowCharacter.Race.*;
 
 @Component
-public class PowerCalculatorEngine {
+public final class PowerCalculatorEngine {
 
     public static final double RANGED_FLAT_BONUS = 20.0;
     public static final double MELEE_FLAT_BONUS = 80.0;

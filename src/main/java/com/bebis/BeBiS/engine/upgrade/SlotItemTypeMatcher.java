@@ -11,7 +11,7 @@ import static com.bebis.BeBiS.item.domain.Item.InventoryType;
 
 
 @Component
-class SlotItemTypeMatcher {
+final class SlotItemTypeMatcher {
 
     private final Map<Equipment.Slot, Set<InventoryType>> slotToInventoryType = Map.ofEntries(
             Map.entry(HEAD, Set.of(InventoryType.HEAD)),

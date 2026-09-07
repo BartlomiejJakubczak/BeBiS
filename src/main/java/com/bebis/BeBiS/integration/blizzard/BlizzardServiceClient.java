@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
-public class BlizzardServiceClient {
+public final class BlizzardServiceClient {
 
     public static final String LOCALE_QUERY_PARAM = "?locale=en_GB";
 

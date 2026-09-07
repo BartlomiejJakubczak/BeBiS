@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-class DualSlotUpgradeFinder extends UpgradeFinder {
+final class DualSlotUpgradeFinder extends UpgradeFinder {
 
     private final UpgradeResultEvaluator evaluator;
 

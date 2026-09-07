@@ -2,7 +2,7 @@ package com.bebis.BeBiS.tools;
 
 import java.util.function.Function;
 
-public class MapperTools {
+public final class MapperTools {
 
     private MapperTools() {
     }

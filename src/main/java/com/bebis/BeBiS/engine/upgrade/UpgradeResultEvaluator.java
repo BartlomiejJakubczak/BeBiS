@@ -8,7 +8,7 @@ import java.util.Optional;
 
 
 @Component
-class UpgradeResultEvaluator {
+final class UpgradeResultEvaluator {
 
     UpgradeResult evaluateUpgradeResult(Optional<ScoredItem> equippedItem, Optional<ScoredItem> upgrade) {
         if (upgrade.isEmpty()) {

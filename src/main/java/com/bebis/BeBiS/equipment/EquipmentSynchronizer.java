@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-class EquipmentSynchronizer {
+final class EquipmentSynchronizer {
 
     private final ItemService itemService;
     private final EquipmentMapper mapper;

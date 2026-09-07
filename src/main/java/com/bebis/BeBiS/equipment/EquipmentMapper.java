@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-class EquipmentMapper {
+final class EquipmentMapper {
 
     private final ItemMapper itemMapper;
 

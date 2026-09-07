@@ -11,7 +11,7 @@ import java.util.Map;
 import static java.util.Map.entry;
 
 @Component
-class StatWeightRegistry {
+final class StatWeightRegistry {
 
     private final Map<ClassSpec, StatWeights> registry = new EnumMap<>(ClassSpec.class);
 

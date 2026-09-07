@@ -2,7 +2,7 @@ package com.bebis.BeBiS.tools;
 
 import java.util.Optional;
 
-public class EnumTools {
+public final class EnumTools {
 
     private EnumTools() {
     }

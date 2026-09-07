@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 @Component
-class ItemEntityFactory {
+final class ItemEntityFactory {
 
     ItemEntity createItemEntity(ItemSyncData syncData) {
         ItemEntity entity = initializeSubtype(syncData);

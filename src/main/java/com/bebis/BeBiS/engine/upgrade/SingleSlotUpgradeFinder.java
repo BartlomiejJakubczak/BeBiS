@@ -14,7 +14,7 @@ import java.util.Optional;
 
 
 @Component
-class SingleSlotUpgradeFinder extends UpgradeFinder {
+final class SingleSlotUpgradeFinder extends UpgradeFinder {
 
     private final UpgradeResultEvaluator evaluator;
 
