@@ -92,9 +92,8 @@ public class DualSlotUpgradeFinderTest {
         assertThat(result.values()).asInstanceOf(collection(UpgradeResult.UpgradeFoundResult.class))
                 .extracting(UpgradeResult.UpgradeFoundResult::item).containsExactly(bestRing, bestRing);
 
-        // additional 2 calculations for equipped items
-        verify(powerCalculator, times(itemPool.size() + 2)).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentRing1, currentRing2, bestRing, currentRing1, currentRing2));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentRing1, currentRing2, bestRing));
     }
 
     @Test
@@ -129,9 +128,8 @@ public class DualSlotUpgradeFinderTest {
         assertThat(result.get(Equipment.Slot.FINGER_2)).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
                 .extracting(UpgradeResult.UpgradeFoundResult::item).isEqualTo(secondBestRing);
 
-        // additional 2 calculations for equipped items
-        verify(powerCalculator, times(itemPool.size() + 2)).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentRing1, currentRing2, secondBestRing, bestUniqueRing, currentRing1, currentRing2));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentRing1, currentRing2, secondBestRing, bestUniqueRing));
     }
 
     @Test
@@ -190,11 +188,9 @@ public class DualSlotUpgradeFinderTest {
         assertThat(result.get(Equipment.Slot.TRINKET_2)).asInstanceOf(type(UpgradeResult.AlreadyBiSResult.class))
                 .extracting(UpgradeResult.AlreadyBiSResult::item).isEqualTo(topTrinket2);
 
-        // additional 2 calculations for the equipped items comparison logic
-        verify(powerCalculator, times(itemPool.size() + 2))
-                .calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
         assertThat(calculationCaptor.getAllValues())
-                .containsExactlyInAnyOrderElementsOf(List.of(topTrinket1, topTrinket2, worseTrinket1, worseTrinket2, topTrinket1, topTrinket2));
+                .containsExactlyInAnyOrderElementsOf(List.of(topTrinket1, topTrinket2, worseTrinket1, worseTrinket2));
     }
 
     @Test
@@ -225,10 +221,9 @@ public class DualSlotUpgradeFinderTest {
         assertThat(result.get(Equipment.Slot.TRINKET_2)).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
                 .extracting(UpgradeResult.UpgradeFoundResult::item).isEqualTo(otherTrinket);
 
-        verify(powerCalculator, times(itemPool.size() + 1))
-                .calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
         assertThat(calculationCaptor.getAllValues())
-                .containsExactlyInAnyOrderElementsOf(List.of(topUniqueTrinket, otherTrinket, topUniqueTrinket));
+                .containsExactlyInAnyOrderElementsOf(List.of(topUniqueTrinket, otherTrinket));
     }
 
     private ItemPair getCurrentRingPair(Optional<EquippedItem> slot1, Optional<EquippedItem> slot2) {

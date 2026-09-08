@@ -39,24 +39,17 @@ final class DualSlotUpgradeFinder extends UpgradeFinder {
     }
 
     public Map<Equipment.Slot, UpgradeResult> findUpgrades(ItemPair currentPair, WowCharacter wowCharacter, Optional<WowTalents> talents, List<Item> itemPool) {
-        ClassSpec classSpec = ClassSpec.getClassSpec(wowCharacter.wowClass(), talents);
-        WowCharacter.Race race = wowCharacter.race();
-
-        List<ScoredItem> scoredItems = scoreAndSortItems(itemPool, classSpec, race);
+        List<ScoredItem> scoredItems = scoreAndSortItems(itemPool, ClassSpec.getClassSpec(wowCharacter.wowClass(), talents), wowCharacter.race());
 
         // candidates
         Optional<ScoredItem> firstItem = scoredItems.stream().findFirst();
         Optional<ScoredItem> secondItem = pickSecondCandidate(firstItem, scoredItems);
 
-        Optional<EquippedItem> firstEquipped = currentPair.slot1().equippedItem();
-        Optional<EquippedItem> secondEquipped = currentPair.slot2().equippedItem();
+        Optional<ScoredItem> firstEquipped = extractEquippedItemFromPool(currentPair.slot1().equippedItem(), scoredItems);
+        Optional<ScoredItem> secondEquipped = extractEquippedItemFromPool(currentPair.slot2().equippedItem(), scoredItems);
 
-        return Map.of(currentPair.slot1().slot(), evaluator.evaluateUpgradeResult(scoreEquipped(firstEquipped, classSpec, race), firstItem),
-                currentPair.slot2().slot(), evaluator.evaluateUpgradeResult(scoreEquipped(secondEquipped, classSpec, race), secondItem));
-    }
-
-    private Optional<ScoredItem> scoreEquipped(Optional<EquippedItem> equippedItem, ClassSpec classSpec, WowCharacter.Race race) {
-        return equippedItem.map(item -> scoreItem(item.item(), classSpec, race));
+        return Map.of(currentPair.slot1().slot(), evaluator.evaluateUpgradeResult(firstEquipped, firstItem),
+                currentPair.slot2().slot(), evaluator.evaluateUpgradeResult(secondEquipped, secondItem));
     }
 
     private Optional<ScoredItem> pickSecondCandidate(Optional<ScoredItem> firstItem, List<ScoredItem> scoredItems) {

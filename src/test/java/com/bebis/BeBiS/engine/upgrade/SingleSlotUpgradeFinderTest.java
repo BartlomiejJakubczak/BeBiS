@@ -122,10 +122,9 @@ public class SingleSlotUpgradeFinderTest {
 
         assertThat(upgradeFoundResult.item()).isEqualTo(bestItem);
 
-        // additional 1 calculation for the equipped item comparison logic
-        verify(powerCalculator, times(itemPool.size() + 1)).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
         // currentItem is a part of the itemPool and is calculated again during evaluation
-        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentItem, currentItem, otherItem1, bestItem));
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentItem, otherItem1, bestItem));
     }
 
     @ParameterizedTest
@@ -153,10 +152,8 @@ public class SingleSlotUpgradeFinderTest {
         // then
         assertThat(result).isInstanceOf(UpgradeResult.AlreadyBiSResult.class);
 
-        // additional 1 calculation for the equipped item comparison logic
-        verify(powerCalculator, times(itemPool.size() + 1)).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        // currentItem is a part of the itemPool and is calculated again during evaluation
-        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentItem, currentItem, otherItem));
+        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
+        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentItem, otherItem));
     }
 
     private static Stream<Arguments> scoreProvider() {

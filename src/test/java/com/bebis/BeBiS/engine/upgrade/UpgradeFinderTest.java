@@ -1,10 +1,9 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
+import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.item.ItemBuilder;
 import com.bebis.BeBiS.item.domain.Item;
-import com.bebis.BeBiS.profile.domain.ClassSpec;
-import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +13,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static com.bebis.BeBiS.profile.domain.ClassSpec.ROGUE_COMBAT;
+import static com.bebis.BeBiS.profile.domain.WowCharacter.Race.NIGHT_ELF;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -32,27 +33,19 @@ public class UpgradeFinderTest {
     }
 
     @Test
-    void shouldExtractBestScoringItemFromThePool() {
+    void shouldExtractEquippedItemFromItemPool() {
         // given
-        Item someItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
-        Item otherItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
-        Item bestItem = ItemBuilder.newEquippableItem().withBaseId(3L).build();
-
-        double bestScore = 69.0;
-
-        when(calculator.calculate(eq(someItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(21.0);
-        when(calculator.calculate(eq(otherItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(37.0);
-        when(calculator.calculate(eq(bestItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(bestScore);
+        EquippedItem equippedItem = new EquippedItem(ItemBuilder.newEquippableItem().withBaseId(1L).build(), List.of());
+        Item otherItem1 = ItemBuilder.newEquippableItem().withBaseId(2L).build();
+        Item otherItem2 = ItemBuilder.newEquippableItem().withBaseId(3L).build();
 
         // when
-        Optional<ScoredItem> result = finder.extractBestItemFromPool(List.of(someItem, otherItem, bestItem), ClassSpec.ROGUE_COMBAT, WowCharacter.Race.NIGHT_ELF);
+        Optional<ScoredItem> result = finder.extractEquippedItemFromPool(Optional.of(equippedItem),
+                List.of(new ScoredItem(equippedItem.item(), 21.0), new ScoredItem(otherItem1, 37.0), new ScoredItem(otherItem2, 69.0)));
 
         // then
-        assertThat(result).isPresent();
-        ScoredItem scoredItem = result.get();
-
-        assertThat(scoredItem.item()).isEqualTo(bestItem);
-        assertThat(scoredItem.score()).isEqualTo(bestScore);
+        assertThat(result.isPresent()).isTrue();
+        assertThat(result.get().item()).isEqualTo(equippedItem.item());
     }
 
     @Test
@@ -61,18 +54,18 @@ public class UpgradeFinderTest {
         Item item = ItemBuilder.newEquippableItem().withBaseId(1L).build();
         double expectedScore = 42.0;
 
-        when(calculator.calculate(eq(item), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF)))
+        when(calculator.calculate(eq(item), eq(ROGUE_COMBAT), eq(NIGHT_ELF)))
                 .thenReturn(expectedScore);
 
         // when
-        ScoredItem result = finder.scoreItem(item, ClassSpec.ROGUE_COMBAT, WowCharacter.Race.NIGHT_ELF);
+        ScoredItem result = finder.scoreItem(item, ROGUE_COMBAT, NIGHT_ELF);
 
         // then
         assertThat(result.item()).isEqualTo(item);
         assertThat(result.score()).isEqualTo(expectedScore);
 
         // verifies exact delegation to the engine
-        verify(calculator).calculate(item, ClassSpec.ROGUE_COMBAT, WowCharacter.Race.NIGHT_ELF);
+        verify(calculator).calculate(item, ROGUE_COMBAT, NIGHT_ELF);
     }
 
     @Test
@@ -82,15 +75,15 @@ public class UpgradeFinderTest {
         Item midItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
         Item highItem = ItemBuilder.newEquippableItem().withBaseId(3L).build();
 
-        when(calculator.calculate(eq(lowItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(10.0);
-        when(calculator.calculate(eq(midItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(50.0);
-        when(calculator.calculate(eq(highItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(100.0);
+        when(calculator.calculate(eq(lowItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(10.0);
+        when(calculator.calculate(eq(midItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(50.0);
+        when(calculator.calculate(eq(highItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(100.0);
 
         // when
         List<ScoredItem> result = finder.scoreAndSortItems(
                 List.of(lowItem, highItem, midItem),
-                ClassSpec.ROGUE_COMBAT,
-                WowCharacter.Race.NIGHT_ELF
+                ROGUE_COMBAT,
+                NIGHT_ELF
         );
 
         // then
@@ -110,14 +103,14 @@ public class UpgradeFinderTest {
         Item secondTiedItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
 
         double tiedScore = 50.0;
-        when(calculator.calculate(eq(firstTiedItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(tiedScore);
-        when(calculator.calculate(eq(secondTiedItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(tiedScore);
+        when(calculator.calculate(eq(firstTiedItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
+        when(calculator.calculate(eq(secondTiedItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
 
         // when
         List<ScoredItem> result = finder.scoreAndSortItems(
                 List.of(firstTiedItem, secondTiedItem),
-                ClassSpec.ROGUE_COMBAT,
-                WowCharacter.Race.NIGHT_ELF
+                ROGUE_COMBAT,
+                NIGHT_ELF
         );
 
         // then
@@ -133,15 +126,15 @@ public class UpgradeFinderTest {
         Item otherItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
         Item otherItem1 = ItemBuilder.newEquippableItem().withBaseId(3L).build();
 
-        when(calculator.calculate(eq(zeroItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(0.0);
-        when(calculator.calculate(eq(otherItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(10.0);
-        when(calculator.calculate(eq(otherItem1), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(50.0);
+        when(calculator.calculate(eq(zeroItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(0.0);
+        when(calculator.calculate(eq(otherItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(10.0);
+        when(calculator.calculate(eq(otherItem1), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(50.0);
 
         // when
         List<ScoredItem> result = finder.scoreAndSortItems(
                 List.of(otherItem1, zeroItem, otherItem),
-                ClassSpec.ROGUE_COMBAT,
-                WowCharacter.Race.NIGHT_ELF
+                ROGUE_COMBAT,
+                NIGHT_ELF
         );
 
         // then
@@ -161,14 +154,14 @@ public class UpgradeFinderTest {
         Item lowerIdItem = ItemBuilder.newEquippableItem().withBaseId(10L).build();
 
         double tiedScore = 50.0;
-        when(calculator.calculate(eq(higherIdItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(tiedScore);
-        when(calculator.calculate(eq(lowerIdItem), eq(ClassSpec.ROGUE_COMBAT), eq(WowCharacter.Race.NIGHT_ELF))).thenReturn(tiedScore);
+        when(calculator.calculate(eq(higherIdItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
+        when(calculator.calculate(eq(lowerIdItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
 
         // when (input order puts higher ID first)
         List<ScoredItem> result = finder.scoreAndSortItems(
                 List.of(higherIdItem, lowerIdItem),
-                ClassSpec.ROGUE_COMBAT,
-                WowCharacter.Race.NIGHT_ELF
+                ROGUE_COMBAT,
+                NIGHT_ELF
         );
 
         // then (lower baseId wins deterministic tie-breaker)
@@ -182,8 +175,8 @@ public class UpgradeFinderTest {
         // when
         List<ScoredItem> result = finder.scoreAndSortItems(
                 List.of(),
-                ClassSpec.ROGUE_COMBAT,
-                WowCharacter.Race.NIGHT_ELF
+                ROGUE_COMBAT,
+                NIGHT_ELF
         );
 
         // then

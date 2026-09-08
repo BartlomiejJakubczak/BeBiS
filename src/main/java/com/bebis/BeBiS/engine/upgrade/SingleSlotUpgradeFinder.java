@@ -24,11 +24,8 @@ final class SingleSlotUpgradeFinder extends UpgradeFinder {
     }
 
     public UpgradeResult findUpgrade(Optional<EquippedItem> equippedItem, WowCharacter wowCharacter, Optional<WowTalents> talents, List<Item> itemPool) {
-        ClassSpec classSpec = ClassSpec.getClassSpec(wowCharacter.wowClass(), talents);
-        WowCharacter.Race race = wowCharacter.race();
-
-        return evaluator.evaluateUpgradeResult(equippedItem.map(item ->
-                scoreItem(item.item(), classSpec, race)), extractBestItemFromPool(itemPool, classSpec, race));
+        List<ScoredItem> scoredItems = scoreAndSortItems(itemPool, ClassSpec.getClassSpec(wowCharacter.wowClass(), talents), wowCharacter.race());
+        return evaluator.evaluateUpgradeResult(extractEquippedItemFromPool(equippedItem, scoredItems), scoredItems.stream().findFirst());
     }
 
 }

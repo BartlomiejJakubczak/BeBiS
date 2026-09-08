@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
+import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
@@ -17,10 +18,10 @@ abstract class UpgradeFinder {
         this.calculator = calculator;
     }
 
-    protected Optional<ScoredItem> extractBestItemFromPool(List<Item> itemPool, ClassSpec classSpec, WowCharacter.Race race) {
-        return itemPool.stream()
-                .map(item -> scoreItem(item, classSpec, race))
-                .max(Comparator.comparingDouble(ScoredItem::score));
+    protected Optional<ScoredItem> extractEquippedItemFromPool(Optional<EquippedItem> equippedItem, List<ScoredItem> itemPool) {
+        return equippedItem.flatMap(equipped -> itemPool.stream()
+                .filter((scoredItem -> equipped.item().equals(scoredItem.item())))
+                .findFirst());
     }
 
     protected List<ScoredItem> scoreAndSortItems(List<Item> itemPool, ClassSpec classSpec, WowCharacter.Race race) {
