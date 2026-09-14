@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 
-import static com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeFinder.ItemPair;
+import static com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeFinder.EquippedItemPair;
 
 @Component
 class DualSlotUpgradeOrchestrator {
@@ -35,7 +35,7 @@ class DualSlotUpgradeOrchestrator {
         // both paired slots go to the same InventoryType, hence the same itemPool for both slots
         List<Item> itemPool = itemPoolProvider.getItemPool(slots.slot1(), info.wowCharacter().level(), info.wowCharacter().wowClass());
 
-        Map<Equipment.Slot, UpgradeResult> results = upgradeFinder.findUpgrades(ItemPair.from(slots, info.equipment()),
+        Map<Equipment.Slot, UpgradeResult> results = upgradeFinder.findUpgrades(EquippedItemPair.from(slots, info.equipment()),
                 info.wowCharacter(), info.talents(), itemPool);
 
         evaluateResults(results);

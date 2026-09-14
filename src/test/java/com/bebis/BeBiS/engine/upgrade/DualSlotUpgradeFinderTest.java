@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
-import com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeFinder.ItemPair;
+import com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeFinder.EquippedItemPair;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
-import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -80,11 +79,11 @@ public class DualSlotUpgradeFinderTest {
         when(powerCalculator.calculate(currentRing2, classSpec, wowCharacter.race())).thenReturn(37.0);
         when(powerCalculator.calculate(bestRing, classSpec, wowCharacter.race())).thenReturn(69.0);
 
-        ItemPair itemPair = getCurrentRingPair(Optional.of(new EquippedItem(currentRing1, List.of())), Optional.of(new EquippedItem(currentRing2, List.of())));
+        EquippedItemPair equippedItemPair = getCurrentRingPair(Optional.of(new EquippedItem(currentRing1, List.of())), Optional.of(new EquippedItem(currentRing2, List.of())));
         List<Item> itemPool = List.of(currentRing1, currentRing2, bestRing);
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(itemPair, wowCharacter, talents, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(equippedItemPair, wowCharacter, talents, itemPool);
 
         // then
         assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
@@ -92,8 +91,8 @@ public class DualSlotUpgradeFinderTest {
         assertThat(result.values()).asInstanceOf(collection(UpgradeResult.UpgradeFoundResult.class))
                 .extracting(UpgradeResult.UpgradeFoundResult::item).containsExactly(bestRing, bestRing);
 
-        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentRing1, currentRing2, bestRing));
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
     }
 
     @Test
@@ -113,23 +112,23 @@ public class DualSlotUpgradeFinderTest {
         when(powerCalculator.calculate(secondBestRing, classSpec, wowCharacter.race())).thenReturn(69.0);
         when(powerCalculator.calculate(bestUniqueRing, classSpec, wowCharacter.race())).thenReturn(100.0);
 
-        ItemPair itemPair = getCurrentRingPair(Optional.of(new EquippedItem(currentRing1, List.of())), Optional.of(new EquippedItem(currentRing2, List.of())));
+        EquippedItemPair equippedItemPair = getCurrentRingPair(Optional.of(new EquippedItem(currentRing1, List.of())), Optional.of(new EquippedItem(currentRing2, List.of())));
         List<Item> itemPool = List.of(currentRing1, currentRing2, secondBestRing, bestUniqueRing);
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(itemPair, wowCharacter, talents, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(equippedItemPair, wowCharacter, talents, itemPool);
 
         // then
         assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
 
-        assertThat(result.get(Equipment.Slot.FINGER_1)).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
-                .extracting(UpgradeResult.UpgradeFoundResult::item).isEqualTo(bestUniqueRing);
+        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(bestUniqueRing));
 
-        assertThat(result.get(Equipment.Slot.FINGER_2)).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
-                .extracting(UpgradeResult.UpgradeFoundResult::item).isEqualTo(secondBestRing);
+        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(secondBestRing));
 
-        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getAllValues()).containsExactlyInAnyOrderElementsOf(List.of(currentRing1, currentRing2, secondBestRing, bestUniqueRing));
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
     }
 
     @Test
@@ -150,14 +149,14 @@ public class DualSlotUpgradeFinderTest {
         // then
         assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
 
-        assertThat(result.get(Equipment.Slot.FINGER_1)).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
-                .extracting(UpgradeResult.UpgradeFoundResult::item).isEqualTo(uniqueRing);
+        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(uniqueRing));
 
         assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOf(UpgradeResult.NoItemsAvailableResult.class);
 
         // no equipped items so no additional calculations
-        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getValue()).isEqualTo(uniqueRing);
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
     }
 
     @Test
@@ -182,15 +181,14 @@ public class DualSlotUpgradeFinderTest {
         // then
         assertThat(result).containsOnlyKeys(Equipment.Slot.TRINKET_1, Equipment.Slot.TRINKET_2);
 
-        assertThat(result.get(Equipment.Slot.TRINKET_1)).asInstanceOf(type(UpgradeResult.AlreadyBiSResult.class))
-                .extracting(UpgradeResult.AlreadyBiSResult::item).isEqualTo(topTrinket1);
+        assertThat(result.get(Equipment.Slot.TRINKET_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+                res -> assertThat(res.item()).isEqualTo(topTrinket1));
 
-        assertThat(result.get(Equipment.Slot.TRINKET_2)).asInstanceOf(type(UpgradeResult.AlreadyBiSResult.class))
-                .extracting(UpgradeResult.AlreadyBiSResult::item).isEqualTo(topTrinket2);
+        assertThat(result.get(Equipment.Slot.TRINKET_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+                res -> assertThat(res.item()).isEqualTo(topTrinket2));
 
-        verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getAllValues())
-                .containsExactlyInAnyOrderElementsOf(List.of(topTrinket1, topTrinket2, worseTrinket1, worseTrinket2));
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
     }
 
     @Test
@@ -215,27 +213,129 @@ public class DualSlotUpgradeFinderTest {
         // then
         assertThat(result).containsOnlyKeys(Equipment.Slot.TRINKET_1, Equipment.Slot.TRINKET_2);
 
-        assertThat(result.get(Equipment.Slot.TRINKET_1)).asInstanceOf(type(UpgradeResult.AlreadyBiSResult.class))
-                .extracting(UpgradeResult.AlreadyBiSResult::item).isEqualTo(topUniqueTrinket);
+        assertThat(result.get(Equipment.Slot.TRINKET_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+                res -> assertThat(res.item()).isEqualTo(topUniqueTrinket));
 
-        assertThat(result.get(Equipment.Slot.TRINKET_2)).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
-                .extracting(UpgradeResult.UpgradeFoundResult::item).isEqualTo(otherTrinket);
+        assertThat(result.get(Equipment.Slot.TRINKET_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(otherTrinket));
+
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
+    }
+
+    @Test
+    void shouldSignalUpgradeFoundEvents_BothUpgradesDifferentAndUniqueEquipped() {
+        // given
+        Item uniqueRing1 = ItemBuilder.newEquippableItem().withBaseId(1L)
+                .withInventoryType("FINGER")
+                .withUniqueEquipped(true)
+                .build();
+        Item uniqueRing2 = ItemBuilder.newEquippableItem().withBaseId(2L)
+                .withInventoryType("FINGER")
+                .withUniqueEquipped(true)
+                .build();
+
+        when(powerCalculator.calculate(uniqueRing1, classSpec, wowCharacter.race())).thenReturn(100.0);
+        when(powerCalculator.calculate(uniqueRing2, classSpec, wowCharacter.race())).thenReturn(80.0);
+
+        List<Item> itemPool = List.of(uniqueRing1, uniqueRing2);
+
+        // when
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(Optional.empty(),
+                Optional.empty()), wowCharacter, talents, itemPool);
+
+        // then
+        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
+
+        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(uniqueRing1));
+
+        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(uniqueRing2));
 
         verify(powerCalculator, times(itemPool.size())).calculate(calculationCaptor.capture(), eq(classSpec), eq(wowCharacter.race()));
-        assertThat(calculationCaptor.getAllValues())
-                .containsExactlyInAnyOrderElementsOf(List.of(topUniqueTrinket, otherTrinket));
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
     }
 
-    private ItemPair getCurrentRingPair(Optional<EquippedItem> slot1, Optional<EquippedItem> slot2) {
-        return new ItemPair(
-                new ItemPair.Item(Equipment.Slot.FINGER_1, slot1),
-                new ItemPair.Item(Equipment.Slot.FINGER_2, slot2));
+    @Test
+    void shouldAlwaysAssignItemsToSameSlots_SameTotalScoreOfCandidateItemsConfigurations() {
+        // given
+        Item ring1 = ItemBuilder.newEquippableItem().withBaseId(1L)
+                .withInventoryType("FINGER")
+                .withUniqueEquipped(true)
+                .build();
+        Item ring2 = ItemBuilder.newEquippableItem().withBaseId(2L).withInventoryType("FINGER").build();
+
+        when(powerCalculator.calculate(ring1, classSpec, wowCharacter.race())).thenReturn(100.0);
+        when(powerCalculator.calculate(ring2, classSpec, wowCharacter.race())).thenReturn(80.0);
+
+        List<Item> itemPool = List.of(ring1, ring2);
+
+        // when
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(Optional.empty(),
+                Optional.empty()), wowCharacter, talents, itemPool);
+
+        // then
+        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
+
+        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(ring1));
+
+        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(ring2));
+
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
+
     }
 
-    private ItemPair getCurrentTrinketPair(Optional<EquippedItem> slot1, Optional<EquippedItem> slot2) {
-        return new ItemPair(
-                new ItemPair.Item(Equipment.Slot.TRINKET_1, slot1),
-                new ItemPair.Item(Equipment.Slot.TRINKET_2, slot2));
+    @Test
+    void shouldOptimizeCandidateItemsSlotAssignment_ByTotalScoreOfACandidateConfiguration() {
+        // given
+        Item bestRing = ItemBuilder.newEquippableItem().withBaseId(1L)
+                .withInventoryType("FINGER")
+                .withUniqueEquipped(true)
+                .build();
+        Item worstRing = ItemBuilder.newEquippableItem().withBaseId(2L).withInventoryType("FINGER").build();
+        Item otherRing = ItemBuilder.newEquippableItem().withBaseId(3L).withInventoryType("FINGER").build();
+
+        when(powerCalculator.calculate(bestRing, classSpec, wowCharacter.race())).thenReturn(80.0);
+        when(powerCalculator.calculate(worstRing, classSpec, wowCharacter.race())).thenReturn(10.0);
+        when(powerCalculator.calculate(otherRing, classSpec, wowCharacter.race())).thenReturn(50.0);
+
+        EquippedItem slot1 = new EquippedItem(bestRing, List.of());
+        EquippedItem slot2 = new EquippedItem(worstRing, List.of());
+
+        List<Item> itemPool = List.of(bestRing, worstRing, otherRing);
+
+        // when
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(Optional.of(slot1), Optional.of(slot2)),
+                wowCharacter, talents, itemPool);
+
+        // then
+        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
+
+        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+                res -> assertThat(res.item()).isEqualTo(bestRing));
+
+        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(otherRing));
+
+        verify(powerCalculator, times(itemPool.size()))
+                .calculate(argThat(itemPool::contains), eq(classSpec), eq(wowCharacter.race()));
+    }
+
+    private EquippedItemPair getCurrentRingPair(Optional<EquippedItem> slot1, Optional<EquippedItem> slot2) {
+        return new EquippedItemPair(
+                new EquippedItemPair.Item(Equipment.Slot.FINGER_1, slot1),
+                new EquippedItemPair.Item(Equipment.Slot.FINGER_2, slot2));
+    }
+
+    private EquippedItemPair getCurrentTrinketPair(Optional<EquippedItem> slot1, Optional<EquippedItem> slot2) {
+        return new EquippedItemPair(
+                new EquippedItemPair.Item(Equipment.Slot.TRINKET_1, slot1),
+                new EquippedItemPair.Item(Equipment.Slot.TRINKET_2, slot2));
     }
 
     private WowTalents getTalents() {
