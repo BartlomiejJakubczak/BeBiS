@@ -2,11 +2,9 @@ package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
-import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -20,11 +18,10 @@ class DualSlotUpgradeOrchestrator {
 
     private final DualSlotUpgradeFinder upgradeFinder;
     private final ItemPoolProvider itemPoolProvider;
-
-    private final ApplicationEventPublisher publisher;
+    private final UpgradeEventPublisher publisher;
 
     DualSlotUpgradeOrchestrator(ItemPoolProvider itemPoolProvider, DualSlotUpgradeFinder upgradeFinder,
-                                ApplicationEventPublisher publisher) {
+                                UpgradeEventPublisher publisher) {
         this.itemPoolProvider = itemPoolProvider;
         this.upgradeFinder = upgradeFinder;
         this.publisher = publisher;
@@ -38,20 +35,7 @@ class DualSlotUpgradeOrchestrator {
         Map<Equipment.Slot, UpgradeResult> results = upgradeFinder.findUpgrades(EquippedItemPair.from(slots, info.equipment()),
                 info.wowCharacter(), info.talents(), itemPool);
 
-        evaluateResults(results);
-    }
-
-    private void evaluateResults(Map<Equipment.Slot, UpgradeResult> results) {
-        results.forEach((slot, result) -> {
-            switch (result) {
-                case UpgradeResult.UpgradeFoundResult r ->
-                        publisher.publishEvent(new UpgradeEvent.UpgradeFoundEvent(slot, r.item(), r.timestamp()));
-                case UpgradeResult.AlreadyBiSResult r ->
-                        publisher.publishEvent(new UpgradeEvent.BiSAlreadyEquippedEvent(slot, r.item(), r.timestamp()));
-                case UpgradeResult.NoItemsAvailableResult r ->
-                        publisher.publishEvent(new UpgradeEvent.UpgradeNotAvailableEvent(slot, r.timestamp()));
-            }
-        });
+        results.forEach(publisher::publish);
     }
 
 }
