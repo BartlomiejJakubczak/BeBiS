@@ -9,10 +9,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ItemBuilder {
+public class EquippableItemBuilder {
 
-    private Long baseId;
-    private Long suffixId;
+    private long baseId;
+    private long suffixId;
     private String name;
     private String inventoryType;
     private String quality;
@@ -23,12 +23,12 @@ public class ItemBuilder {
     private Map<String, Integer> stats;
     private List<String> specialEffects;
 
-    private ItemBuilder() {
+    private EquippableItemBuilder() {
 
     }
 
-    public static ItemBuilder newEquippableItem() {
-        ItemBuilder builder = new ItemBuilder();
+    public static EquippableItemBuilder newRing() {
+        EquippableItemBuilder builder = new EquippableItemBuilder();
         builder.baseId = 17063L;
         builder.suffixId = 0L;
         builder.name = "Band of Accuria";
@@ -41,52 +41,52 @@ public class ItemBuilder {
         return builder;
     }
 
-    public ItemBuilder withBaseId(long baseId) {
+    public EquippableItemBuilder withBaseId(long baseId) {
         this.baseId = baseId;
         return this;
     }
 
-    public ItemBuilder withSuffixId(long suffixId) {
+    public EquippableItemBuilder withSuffixId(long suffixId) {
         this.suffixId = suffixId;
         return this;
     }
 
-    public ItemBuilder withName(String name) {
+    public EquippableItemBuilder withName(String name) {
         this.name = name;
         return this;
     }
 
-    public ItemBuilder withInventoryType(String inventoryType) {
+    public EquippableItemBuilder withInventoryType(String inventoryType) {
         this.inventoryType = inventoryType;
         return this;
     }
 
-    public ItemBuilder withQuality(String quality) {
+    public EquippableItemBuilder withQuality(String quality) {
         this.quality = quality;
         return this;
     }
 
-    public ItemBuilder withItemLevel(int itemLevel) {
+    public EquippableItemBuilder withItemLevel(int itemLevel) {
         this.itemLevel = itemLevel;
         return this;
     }
 
-    public ItemBuilder withRequiredLevel(int requiredLevel) {
+    public EquippableItemBuilder withRequiredLevel(int requiredLevel) {
         this.requiredLevel = requiredLevel;
         return this;
     }
 
-    public ItemBuilder withUniqueEquipped(boolean uniqueEquipped) {
+    public EquippableItemBuilder withUniqueEquipped(boolean uniqueEquipped) {
         this.uniqueEquipped = uniqueEquipped;
         return this;
     }
 
-    public ItemBuilder withStats(Map<String, Integer> stats) {
+    public EquippableItemBuilder withStats(Map<String, Integer> stats) {
         this.stats = stats;
         return this;
     }
 
-    public ItemBuilder withSpecialEffects(List<String> specialEffects) {
+    public EquippableItemBuilder withSpecialEffects(List<String> specialEffects) {
         this.specialEffects = specialEffects;
         return this;
     }
@@ -107,9 +107,6 @@ public class ItemBuilder {
     }
 
     private Item.ItemKey itemKey() {
-        if (this.baseId == null || this.suffixId == null) {
-            throw new IllegalArgumentException("Either baseId or suffixId is null");
-        }
         return new Item.ItemKey(this.baseId, this.suffixId);
     }
 

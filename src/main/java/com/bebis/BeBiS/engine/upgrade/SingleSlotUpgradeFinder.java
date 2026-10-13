@@ -1,16 +1,12 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
-import com.bebis.BeBiS.equipment.domain.EquippedItem;
-import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
-import com.bebis.BeBiS.profile.domain.WowCharacter;
-import com.bebis.BeBiS.profile.domain.WowTalents;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Optional;
 
 
 @Component
@@ -23,9 +19,9 @@ final class SingleSlotUpgradeFinder extends UpgradeFinder {
         this.evaluator = evaluator;
     }
 
-    public UpgradeResult findUpgrade(Optional<EquippedItem> equippedItem, WowCharacter wowCharacter, Optional<WowTalents> talents, List<Item> itemPool) {
-        List<ScoredItem> scoredItems = scoreAndSortItems(itemPool, ClassSpec.getClassSpec(wowCharacter.wowClass(), talents), wowCharacter.race());
-        return evaluator.evaluateUpgradeResult(extractEquippedItemFromPool(equippedItem, scoredItems), scoredItems.stream().findFirst());
+    UpgradeResult findUpgrade(SingleSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec) {
+        List<ScoredItem> scoredItems = scoreAndSortItems(query.itemPool(), classSpec);
+        return evaluator.evaluateUpgradeResult(extractEquippedItemFromPool(query.currentItem(), scoredItems), scoredItems.stream().findFirst());
     }
 
 }

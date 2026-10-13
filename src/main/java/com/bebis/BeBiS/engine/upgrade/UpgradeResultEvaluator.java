@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.engine.upgrade;
 
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import org.springframework.stereotype.Component;
 
@@ -11,17 +12,10 @@ import java.util.Optional;
 final class UpgradeResultEvaluator {
 
     UpgradeResult evaluateUpgradeResult(Optional<ScoredItem> equippedItem, Optional<ScoredItem> upgrade) {
-        if (upgrade.isEmpty()) {
-            return new UpgradeResult.NoItemsAvailableResult(Instant.now());
-        }
-        if (equippedItem.isPresent()) {
-            ScoredItem upgradeScoredItem = upgrade.get();
-            ScoredItem equippedScoredItem = equippedItem.get();
-            return upgradeScoredItem.score() > equippedScoredItem.score()
-                    ? new UpgradeResult.UpgradeFoundResult(upgradeScoredItem.item(), Instant.now())
-                    : new UpgradeResult.AlreadyBiSResult(equippedScoredItem.item(), Instant.now());
-        } else {
-            return new UpgradeResult.UpgradeFoundResult(upgrade.get().item(), Instant.now());
-        }
+        return upgrade.map((up) -> equippedItem.map((eq) -> up.score() > eq.score()
+                                ? new UpgradeResult.UpgradeFoundResult(up.item(), Instant.now())
+                                : new UpgradeResult.AlreadyBiSResult(eq.item(), Instant.now()))
+                        .orElseGet(() -> new UpgradeResult.UpgradeFoundResult(up.item(), Instant.now()))) // orElseGet preferred over orElse (LAZY vs EAGER)
+                .orElseGet(() -> new UpgradeResult.NoItemsAvailableResult(Instant.now()));
     }
 }

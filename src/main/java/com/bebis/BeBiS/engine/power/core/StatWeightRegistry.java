@@ -15,11 +15,11 @@ final class StatWeightRegistry {
 
     private final Map<ClassSpec, StatWeights> registry = new EnumMap<>(ClassSpec.class);
 
-    public StatWeightRegistry() {
+    StatWeightRegistry() {
         populateRegistry();
     }
 
-    public StatWeights getWeightsFor(ClassSpec classSpec) {
+    StatWeights getWeightsFor(ClassSpec classSpec) {
         return registry.getOrDefault(classSpec, new StatWeights(new EnumMap<>(StatType.class)));
     }
 
@@ -104,9 +104,7 @@ final class StatWeightRegistry {
                 StatType.CRIT_RATING, 25.0,
                 StatType.HIT_RATING, 21.0,
                 StatType.STAMINA, 0.2,
-                StatType.ARMOR, 0.01,
-                StatType.WEAPON_DPS, 14.0,
-                StatType.WEAPON_SPEED, 25.0
+                StatType.ARMOR, 0.01
         )));
 
         registry.put(ClassSpec.WARRIOR_FURY, weights(Map.of(
@@ -116,9 +114,7 @@ final class StatWeightRegistry {
                 StatType.CRIT_RATING, 25.0,
                 StatType.HIT_RATING, 21.0,
                 StatType.STAMINA, 0.1,
-                StatType.ARMOR, 0.01,
-                StatType.WEAPON_DPS, 16.5,
-                StatType.WEAPON_SPEED, 5.0
+                StatType.ARMOR, 0.01
         )));
 
         registry.put(ClassSpec.WARRIOR_PROTECTION, weights(Map.ofEntries(
@@ -133,9 +129,7 @@ final class StatWeightRegistry {
                 entry(StatType.AGILITY, 0.8),
                 entry(StatType.ARMOR, 0.04),
                 entry(StatType.HIT_RATING, 15.0),
-                entry(StatType.CRIT_RATING, 10.0),
-                entry(StatType.WEAPON_DPS, 9.0),
-                entry(StatType.WEAPON_SPEED, -5.0)
+                entry(StatType.CRIT_RATING, 10.0)
         )));
 
         // ==========================================
@@ -147,9 +141,7 @@ final class StatWeightRegistry {
                 StatType.STRENGTH, 0.6,
                 StatType.ARMOR, 0.01,
                 StatType.CRIT_RATING, 23.0,
-                StatType.HIT_RATING, 19.0,
-                StatType.WEAPON_DPS, 12.0,
-                StatType.WEAPON_SPEED, -10.0
+                StatType.HIT_RATING, 19.0
         )));
 
         registry.put(ClassSpec.ROGUE_COMBAT, weights(Map.of(
@@ -158,9 +150,7 @@ final class StatWeightRegistry {
                 StatType.STRENGTH, 1.0,
                 StatType.ARMOR, 0.01,
                 StatType.CRIT_RATING, 24.0,
-                StatType.HIT_RATING, 18.0,
-                StatType.WEAPON_DPS, 15.0,
-                StatType.WEAPON_SPEED, 12.0
+                StatType.HIT_RATING, 18.0
         )));
 
         registry.put(ClassSpec.ROGUE_SUBTLETY, weights(Map.of(
@@ -169,9 +159,7 @@ final class StatWeightRegistry {
                 StatType.STRENGTH, 0.8,
                 StatType.ARMOR, 0.01,
                 StatType.CRIT_RATING, 22.0,
-                StatType.HIT_RATING, 17.0,
-                StatType.WEAPON_DPS, 11.0,
-                StatType.WEAPON_SPEED, 15.0
+                StatType.HIT_RATING, 17.0
         )));
 
         // ==========================================
@@ -200,8 +188,7 @@ final class StatWeightRegistry {
                 entry(StatType.INTELLECT, 0.5),
                 entry(StatType.MANA_PER_5_SECONDS, 2.0),
                 entry(StatType.ARMOR, 0.04),
-                entry(StatType.HIT_RATING, 12.0),
-                entry(StatType.WEAPON_DPS, 6.0)
+                entry(StatType.HIT_RATING, 12.0)
         )));
 
         registry.put(ClassSpec.PALADIN_RETRIBUTION, weights(Map.ofEntries(
@@ -213,9 +200,7 @@ final class StatWeightRegistry {
                 entry(StatType.CRIT_RATING, 22.0),
                 entry(StatType.HIT_RATING, 20.0),
                 entry(StatType.INTELLECT, 0.5),
-                entry(StatType.MANA_PER_5_SECONDS, 1.5),
-                entry(StatType.WEAPON_DPS, 11.0),
-                entry(StatType.WEAPON_SPEED, 35.0)
+                entry(StatType.MANA_PER_5_SECONDS, 1.5)
         )));
 
         // ==========================================
@@ -228,9 +213,7 @@ final class StatWeightRegistry {
                 StatType.HIT_RATING, 22.0,
                 StatType.MANA_PER_5_SECONDS, 1.0,
                 StatType.STAMINA, 0.2,
-                StatType.ARMOR, 0.01,
-                StatType.WEAPON_DPS, 20.0,
-                StatType.WEAPON_SPEED, 5.0
+                StatType.ARMOR, 0.01
         )));
 
         registry.put(ClassSpec.HUNTER_MARKSMANSHIP, weights(Map.of(
@@ -240,9 +223,7 @@ final class StatWeightRegistry {
                 StatType.HIT_RATING, 24.0,
                 StatType.MANA_PER_5_SECONDS, 1.0,
                 StatType.STAMINA, 0.2,
-                StatType.ARMOR, 0.01,
-                StatType.WEAPON_DPS, 28.0,
-                StatType.WEAPON_SPEED, 18.0
+                StatType.ARMOR, 0.01
         )));
 
         registry.put(ClassSpec.HUNTER_SURVIVAL, weights(Map.of(
@@ -252,9 +233,7 @@ final class StatWeightRegistry {
                 StatType.HIT_RATING, 23.0,
                 StatType.MANA_PER_5_SECONDS, 1.0,
                 StatType.STAMINA, 0.4,
-                StatType.ARMOR, 0.01,
-                StatType.WEAPON_DPS, 22.0,
-                StatType.WEAPON_SPEED, 10.0
+                StatType.ARMOR, 0.01
         )));
 
         // ==========================================
@@ -314,9 +293,7 @@ final class StatWeightRegistry {
                 StatType.CRIT_RATING, 22.0,
                 StatType.HIT_RATING, 20.0,
                 StatType.INTELLECT, 0.4,
-                StatType.MANA_PER_5_SECONDS, 2.0,
-                StatType.WEAPON_DPS, 12.5,
-                StatType.WEAPON_SPEED, 32.0
+                StatType.MANA_PER_5_SECONDS, 2.0
         )));
 
         registry.put(ClassSpec.SHAMAN_RESTORATION, weights(Map.of(

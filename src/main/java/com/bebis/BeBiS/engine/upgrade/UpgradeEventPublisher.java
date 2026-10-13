@@ -23,6 +23,8 @@ final class UpgradeEventPublisher {
                     publisher.publishEvent(new UpgradeEvent.BiSAlreadyEquippedEvent(slot, r.item(), r.timestamp()));
             case UpgradeResult.NoItemsAvailableResult r ->
                     publisher.publishEvent(new UpgradeEvent.UpgradeNotAvailableEvent(slot, r.timestamp()));
+            case UpgradeResult.SlotClearedResult r ->
+                    publisher.publishEvent(new UpgradeEvent.SlotClearedEvent(slot, r.triggeringItem(), r.timestamp()));
         }
     }
 }

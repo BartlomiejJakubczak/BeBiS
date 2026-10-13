@@ -4,7 +4,7 @@ import com.bebis.BeBiS.base.BaseNonTransactionalFullstackTest;
 import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
-import com.bebis.BeBiS.item.ItemBuilder;
+import com.bebis.BeBiS.item.EquippableItemBuilder;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
@@ -79,7 +79,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
         DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // save an eligible ring to db
-        Item theOneRing = ItemBuilder.newEquippableItem().withBaseId(1L).withInventoryType("FINGER").build();
+        Item theOneRing = EquippableItemBuilder.newRing().withBaseId(1L).withInventoryType("FINGER").build();
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(theOneRing)));
 
         // when
@@ -102,7 +102,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
         // given
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().withLevel(30).build();
 
-        Item bisRing = ItemBuilder.newEquippableItem().withBaseId(1L)
+        Item bisRing = EquippableItemBuilder.newRing().withBaseId(1L)
                 .withInventoryType("FINGER")
                 .withRequiredLevel(30)
                 .withQuality("RARE")
@@ -113,7 +113,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
         eq.putItem(FINGER_1, bisRing, List.of());
         eq.putItem(FINGER_2, bisRing, List.of());
 
-        Item worseRing = ItemBuilder.newEquippableItem().withBaseId(2L)
+        Item worseRing = EquippableItemBuilder.newRing().withBaseId(2L)
                 .withInventoryType("FINGER")
                 .withRequiredLevel(25)
                 .withQuality("UNCOMMON")
@@ -144,13 +144,13 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
         // given
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
 
-        Item bisRing = ItemBuilder.newEquippableItem().withBaseId(1L)
+        Item bisRing = EquippableItemBuilder.newRing().withBaseId(1L)
                 .withInventoryType("FINGER")
                 .withQuality("EPIC")
                 .withStats(Map.of("AGILITY", 20, "STRENGTH", 5))
                 .build();
 
-        Item worseRing = ItemBuilder.newEquippableItem().withBaseId(2L)
+        Item worseRing = EquippableItemBuilder.newRing().withBaseId(2L)
                 .withInventoryType("FINGER")
                 .withRequiredLevel(25)
                 .withQuality("UNCOMMON")

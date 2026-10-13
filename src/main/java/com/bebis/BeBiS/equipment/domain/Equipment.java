@@ -4,7 +4,7 @@ import com.bebis.BeBiS.item.domain.Item;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +15,7 @@ public final class Equipment {
     private Map<Slot, EquippedItem> equipment;
 
     public Equipment() {
-        this.equipment = new HashMap<>();
+        this.equipment = new EnumMap<>(Slot.class);
     }
 
     public enum Slot {

@@ -14,4 +14,7 @@ public sealed interface UpgradeResult {
 
     record NoItemsAvailableResult(Instant timestamp) implements UpgradeResult {
     }
+
+    record SlotClearedResult(Item triggeringItem, Instant timestamp) implements UpgradeResult {
+    }
 }

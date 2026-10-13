@@ -1,8 +1,10 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
+import com.bebis.BeBiS.equipment.domain.Equipment.Slot;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
-import com.bebis.BeBiS.item.ItemBuilder;
+import com.bebis.BeBiS.item.EquippableItemBuilder;
 import com.bebis.BeBiS.item.domain.Item;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Optional;
 
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
 import static com.bebis.BeBiS.profile.domain.ClassSpec.ROGUE_COMBAT;
 import static com.bebis.BeBiS.profile.domain.WowCharacter.Race.NIGHT_ELF;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,55 +35,135 @@ public class UpgradeFinderTest {
         finder = new DummyUpgradeFinder(calculator);
     }
 
+    // --- extractEquippedItemFromPool ---
+
     @Test
-    void shouldExtractEquippedItemFromItemPool() {
+    void shouldExtractEquippedItemFromItemPoolWhenPresent() {
         // given
-        EquippedItem equippedItem = new EquippedItem(ItemBuilder.newEquippableItem().withBaseId(1L).build(), List.of());
-        Item otherItem1 = ItemBuilder.newEquippableItem().withBaseId(2L).build();
-        Item otherItem2 = ItemBuilder.newEquippableItem().withBaseId(3L).build();
+        EquippedItem equippedItem = new EquippedItem(EquippableItemBuilder.newRing().withBaseId(1L).build(), List.of());
+        Item otherItem1 = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item otherItem2 = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
         // when
-        Optional<ScoredItem> result = finder.extractEquippedItemFromPool(Optional.of(equippedItem),
-                List.of(new ScoredItem(equippedItem.item(), 21.0), new ScoredItem(otherItem1, 37.0), new ScoredItem(otherItem2, 69.0)));
+        Optional<ScoredItem> result = finder.extractEquippedItemFromPool(
+                Optional.of(equippedItem),
+                List.of(
+                        new ScoredItem(equippedItem.item(), 21.0),
+                        new ScoredItem(otherItem1, 37.0),
+                        new ScoredItem(otherItem2, 69.0)
+                )
+        );
 
         // then
-        assertThat(result.isPresent()).isTrue();
+        assertThat(result).isPresent();
         assertThat(result.get().item()).isEqualTo(equippedItem.item());
     }
 
     @Test
-    void shouldScoreItemUsingCalculator() {
+    void shouldReturnEmptyWhenEquippedItemNotInPool() {
         // given
-        Item item = ItemBuilder.newEquippableItem().withBaseId(1L).build();
-        double expectedScore = 42.0;
-
-        when(calculator.calculate(eq(item), eq(ROGUE_COMBAT), eq(NIGHT_ELF)))
-                .thenReturn(expectedScore);
+        EquippedItem equippedItem = new EquippedItem(EquippableItemBuilder.newRing().withBaseId(1L).build(), List.of());
+        Item otherItem = EquippableItemBuilder.newRing().withBaseId(2L).build();
 
         // when
-        ScoredItem result = finder.scoreItem(item, ROGUE_COMBAT, NIGHT_ELF);
+        Optional<ScoredItem> result = finder.extractEquippedItemFromPool(
+                Optional.of(equippedItem),
+                List.of(new ScoredItem(otherItem, 37.0))
+        );
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldReturnEmptyWhenEquippedItemIsEmpty() {
+        // given
+        Item item = EquippableItemBuilder.newRing().withBaseId(1L).build();
+
+        // when
+        Optional<ScoredItem> result = finder.extractEquippedItemFromPool(
+                Optional.empty(),
+                List.of(new ScoredItem(item, 37.0))
+        );
+
+        // then
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void shouldScoreItemStatOnly() {
+        // given
+        Item item = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        double expectedScore = 42.0;
+
+        when(calculator.calculate(eq(item), eq(ROGUE_COMBAT))).thenReturn(expectedScore);
+
+        // when
+        ScoredItem result = finder.scoreItem(item, ROGUE_COMBAT);
 
         // then
         assertThat(result.item()).isEqualTo(item);
         assertThat(result.score()).isEqualTo(expectedScore);
-
-        // verifies exact delegation to the engine
-        verify(calculator).calculate(item, ROGUE_COMBAT, NIGHT_ELF);
+        verify(calculator).calculate(item, ROGUE_COMBAT);
     }
 
     @Test
-    void shouldScoreAndSortItemsInDescendingOrder() {
+    void shouldScoreAndSortItemsInDescendingOrderStatOnly() {
         // given
-        Item lowItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
-        Item midItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
-        Item highItem = ItemBuilder.newEquippableItem().withBaseId(3L).build();
+        Item lowItem = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        Item midItem = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item highItem = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
-        when(calculator.calculate(eq(lowItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(10.0);
-        when(calculator.calculate(eq(midItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(50.0);
-        when(calculator.calculate(eq(highItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(100.0);
+        when(calculator.calculate(eq(lowItem), eq(ROGUE_COMBAT))).thenReturn(10.0);
+        when(calculator.calculate(eq(midItem), eq(ROGUE_COMBAT))).thenReturn(50.0);
+        when(calculator.calculate(eq(highItem), eq(ROGUE_COMBAT))).thenReturn(100.0);
+
+        // when
+        List<ScoredItem> result = finder.scoreAndSortItems(List.of(lowItem, highItem, midItem), ROGUE_COMBAT);
+
+        // then
+        assertThat(result)
+                .extracting(ScoredItem::item)
+                .containsExactly(highItem, midItem, lowItem);
+
+        assertThat(result)
+                .extracting(ScoredItem::score)
+                .containsExactly(100.0, 50.0, 10.0);
+    }
+
+    @Test
+    void shouldScoreItemSlotAware() {
+        // given
+        Slot slot = MAIN_HAND;
+        Item item = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        double expectedScore = 84.0;
+
+        when(calculator.calculate(eq(slot), eq(item), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(expectedScore);
+
+        // when
+        ScoredItem result = finder.scoreItem(slot, item, ROGUE_COMBAT, NIGHT_ELF);
+
+        // then
+        assertThat(result.item()).isEqualTo(item);
+        assertThat(result.score()).isEqualTo(expectedScore);
+        verify(calculator).calculate(slot, item, ROGUE_COMBAT, NIGHT_ELF);
+    }
+
+    @Test
+    void shouldScoreAndSortItemsInDescendingOrderSlotAware() {
+        // given
+        Slot slot = MAIN_HAND;
+        Item lowItem = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        Item midItem = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item highItem = EquippableItemBuilder.newRing().withBaseId(3L).build();
+
+        when(calculator.calculate(eq(slot), eq(lowItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(10.0);
+        when(calculator.calculate(eq(slot), eq(midItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(50.0);
+        when(calculator.calculate(eq(slot), eq(highItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(100.0);
 
         // when
         List<ScoredItem> result = finder.scoreAndSortItems(
+                slot,
                 List.of(lowItem, highItem, midItem),
                 ROGUE_COMBAT,
                 NIGHT_ELF
@@ -96,46 +179,40 @@ public class UpgradeFinderTest {
                 .containsExactly(100.0, 50.0, 10.0);
     }
 
+    // --- Deterministic Tie-Breaking & Edge Cases ---
+
     @Test
-    void shouldMaintainInputOrderWhenScoresAreTied() {
+    void shouldBreakTiesDeterministicallyByBaseId() {
         // given
-        Item firstTiedItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
-        Item secondTiedItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
+        Item higherIdItem = EquippableItemBuilder.newRing().withBaseId(99L).build();
+        Item lowerIdItem = EquippableItemBuilder.newRing().withBaseId(10L).build();
 
         double tiedScore = 50.0;
-        when(calculator.calculate(eq(firstTiedItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
-        when(calculator.calculate(eq(secondTiedItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
+        when(calculator.calculate(eq(higherIdItem), eq(ROGUE_COMBAT))).thenReturn(tiedScore);
+        when(calculator.calculate(eq(lowerIdItem), eq(ROGUE_COMBAT))).thenReturn(tiedScore);
 
-        // when
-        List<ScoredItem> result = finder.scoreAndSortItems(
-                List.of(firstTiedItem, secondTiedItem),
-                ROGUE_COMBAT,
-                NIGHT_ELF
-        );
+        // when (input order puts higher baseId first)
+        List<ScoredItem> result = finder.scoreAndSortItems(List.of(higherIdItem, lowerIdItem), ROGUE_COMBAT);
 
-        // then
+        // then (lower baseId wins deterministic tie-breaker regardless of input order)
         assertThat(result)
                 .extracting(ScoredItem::item)
-                .containsExactly(firstTiedItem, secondTiedItem);
+                .containsExactly(lowerIdItem, higherIdItem);
     }
 
     @Test
     void shouldPreserveZeroScores() {
         // given
-        Item zeroItem = ItemBuilder.newEquippableItem().withBaseId(1L).build();
-        Item otherItem = ItemBuilder.newEquippableItem().withBaseId(2L).build();
-        Item otherItem1 = ItemBuilder.newEquippableItem().withBaseId(3L).build();
+        Item zeroItem = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        Item otherItem = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item otherItem1 = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
-        when(calculator.calculate(eq(zeroItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(0.0);
-        when(calculator.calculate(eq(otherItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(10.0);
-        when(calculator.calculate(eq(otherItem1), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(50.0);
+        when(calculator.calculate(eq(zeroItem), eq(ROGUE_COMBAT))).thenReturn(0.0);
+        when(calculator.calculate(eq(otherItem), eq(ROGUE_COMBAT))).thenReturn(10.0);
+        when(calculator.calculate(eq(otherItem1), eq(ROGUE_COMBAT))).thenReturn(50.0);
 
         // when
-        List<ScoredItem> result = finder.scoreAndSortItems(
-                List.of(otherItem1, zeroItem, otherItem),
-                ROGUE_COMBAT,
-                NIGHT_ELF
-        );
+        List<ScoredItem> result = finder.scoreAndSortItems(List.of(otherItem1, zeroItem, otherItem), ROGUE_COMBAT);
 
         // then
         assertThat(result)
@@ -148,36 +225,9 @@ public class UpgradeFinderTest {
     }
 
     @Test
-    void shouldBreakTiesDeterministicallyByBaseId() {
-        // given
-        Item higherIdItem = ItemBuilder.newEquippableItem().withBaseId(99L).build();
-        Item lowerIdItem = ItemBuilder.newEquippableItem().withBaseId(10L).build();
-
-        double tiedScore = 50.0;
-        when(calculator.calculate(eq(higherIdItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
-        when(calculator.calculate(eq(lowerIdItem), eq(ROGUE_COMBAT), eq(NIGHT_ELF))).thenReturn(tiedScore);
-
-        // when (input order puts higher ID first)
-        List<ScoredItem> result = finder.scoreAndSortItems(
-                List.of(higherIdItem, lowerIdItem),
-                ROGUE_COMBAT,
-                NIGHT_ELF
-        );
-
-        // then (lower baseId wins deterministic tie-breaker)
-        assertThat(result)
-                .extracting(ScoredItem::item)
-                .containsExactly(lowerIdItem, higherIdItem);
-    }
-
-    @Test
     void shouldReturnEmptyListWhenItemPoolIsEmpty() {
         // when
-        List<ScoredItem> result = finder.scoreAndSortItems(
-                List.of(),
-                ROGUE_COMBAT,
-                NIGHT_ELF
-        );
+        List<ScoredItem> result = finder.scoreAndSortItems(List.of(), ROGUE_COMBAT);
 
         // then
         assertThat(result).isEmpty();

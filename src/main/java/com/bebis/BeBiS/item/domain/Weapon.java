@@ -26,4 +26,9 @@ public final class Weapon extends Item {
     public enum WeaponType {
         SWORD, AXE, MACE, DAGGER, POLEARM, STAFF, BOW, CROSSBOW, GUN, WAND, UNARMED
     }
+
+    public boolean isRanged() {
+        return this.weaponType.equals(WeaponType.BOW) || this.weaponType.equals(WeaponType.CROSSBOW) ||
+                this.weaponType.equals(WeaponType.GUN) || this.weaponType.equals(WeaponType.WAND);
+    }
 }

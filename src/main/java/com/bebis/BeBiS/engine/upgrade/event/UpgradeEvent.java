@@ -13,7 +13,10 @@ public sealed interface UpgradeEvent {
     record UpgradeFoundEvent(Equipment.Slot slot, Item upgrade, Instant timestamp) implements UpgradeEvent {
     }
 
-    record UpgradeNotAvailableEvent(Equipment.Slot slot, Instant timestamp) {
+    record UpgradeNotAvailableEvent(Equipment.Slot slot, Instant timestamp) implements UpgradeEvent {
+    }
+
+    record SlotClearedEvent(Equipment.Slot slot, Item triggeringItem, Instant timestamp) implements UpgradeEvent {
     }
 
 }

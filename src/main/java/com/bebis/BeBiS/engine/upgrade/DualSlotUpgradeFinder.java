@@ -1,16 +1,17 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
-import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
+import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
+import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
-import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
-import com.bebis.BeBiS.profile.domain.WowCharacter;
-import com.bebis.BeBiS.profile.domain.WowTalents;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,88 +26,39 @@ final class DualSlotUpgradeFinder extends UpgradeFinder {
         this.evaluator = evaluator;
     }
 
-    record EquippedItemPair(Item slot1, Item slot2) {
+    Map<Equipment.Slot, UpgradeResult> findUpgrades(EquippedItemPair currentPair, ClassSpec classSpec, List<Item> itemPool) {
+        List<ScoredItem> scoredItems = scoreAndSortItems(itemPool, classSpec);
 
-        record Item(Equipment.Slot slot, Optional<EquippedItem> equippedItem) {
-        }
+        SlotPair equipped = new SlotPair(extractEquippedItemFromPool(currentPair.slot1().equippedItem(), scoredItems),
+                extractEquippedItemFromPool(currentPair.slot2().equippedItem(), scoredItems));
 
-        static EquippedItemPair from(DualSlot slots, Equipment equipment) {
-            return new EquippedItemPair(
-                    new EquippedItemPair.Item(slots.slot1(), equipment.getItem(slots.slot1())),
-                    new EquippedItemPair.Item(slots.slot2(), equipment.getItem(slots.slot2()))
-            );
-        }
+        Optional<SlotPair> bestCandidatePair = pickBestPair(equipped, mapCandidatePairs(scoredItems));
+
+        return bestCandidatePair.map((best) ->
+                        Map.of(currentPair.slot1().slot(), evaluator.evaluateUpgradeResult(equipped.slot1(), best.slot1()),
+                                currentPair.slot2().slot(), evaluator.evaluateUpgradeResult(equipped.slot2(), best.slot2())))
+                .orElse(Map.of(currentPair.slot1().slot(), new UpgradeResult.NoItemsAvailableResult(Instant.now()), currentPair.slot2().slot(),
+                        new UpgradeResult.NoItemsAvailableResult(Instant.now())));
     }
 
-    private record SlotAssignment(Optional<ScoredItem> slot1, Optional<ScoredItem> slot2) {
-    }
-
-    private record OutcomeAssignment(Optional<ScoredItem> slot1, Optional<ScoredItem> slot2) {
-
-        double totalScore() {
-            return slot1().map(ScoredItem::score).orElse(0.0) + slot2().map(ScoredItem::score).orElse(0.0);
-        }
-
-        boolean hasUniqueConflict() {
-            if (slot1().isPresent() && slot2().isPresent()) {
-                Item slot1 = slot1().get().item();
-                return slot1.equals(slot2().get().item()) && slot1.getMetadata().uniqueEquipped();
+    private List<SlotPair> mapCandidatePairs(List<ScoredItem> scoredItems) {
+        if (scoredItems.size() == 1) {
+            ScoredItem onlyItem = scoredItems.getFirst();
+            if (onlyItem.item().getMetadata().uniqueEquipped()) {
+                return List.of(new SlotPair(Optional.of(onlyItem), Optional.empty()), new SlotPair(Optional.empty(), Optional.of(onlyItem)));
             }
-            return false;
         }
+        return scoredItems.stream().flatMap((slot1) ->
+                        scoredItems.stream().map((slot2) -> new SlotPair(Optional.of(slot1), Optional.of(slot2))))
+                .filter((pair) -> !pair.hasUniqueConflict())
+                .toList();
     }
 
-    public Map<Equipment.Slot, UpgradeResult> findUpgrades(EquippedItemPair currentPair, WowCharacter wowCharacter, Optional<WowTalents> talents, List<Item> itemPool) {
-        List<ScoredItem> scoredItems = scoreAndSortItems(itemPool, ClassSpec.getClassSpec(wowCharacter.wowClass(), talents), wowCharacter.race());
-
-        Optional<ScoredItem> firstCandidate = scoredItems.stream().findFirst();
-        Optional<ScoredItem> secondCandidate = pickSecondCandidate(firstCandidate, scoredItems);
-
-        Optional<ScoredItem> firstEquipped = extractEquippedItemFromPool(currentPair.slot1().equippedItem(), scoredItems);
-        Optional<ScoredItem> secondEquipped = extractEquippedItemFromPool(currentPair.slot2().equippedItem(), scoredItems);
-
-        SlotAssignment assignment = chooseOptimalCandidateAssignment(new SlotAssignment(firstEquipped, secondEquipped),
-                new SlotAssignment(firstCandidate, secondCandidate));
-
-        return Map.of(currentPair.slot1().slot(), evaluator.evaluateUpgradeResult(firstEquipped, assignment.slot1()),
-                currentPair.slot2().slot(), evaluator.evaluateUpgradeResult(secondEquipped, assignment.slot2()));
+    private Optional<SlotPair> pickBestPair(SlotPair equipped, List<SlotPair> candidates) {
+        return candidates.stream()
+                .max(Comparator.comparingDouble(SlotPair::totalScore) // pick the best pair
+                        .thenComparingInt((pair) -> countEquippedMatches(equipped, pair)) // favor pairs with equipped items
+                        .thenComparing(pair -> pair.slot1().map(s -> s.item().getMetadata().key().baseId()).orElse(0L)) // in case of tie in slot 1
+                        .thenComparing(pair -> pair.slot2().map(s -> s.item().getMetadata().key().baseId()).orElse(0L))); // in case of tie in slot 2
     }
-
-    private SlotAssignment chooseOptimalCandidateAssignment(SlotAssignment equipped, SlotAssignment candidate) {
-        SlotAssignment configA = new SlotAssignment(candidate.slot1(), candidate.slot2());
-        SlotAssignment configB = new SlotAssignment(candidate.slot2(), candidate.slot1());
-
-        OutcomeAssignment configAOutcome = new OutcomeAssignment(resolveSlotWinner(equipped.slot1(), candidate.slot1()),
-                resolveSlotWinner(equipped.slot2(), candidate.slot2()));
-        OutcomeAssignment configBOutcome = new OutcomeAssignment(resolveSlotWinner(equipped.slot1(), candidate.slot2()),
-                resolveSlotWinner(equipped.slot2(), candidate.slot1()));
-
-        if (configAOutcome.hasUniqueConflict()) return configB;
-        if (configBOutcome.hasUniqueConflict()) return configA;
-
-        int configABetterThanB = Double.compare(configAOutcome.totalScore(), configBOutcome.totalScore());
-
-        if (configABetterThanB == 0) {
-            return configA;
-        } // default to a config to remain deterministic
-
-        return configABetterThanB == 1 ? configA : configB;
-    }
-
-    private Optional<ScoredItem> resolveSlotWinner(Optional<ScoredItem> equippedItem, Optional<ScoredItem> upgradeCandidate) {
-        return equippedItem.map(ScoredItem::score).orElse(0.0) >= upgradeCandidate.map(ScoredItem::score).orElse(0.0) ? equippedItem : upgradeCandidate;
-    }
-
-    private Optional<ScoredItem> pickSecondCandidate(Optional<ScoredItem> firstCandidate, List<ScoredItem> scoredItems) {
-        return firstCandidate.flatMap(item -> item.item().getMetadata().uniqueEquipped()
-                ? pickExcluding(item, scoredItems)
-                : Optional.of(item));
-    }
-
-    private Optional<ScoredItem> pickExcluding(ScoredItem excluded, List<ScoredItem> scoredItems) {
-        return scoredItems.stream()
-                .filter((it) -> !it.equals(excluded))
-                .findFirst();
-    }
-
 }
