@@ -10,7 +10,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-public class BlizzardServiceOAuthIntegrationTest extends BaseWiremockTest {
+public class BlizzardServiceOAuthIT extends BaseWiremockTest {
 
     @Value("${blizzard.api.namespace.service}")
     private String serviceNamespace;
