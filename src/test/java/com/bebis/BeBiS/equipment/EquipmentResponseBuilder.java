@@ -41,7 +41,7 @@ public class EquipmentResponseBuilder {
         builder.id = base.id();
         builder.fullName = base.name();
         builder.quality = base.quality() != null ? base.quality().type() : null;
-        builder.itemLevel = base.itemLevel() != null ? base.itemLevel() : null;
+        builder.itemLevel = base.itemLevel();
         builder.stats = mapStatsFromBase(base);
         builder.armorValue = mapArmorFromBase(base);
         mapWeaponFromBase(builder, base);

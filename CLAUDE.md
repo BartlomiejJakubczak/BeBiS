@@ -82,6 +82,9 @@ sorting.
 
 ## Testing conventions
 
+- The app isn't run end to end yet. Tests (`./mvnw test`, `./mvnw verify`) are the acceptance criteria, so verify
+  behavior with a test, typically an orchestrator-level IT, rather than by running the app.
+
 - `*Test` = unit test (Mockito, `@ExtendWith(MockitoExtension.class)`). `*IT` = Spring/Testcontainers integration test.
 - Base classes in `src/test/java/com/bebis/BeBiS/base/` (`BaseContainerTest` is sealed):
     - `BaseFullStackTest`: `@SpringBootTest`, transactional, Blizzard clients replaced with `@MockitoBean`, caches
@@ -97,15 +100,30 @@ sorting.
   eventually become a builder.
 - Use the `// given / // when / // then` structure, AssertJ assertions, and `@ParameterizedTest` + `@MethodSource` for
   case matrices. Use Awaitility for async assertions.
-- Method naming: `shouldDoX_WhenCondition` (e.g. `shouldSignalUpgradeFoundResult_EmptyEquippedItem`).
+- Method naming: `shouldDoX_WhenCondition` (e.g. `shouldSignalUpgradeFoundResult_EmptyEquippedItem`). Name the
+  mechanism or game rule being exercised, not a vague outcome (`...WithParametersFromEqDTO_WhenPreviewMissing`, not
+  `...WithDefaults_...`).
+- **Test level matches the abstraction**:
+    - ITs describe what the class achieves as a whole, i.e. its use cases (e.g. ItemServiceIT
+      `shouldHandleGettingItemsFromBothDbAndBlizzardSimultaneously`).
+    - How individual fields are treated (null → default, normalization, fallbacks) belongs in unit tests, typically the
+      mapper's.
+    - Don't add an IT just to prove one parameter is handled.
+- Keep test data realistic for Classic. Low-level items are mostly armor and weapons. Rings appear around level 15+,
+  necks 20+, and trinkets 35+. For a low-level scenario use, say, a chest piece, not jewelry.
 
 ## Domain notes (WoW Classic)
 
 - `ClassSpec` is `CLASS_SPEC`. Characters with no clear spec fall back to `CLASS_NONE`. The active spec is derived from
   the talent tree; ties throw `TalentTreeTieInException`.
-- Items with random suffixes ("of the Bear") share a `baseId` and differ by `suffixId`.
+- Items with random suffixes ("of the Bear") share a `baseId` and differ by `suffixId`. The base item of a suffixable
+  item can have no stats at all, so its `preview_item` may be missing or empty. The suffixed instance always carries
+  stats, which is why stats are taken from the equipped-item DTO (`EquipmentResponse.ItemDTO`), not from the base item.
 - Unique-equipped items can't occupy both ring or trinket slots.
 - Shirt and tabard are not part of `Equipment.Slot`.
+- Blizzard leaves a field out of the response when it isn't set on the item (e.g. `unique_equipped`, `required_level`).
+  A missing field means "not set", not invalid data: mappers map it to a neutral default (`false`, `0`) instead of
+  throwing. Only reject data that is genuinely required for analysis.
 
 ## Working with me (Claude)
 

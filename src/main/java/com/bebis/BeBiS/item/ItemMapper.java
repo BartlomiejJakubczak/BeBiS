@@ -15,7 +15,6 @@ import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import com.bebis.BeBiS.tools.EnumTools;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +142,7 @@ public final class ItemMapper {
                 mapQuality(equippedItemDTO),
                 mapInventoryType(baseDTO),
                 mapItemLevel(equippedItemDTO),
-                validateRequired(baseDTO.requiredLevel(), "required_level", InvalidItemException::new),
+                mapRequiredLevel(baseDTO),
                 mapUniqueEquipped(baseDTO),
                 mapStats(baseDTO, equippedItemDTO),
                 mapSpecialEffects(baseDTO)
@@ -160,7 +159,7 @@ public final class ItemMapper {
     }
 
     private Optional<Integer> mapArmorValueFromBase(ItemResponse baseDTO) {
-        return (baseDTO.preview().armor() != null) ? Optional.of(baseDTO.preview().armor().value()) : Optional.empty();
+        return (baseDTO.preview() != null && baseDTO.preview().armor() != null) ? Optional.of(baseDTO.preview().armor().value()) : Optional.empty();
     }
 
     private Map<StatType, Integer> mapStats(ItemResponse baseDTO, EquipmentResponse.ItemDTO dto) {
@@ -178,13 +177,9 @@ public final class ItemMapper {
 
     private List<String> mapSpecialEffects(ItemResponse dto) {
         if (dto.preview() == null || dto.preview().spells() == null) {
-            return new ArrayList<>();
+            return List.of();
         } else {
-            List<ItemResponse.PreviewItemDTO.SpellEffectDTO> spellsFromDTO = dto.preview().spells();
-            List<String> specialEffects = new ArrayList<>();
-            spellsFromDTO.forEach(
-                    s -> specialEffects.add(s.description()));
-            return specialEffects;
+            return dto.preview().spells().stream().map(ItemResponse.PreviewItemDTO.SpellEffectDTO::description).toList();
         }
     }
 
@@ -249,6 +244,10 @@ public final class ItemMapper {
 
     private boolean mapUniqueEquipped(ItemResponse baseDTO) {
         return baseDTO.preview() != null && baseDTO.preview().uniqueEquipped() != null; // no value means not unique
+    }
+
+    private int mapRequiredLevel(ItemResponse baseDTO) {
+        return Optional.ofNullable(baseDTO.requiredLevel()).orElse(0);
     }
 
 }

@@ -202,6 +202,45 @@ class ItemMapperTest {
         }
 
         @Test
+        void shouldMapNullRequiredLevelToZero() {
+            // given
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withRequiredLevel(null)
+                    .build();
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().requiredLevel()).isZero();
+        }
+
+        @Test
+        void shouldMapItemWithParametersFromEqDTO_WhenPreviewMissing() {
+            // given
+            ItemResponse base = ItemResponseBuilder.newSuffixableEquippableInstance().build();
+            assertThat(base.preview()).isNull(); // guard: the builder omits preview when all of its fields are empty
+
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSuffix(new EquipmentResponseBuilder.Suffix(37, "of The Monkey"))
+                    .withSlot("FINGER_1")
+                    .withStats(Map.of("AGILITY", 20))
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().uniqueEquipped()).isFalse();
+            assertThat(result.commonData().specialEffects()).isEmpty();
+            assertThat(result.commonData().stats()).containsExactlyEntriesOf(Map.of(StatType.AGILITY, 20));
+        }
+
+        @Test
         void shouldFallbackToUnknownForBadEnums() {
             // given
             ItemResponse base = ItemResponseBuilder.newEquippableInstance().build();

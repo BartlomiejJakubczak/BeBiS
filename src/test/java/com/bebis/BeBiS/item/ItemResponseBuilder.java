@@ -134,8 +134,8 @@ public class ItemResponseBuilder {
                 this.id,
                 this.name,
                 new QualityDTO(this.quality),
-                this.requiredLevel,
                 this.itemLevel,
+                this.requiredLevel,
                 itemClassDTO(),
                 subClassDTO(),
                 new InventoryTypeDTO(this.inventoryType),
@@ -152,7 +152,15 @@ public class ItemResponseBuilder {
     }
 
     private PreviewItemDTO previewItemDTO() {
-        return new PreviewItemDTO(statsDTO(), weaponDTO(), armorDTO(), spellEffectDTO(), uniqueEquipped());
+        List<StatDTO> statDTOS = statsDTO();
+        WeaponDTO weaponDTO = weaponDTO();
+        ArmorDTO armorDTO = armorDTO();
+        List<PreviewItemDTO.SpellEffectDTO> spellEffectDTOS = spellEffectDTO();
+        String uniqueEquipped = uniqueEquipped();
+        if (statDTOS == null && weaponDTO == null && armorDTO == null && spellEffectDTOS == null && uniqueEquipped == null) {
+            return null;
+        }
+        return new PreviewItemDTO(statDTOS, weaponDTO, armorDTO, spellEffectDTOS, uniqueEquipped);
     }
 
     private List<StatDTO> statsDTO() {

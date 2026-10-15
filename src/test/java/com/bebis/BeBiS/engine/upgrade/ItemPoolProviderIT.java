@@ -61,7 +61,9 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
                 createEquippableEntity(10L, 50, Item.InventoryType.FINGER),
                 createEquippableEntity(11L, 50, Item.InventoryType.TRINKET),
                 createEquippableEntity(12L, 50, Item.InventoryType.TRINKET),
-                createEquippableEntity(13L, 50, Item.InventoryType.TRINKET)
+                createEquippableEntity(13L, 50, Item.InventoryType.TRINKET),
+                // no level requirement
+                createArmorEntity(14L, 0, Armor.ArmorType.MAIL)
         )));
     }
 
@@ -106,7 +108,16 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
         List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, level, wowClass);
 
         // then
-        assertThat(extractIdsFromResult(result)).containsExactlyInAnyOrder(1L, 2L, 3L);
+        assertThat(extractIdsFromResult(result)).containsExactlyInAnyOrder(1L, 2L, 3L, 14L);
+    }
+
+    @Test
+    void shouldIncludeItemWithoutRequiredLevel_WhenCharacterIsLevelOne() {
+        // given / when
+        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, 1, WowCharacter.WowClass.WARRIOR);
+
+        // then
+        assertThat(extractIdsFromResult(result)).containsExactly(14L);
     }
 
     @ParameterizedTest
@@ -127,14 +138,14 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
 
     private static Stream<Arguments> classAndLevelProvider() {
         return Stream.of(
-                Arguments.of(WowCharacter.WowClass.WARRIOR, 39, Set.of(1L, 2L)),
-                Arguments.of(WowCharacter.WowClass.WARRIOR, 40, Set.of(1L, 2L, 3L)),
-                Arguments.of(WowCharacter.WowClass.PALADIN, 39, Set.of(1L, 2L)),
-                Arguments.of(WowCharacter.WowClass.PALADIN, 40, Set.of(1L, 2L, 3L)),
+                Arguments.of(WowCharacter.WowClass.WARRIOR, 39, Set.of(1L, 2L, 14L)),
+                Arguments.of(WowCharacter.WowClass.WARRIOR, 40, Set.of(1L, 2L, 3L, 14L)),
+                Arguments.of(WowCharacter.WowClass.PALADIN, 39, Set.of(1L, 2L, 14L)),
+                Arguments.of(WowCharacter.WowClass.PALADIN, 40, Set.of(1L, 2L, 3L, 14L)),
                 Arguments.of(WowCharacter.WowClass.HUNTER, 39, Set.of(1L)),
-                Arguments.of(WowCharacter.WowClass.HUNTER, 40, Set.of(1L, 2L)),
+                Arguments.of(WowCharacter.WowClass.HUNTER, 40, Set.of(1L, 2L, 14L)),
                 Arguments.of(WowCharacter.WowClass.SHAMAN, 39, Set.of(1L)),
-                Arguments.of(WowCharacter.WowClass.SHAMAN, 40, Set.of(1L, 2L))
+                Arguments.of(WowCharacter.WowClass.SHAMAN, 40, Set.of(1L, 2L, 14L))
         );
     }
 
