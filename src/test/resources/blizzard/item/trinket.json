@@ -1,0 +1,125 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/data/wow/item/11815?namespace=static-1.15.9_68185-classic1x-eu"
+    }
+  },
+  "id": 11815,
+  "name": "Hand of Justice",
+  "quality": {
+    "type": "RARE",
+    "name": "Rare"
+  },
+  "level": 58,
+  "required_level": 53,
+  "media": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/media/item/11815?namespace=static-1.15.9_68185-classic1x-eu"
+    },
+    "id": 11815
+  },
+  "item_class": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/item-class/4?namespace=static-1.15.9_68185-classic1x-eu"
+    },
+    "name": "Armor",
+    "id": 4
+  },
+  "item_subclass": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-1.15.9_68185-classic1x-eu"
+    },
+    "name": "Miscellaneous",
+    "id": 0
+  },
+  "inventory_type": {
+    "type": "TRINKET",
+    "name": "Trinket"
+  },
+  "purchase_price": 40000,
+  "sell_price": 10000,
+  "max_count": 1,
+  "is_equippable": true,
+  "is_stackable": false,
+  "preview_item": {
+    "item": {
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/item/11815?namespace=static-1.15.9_68185-classic1x-eu"
+      },
+      "id": 11815
+    },
+    "quality": {
+      "type": "RARE",
+      "name": "Rare"
+    },
+    "name": "Hand of Justice",
+    "media": {
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/media/item/11815?namespace=static-1.15.9_68185-classic1x-eu"
+      },
+      "id": 11815
+    },
+    "item_class": {
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/item-class/4?namespace=static-1.15.9_68185-classic1x-eu"
+      },
+      "name": "Armor",
+      "id": 4
+    },
+    "item_subclass": {
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/item-class/4/item-subclass/0?namespace=static-1.15.9_68185-classic1x-eu"
+      },
+      "name": "Miscellaneous",
+      "id": 0
+    },
+    "inventory_type": {
+      "type": "TRINKET",
+      "name": "Trinket"
+    },
+    "binding": {
+      "type": "ON_ACQUIRE",
+      "name": "Binds when picked up"
+    },
+    "unique_equipped": "Unique",
+    "spells": [
+      {
+        "spell": {
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/spell/15600?namespace=static-1.15.9_68185-classic1x-eu"
+          },
+          "name": "Hand of Justice",
+          "id": 15600
+        },
+        "description": "Equip: 2% chance on melee hit to gain 1 extra attack."
+      },
+      {
+        "spell": {
+          "key": {
+            "href": "https://eu.api.blizzard.com/data/wow/spell/9331?namespace=static-1.15.9_68185-classic1x-eu"
+          },
+          "name": "Attack Power 20",
+          "id": 9331
+        },
+        "description": "Equip: +20 Attack Power."
+      }
+    ],
+    "sell_price": {
+      "value": 10000,
+      "display_strings": {
+        "header": "Sell Price:",
+        "gold": "1",
+        "silver": "0",
+        "copper": "0"
+      }
+    },
+    "requirements": {
+      "level": {
+        "value": 53,
+        "display_string": "Requires Level 53"
+      }
+    },
+    "is_subclass_hidden": true
+  },
+  "purchase_quantity": 1
+}

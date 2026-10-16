@@ -109,6 +109,12 @@ sorting.
     - How individual fields are treated (null → default, normalization, fallbacks) belongs in unit tests, typically the
       mapper's.
     - Don't add an IT just to prove one parameter is handled.
+- **API codes vs domain names**:
+    - API-level builders (`ItemResponseBuilder`, `EquipmentResponseBuilder`) must use the codes Blizzard actually sends,
+      e.g. `TWOHWEAPON`, `HAND`.
+    - Domain-level builders (`WeaponBuilder`, ...) and SQL inserts use domain enum names, e.g. `TWO_HAND`, `HANDS`.
+    - Real recorded responses live in `src/test/resources/blizzard/` and back the contract tests in
+      `ItemMapperTest.RecordedBlizzardResponses`. When Blizzard surprises you, add the response there.
 - Keep test data realistic for Classic. Low-level items are mostly armor and weapons. Rings appear around level 15+,
   necks 20+, and trinkets 35+. For a low-level scenario use, say, a chest piece, not jewelry.
 

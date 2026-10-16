@@ -47,7 +47,7 @@ public class ItemResponseBuilder {
         builder.requiredLevel = 30;
         builder.itemClass = new ItemClass(2, "Weapon"); // weapon class
         builder.subClass = new SubClass(1, "Axe"); // 2h axe subclass
-        builder.inventoryType = "TWO_HAND";
+        builder.inventoryType = "TWOHWEAPON"; // Blizzard API code, not the domain enum name
         builder.stats = Map.of("STRENGTH", 15, "STAMINA", 14);
         builder.attackSpeed = 3.6;
         builder.minDamage = 82;
@@ -65,7 +65,7 @@ public class ItemResponseBuilder {
         builder.requiredLevel = 38;
         builder.itemClass = new ItemClass(2, "Weapon"); // weapon class
         builder.subClass = new SubClass(1, "Axe"); // 2h axe subclass
-        builder.inventoryType = "TWO_HAND";
+        builder.inventoryType = "TWOHWEAPON"; // Blizzard API code, not the domain enum name
         builder.attackSpeed = 3.4;
         builder.minDamage = 75;
         builder.maxDamage = 113;

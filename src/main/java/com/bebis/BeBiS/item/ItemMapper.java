@@ -210,21 +210,37 @@ public final class ItemMapper {
         };
     }
 
+    // Blizzard's codes follow the client's INVTYPE_* constants (with 2HWEAPON spelled TWOHWEAPON), not our enum names,
+    // so every code is mapped explicitly: renaming an enum constant must never silently change what the API maps to.
     private InventoryType mapInventoryType(ItemResponse dto) throws InvalidItemException {
         if (dto.inventoryType() != null && dto.inventoryType().type() != null) {
             String raw = dto.inventoryType().type();
             return switch (raw.toUpperCase()) {
+                case "HEAD" -> InventoryType.HEAD;
+                case "NECK" -> InventoryType.NECK;
+                case "SHOULDER" -> InventoryType.SHOULDER;
+                case "BODY" -> InventoryType.BODY;
+                case "CHEST", "ROBE" -> InventoryType.CHEST; // ROBE is a chest piece that also covers the legs visually
+                case "WAIST" -> InventoryType.WAIST;
+                case "LEGS" -> InventoryType.LEGS;
+                case "FEET" -> InventoryType.FEET;
+                case "WRIST" -> InventoryType.WRIST;
+                case "HAND" -> InventoryType.HANDS;
+                case "FINGER" -> InventoryType.FINGER;
+                case "TRINKET" -> InventoryType.TRINKET;
+                case "CLOAK", "BACK" -> InventoryType.CLOAK; // BACK is a defensive alias, the API code is CLOAK
+                case "TABARD" -> InventoryType.TABARD;
                 case "WEAPON" -> InventoryType.WEAPON;
+                case "TWOHWEAPON" -> InventoryType.TWO_HAND;
                 case "WEAPONMAINHAND" -> InventoryType.WEAPONMAINHAND;
-                case "ROBE" -> InventoryType.CHEST;
-                case "BACK" -> InventoryType.CLOAK;
-                default -> {
-                    try {
-                        yield InventoryType.valueOf(raw.toUpperCase());
-                    } catch (Exception e) {
-                        throw new InvalidItemException("Could not map inventory type, reason: " + e.getMessage());
-                    }
-                }
+                case "WEAPONOFFHAND" -> InventoryType.WEAPONOFFHAND;
+                case "SHIELD" -> InventoryType.SHIELD;
+                case "HOLDABLE" -> InventoryType.HOLDABLE;
+                case "RANGED" -> InventoryType.RANGED;
+                case "RANGEDRIGHT" -> InventoryType.RANGEDRIGHT;
+                case "THROWN" -> InventoryType.THROWN;
+                case "RELIC" -> InventoryType.RELIC;
+                default -> throw new InvalidItemException("Could not map inventory type, reason: unsupported type " + raw);
             };
         }
         throw new InvalidItemException("inventoryType cannot be null for upgrade analysis purposes");

@@ -4,6 +4,7 @@ import com.bebis.BeBiS.base.BaseFullStackTest;
 import com.bebis.BeBiS.equipment.EquipmentResponseBuilder;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
+import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.event.ItemPersistedEvent;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemRepository;
@@ -101,7 +102,7 @@ public class ItemServiceIT extends BaseFullStackTest {
                 "INSERT INTO items (base_id, suffix_id, name, item_level, quality, inventory_type, item_category) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 baseId, suffixId, response.name(), itemLevel, response.quality().type().toUpperCase(),
-                response.inventoryType().type().toUpperCase(), "WEAPON"
+                Item.InventoryType.TWO_HAND.name(), "WEAPON" // the DB stores the domain enum name, not the API code
         );
 
         EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(response)
@@ -211,7 +212,7 @@ public class ItemServiceIT extends BaseFullStackTest {
                 "INSERT INTO items (base_id, suffix_id, name, item_level, quality, inventory_type, item_category) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?)",
                 responseFromDb.id(), 0L, responseFromDb.name(), responseFromDb.itemLevel(), responseFromDb.quality().type().toUpperCase(),
-                responseFromDb.inventoryType().type().toUpperCase(), "WEAPON"
+                Item.InventoryType.TWO_HAND.name(), "WEAPON" // the DB stores the domain enum name, not the API code
         );
 
         ItemResponse responseFromBlizz = ItemResponseBuilder.newEquippableInstance().build();

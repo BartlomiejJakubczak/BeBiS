@@ -14,17 +14,30 @@ import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ItemMapperTest {
+
+    // Same defaults as the ObjectMapper behind the app's RestClient (e.g. unknown JSON properties are ignored)
+    private static final ObjectMapper BLIZZARD_JSON = Jackson2ObjectMapperBuilder.json().build();
 
     private final ItemMapper itemMapper = new ItemMapper();
 
@@ -459,6 +472,165 @@ class ItemMapperTest {
             assertThatThrownBy(() -> itemMapper.mapToSyncData(weaponResponse, weaponDTO))
                     .isInstanceOf(InvalidItemException.class)
                     .hasMessage("weapon dps cannot be null for weapon upgrade analysis purposes");
+        }
+    }
+
+    @Nested
+    class InventoryTypeMapping {
+
+        @ParameterizedTest
+        @MethodSource("blizzardCodeToInventoryType")
+        void shouldMapBlizzardInventoryTypeCode_ToDomainInventoryType(String blizzardCode, Item.InventoryType expected) {
+            // given
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withInventoryType(blizzardCode)
+                    .build();
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().inventoryType()).isEqualTo(expected);
+        }
+
+        static Stream<Arguments> blizzardCodeToInventoryType() {
+            return Stream.of(
+                    Arguments.of("HEAD", Item.InventoryType.HEAD),
+                    Arguments.of("NECK", Item.InventoryType.NECK),
+                    Arguments.of("SHOULDER", Item.InventoryType.SHOULDER),
+                    Arguments.of("BODY", Item.InventoryType.BODY),
+                    Arguments.of("CHEST", Item.InventoryType.CHEST),
+                    Arguments.of("ROBE", Item.InventoryType.CHEST),
+                    Arguments.of("WAIST", Item.InventoryType.WAIST),
+                    Arguments.of("LEGS", Item.InventoryType.LEGS),
+                    Arguments.of("FEET", Item.InventoryType.FEET),
+                    Arguments.of("WRIST", Item.InventoryType.WRIST),
+                    Arguments.of("HAND", Item.InventoryType.HANDS),
+                    Arguments.of("FINGER", Item.InventoryType.FINGER),
+                    Arguments.of("TRINKET", Item.InventoryType.TRINKET),
+                    Arguments.of("CLOAK", Item.InventoryType.CLOAK),
+                    Arguments.of("BACK", Item.InventoryType.CLOAK),
+                    Arguments.of("TABARD", Item.InventoryType.TABARD),
+                    Arguments.of("WEAPON", Item.InventoryType.WEAPON),
+                    Arguments.of("TWOHWEAPON", Item.InventoryType.TWO_HAND),
+                    Arguments.of("WEAPONMAINHAND", Item.InventoryType.WEAPONMAINHAND),
+                    Arguments.of("WEAPONOFFHAND", Item.InventoryType.WEAPONOFFHAND),
+                    Arguments.of("SHIELD", Item.InventoryType.SHIELD),
+                    Arguments.of("HOLDABLE", Item.InventoryType.HOLDABLE),
+                    Arguments.of("RANGED", Item.InventoryType.RANGED),
+                    Arguments.of("RANGEDRIGHT", Item.InventoryType.RANGEDRIGHT),
+                    Arguments.of("THROWN", Item.InventoryType.THROWN),
+                    Arguments.of("RELIC", Item.InventoryType.RELIC)
+            );
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {"NON_EQUIP", "BAG", "AMMO", "QUIVER", "TWO_HAND", "HANDS"})
+        void shouldRejectInventoryType_WhenCodeIsNotEquippableGearOrNotABlizzardCode(String blizzardCode) {
+            // given
+            ItemResponse base = ItemResponseBuilder.newEquippableInstance()
+                    .withInventoryType(blizzardCode)
+                    .build();
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("FINGER_1")
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(base, dto))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessageContaining("Could not map inventory type");
+        }
+    }
+
+    /**
+     * Contract tests against responses recorded from the real Blizzard API (src/test/resources/blizzard/item).
+     * Builders encode our assumptions about the API, these fixtures encode what it actually sends.
+     */
+    @Nested
+    class RecordedBlizzardResponses {
+
+        @ParameterizedTest
+        @MethodSource("recordedItems")
+        void shouldMapRecordedResponse_ToInventoryTypeLevelAndUniqueness(String fixture, String slot,
+                                                                          Item.InventoryType expectedType,
+                                                                          int expectedRequiredLevel,
+                                                                          boolean expectedUnique) {
+            // given
+            ItemResponse base = loadItemFixture(fixture);
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot(slot)
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().baseId()).isEqualTo(base.id());
+            assertThat(result.commonData().inventoryType()).isEqualTo(expectedType);
+            assertThat(result.commonData().requiredLevel()).isEqualTo(expectedRequiredLevel);
+            assertThat(result.commonData().uniqueEquipped()).isEqualTo(expectedUnique);
+        }
+
+        static Stream<Arguments> recordedItems() {
+            return Stream.of(
+                    // Whirlwind Axe: quest reward, no level requirement on the item itself
+                    Arguments.of("two_hand.json", "MAIN_HAND", Item.InventoryType.TWO_HAND, 0, false),
+                    // Sword of Omen: quest reward, no level requirement on the item itself
+                    Arguments.of("one_hand.json", "MAIN_HAND", Item.InventoryType.WEAPON, 0, false),
+                    Arguments.of("neck.json", "NECK", Item.InventoryType.NECK, 39, false),
+                    Arguments.of("ring.json", "FINGER_1", Item.InventoryType.FINGER, 60, true),
+                    Arguments.of("trinket.json", "TRINKET_1", Item.InventoryType.TRINKET, 53, true)
+            );
+        }
+
+        @Test
+        void shouldMapRecordedTwoHandWeapon_WithSpeedNormalizedFromMilliseconds() {
+            // given
+            ItemResponse base = loadItemFixture("two_hand.json"); // attack_speed comes as 3600
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.isWeapon()).isTrue();
+            assertThat(result.weapon().weaponType()).isEqualTo(Weapon.WeaponType.AXE);
+            assertThat(result.weapon().speed()).isEqualTo(3.6);
+            assertThat(result.weapon().minDamage()).isEqualTo(102);
+            assertThat(result.weapon().maxDamage()).isEqualTo(154);
+        }
+
+        @Test
+        void shouldKeepEquipEffectsOnlyAsDescriptions_WhenStatsComeAsSpells() {
+            // given
+            ItemResponse base = loadItemFixture("trinket.json"); // Hand of Justice: +20 AP is a spell, not a stat
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("TRINKET_1")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().stats()).doesNotContainKey(StatType.ATTACK_POWER);
+            assertThat(result.commonData().specialEffects()).containsExactlyInAnyOrder(
+                    "Equip: 2% chance on melee hit to gain 1 extra attack.",
+                    "Equip: +20 Attack Power.");
+        }
+
+        private static ItemResponse loadItemFixture(String fileName) {
+            String path = "/blizzard/item/" + fileName;
+            try (InputStream json = ItemMapperTest.class.getResourceAsStream(path)) {
+                assertThat(json).as("fixture %s", path).isNotNull();
+                return BLIZZARD_JSON.readValue(json, ItemResponse.class);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
