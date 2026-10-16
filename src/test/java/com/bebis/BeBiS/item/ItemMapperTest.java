@@ -46,6 +46,9 @@ class ItemMapperTest {
             assertTrue(result.isWeapon());
             assertEquals(base.preview().weapon().attackSpeed().value(), result.weapon().speed());
             assertEquals(base.subclass().name().toUpperCase(), result.weapon().weaponType().name());
+            assertEquals(base.preview().weapon().damage().minValue(), result.weapon().minDamage());
+            assertEquals(base.preview().weapon().damage().maxValue(), result.weapon().maxDamage());
+            assertEquals(base.preview().weapon().dps().value(), result.weapon().dps());
         }
 
         @Test

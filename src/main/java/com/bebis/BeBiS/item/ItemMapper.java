@@ -110,7 +110,7 @@ public final class ItemMapper {
                         mapWeaponType((int) baseDTO.subclass().id()),
                         normalizeSpeed(weaponData.attackSpeed().value()),
                         weaponData.damage().minValue(),
-                        weaponData.damage().minValue(),
+                        weaponData.damage().maxValue(),
                         weaponData.dps().value()
                 ),
                 null
