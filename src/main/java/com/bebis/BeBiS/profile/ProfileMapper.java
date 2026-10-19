@@ -81,12 +81,9 @@ final class ProfileMapper {
     }
 
     private WowCharacter.WowClass mapWowClass(WowCharacterDTO dto) {
-        if (dto.wowClass() != null && dto.wowClass().name() != null) {
-            try {
-                return WowCharacter.WowClass.valueOf(dto.wowClass().name());
-            } catch (IllegalArgumentException e) {
-                throw new InvalidCharacterException("invalid wowClass, message: \n" + e.getMessage());
-            }
+        if (dto.wowClass() != null && dto.wowClass().id() != null) {
+            return WowCharacter.WowClass.fromId(dto.wowClass().id())
+                    .orElseThrow(() -> new InvalidCharacterException("No such wowClass of given id: " + dto.wowClass().id()));
         }
         throw new InvalidCharacterException("wowClass cannot be null for upgrade analysis purposes");
     }

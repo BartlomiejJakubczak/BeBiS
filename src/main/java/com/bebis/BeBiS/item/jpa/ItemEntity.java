@@ -2,6 +2,7 @@ package com.bebis.BeBiS.item.jpa;
 
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.domain.StatType;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
@@ -26,8 +27,10 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Entity
 @Table(name = "items")
@@ -78,6 +81,15 @@ public abstract class ItemEntity {
     })
     @Column(name = "effect_description", length = 1000) // Effects can be long!
     private List<String> specialEffects = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "item_playable_classes", joinColumns = {
+            @JoinColumn(name = "base_id"),
+            @JoinColumn(name = "suffix_id")
+    })
+    @Column(name = "playable_class")
+    @Enumerated(EnumType.STRING)
+    private Set<WowCharacter.WowClass> playableClasses = new HashSet<>();
 
     @Embeddable
     @AllArgsConstructor

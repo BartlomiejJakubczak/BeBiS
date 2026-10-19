@@ -39,7 +39,8 @@ public record ItemResponse(
             WeaponDTO weapon,
             ArmorDTO armor,
             @JsonProperty("spells") List<SpellEffectDTO> spells,
-            @JsonProperty("unique_equipped") String uniqueEquipped
+            @JsonProperty("unique_equipped") String uniqueEquipped,
+            RequirementsDTO requirements
     ) {
         public record SpellEffectDTO(String description) {
         }
@@ -74,5 +75,14 @@ public record ItemResponse(
     }
 
     public record ArmorDTO(int value) {
+    }
+
+    public record RequirementsDTO(
+            @JsonProperty("playable_classes") PlayableClassesDTO playableClasses
+    ) {
+        public record PlayableClassesDTO(List<PlayableClassDTO> links) {
+            public record PlayableClassDTO(int id, String name) {
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@ public class ProfileTestData {
             .toList();
 
     public static List<WowClassDTO> classes = Arrays.stream(WowCharacter.WowClass.values())
-            .map(wowClass -> new WowClassDTO(wowClass.ordinal(), wowClass.name(), null))
+            .map(wowClass -> new WowClassDTO(wowClass.getId(), wowClass.name(), null))
             .toList();
 
     public static final int DEFAULT_ACCOUNT_COUNT = 1;

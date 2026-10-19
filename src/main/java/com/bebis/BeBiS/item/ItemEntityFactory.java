@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 @Component
 final class ItemEntityFactory {
@@ -49,6 +50,7 @@ final class ItemEntityFactory {
         entity.setUniqueEquipped(syncData.commonData().uniqueEquipped());
         entity.setStats(syncData.commonData().stats() != null ? syncData.commonData().stats() : new HashMap<>());
         entity.setSpecialEffects(syncData.commonData().specialEffects() != null ? syncData.commonData().specialEffects() : new ArrayList<>());
+        entity.setPlayableClasses(syncData.commonData().playableClasses() != null ? new HashSet<>(syncData.commonData().playableClasses()) : new HashSet<>());
     }
 
 }

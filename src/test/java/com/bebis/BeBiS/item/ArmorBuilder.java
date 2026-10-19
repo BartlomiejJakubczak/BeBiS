@@ -3,11 +3,13 @@ package com.bebis.BeBiS.item;
 import com.bebis.BeBiS.item.domain.Armor;
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.domain.StatType;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.tools.EnumTools;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ArmorBuilder {
 
@@ -22,6 +24,7 @@ public class ArmorBuilder {
 
     private Map<String, Integer> stats;
     private List<String> specialEffects;
+    private Set<WowCharacter.WowClass> playableClasses = Set.of(); // empty = usable by every class
 
     // armor-specific stuff
     private String armorType;
@@ -89,6 +92,11 @@ public class ArmorBuilder {
         return this;
     }
 
+    public ArmorBuilder withPlayableClasses(WowCharacter.WowClass... playableClasses) {
+        this.playableClasses = Set.of(playableClasses);
+        return this;
+    }
+
     public ArmorBuilder withSpecialEffects(List<String> specialEffects) {
         this.specialEffects = specialEffects;
         return this;
@@ -109,7 +117,8 @@ public class ArmorBuilder {
                 this.requiredLevel,
                 this.uniqueEquipped,
                 stats(),
-                this.specialEffects
+                this.specialEffects,
+                this.playableClasses
         );
         return new Armor(metadata, armorType());
     }

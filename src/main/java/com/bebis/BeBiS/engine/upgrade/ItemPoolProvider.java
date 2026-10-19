@@ -31,8 +31,8 @@ class ItemPoolProvider {
     @Transactional(readOnly = true)
     public List<Item> getItemPool(Equipment.Slot slot, int level, WowCharacter.WowClass wowClass) {
         ClassItemTypeCapabilitiesResolver.ClassItemTypeCapabilities eligibleItemTypes = itemTypeResolver.getCapabilitiesFor(wowClass, level); // what the class is able to equip for given level
-        List<ItemEntity> allEligibleItems = itemRepository.findAllByEligibleItemTypesAndLevel(slotMatcher.matchSlotToItemTypes(slot),
-                eligibleItemTypes.eligibleArmor(), eligibleItemTypes.eligibleWeapons(), level);
+        List<ItemEntity> allEligibleItems = itemRepository.findAllByEligibleItemTypesLevelAndClass(slotMatcher.matchSlotToItemTypes(slot),
+                eligibleItemTypes.eligibleArmor(), eligibleItemTypes.eligibleWeapons(), wowClass, level);
         return itemMapper.mapToDomain(allEligibleItems);
     }
 }

@@ -141,8 +141,8 @@ class ProfileMapperTest {
         RealmDTO realmMissingSlug = new RealmDTO(1, "Soulseeker", null, null);
         RaceDTO validRace = new RaceDTO(1, "NIGHT_ELF", null);
         RaceDTO invalidRace = new RaceDTO(1, "INVALID_RACE", null);
-        WowClassDTO validClass = new WowClassDTO(1, "ROGUE", null);
-        WowClassDTO invalidClass = new WowClassDTO(1, "INVALID_CLASS", null);
+        WowClassDTO validClass = new WowClassDTO(4, "Rogue", null);
+        WowClassDTO invalidClass = new WowClassDTO(6, "DEATH_KNIGHT", null);
 
         return Stream.of(
                 // Missing realm slug

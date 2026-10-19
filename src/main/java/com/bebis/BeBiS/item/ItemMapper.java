@@ -12,13 +12,17 @@ import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
+import com.bebis.BeBiS.profile.domain.WowCharacter.WowClass;
 import com.bebis.BeBiS.tools.EnumTools;
 import org.springframework.stereotype.Component;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.bebis.BeBiS.item.domain.Item.InventoryType;
 import static com.bebis.BeBiS.item.domain.Item.Quality;
@@ -37,7 +41,8 @@ public final class ItemMapper {
                 Optional.ofNullable(entity.getRequiredLevel()).orElse(0),
                 Optional.ofNullable(entity.getUniqueEquipped()).orElse(false),
                 Map.copyOf(entity.getStats()),
-                List.copyOf(entity.getSpecialEffects())
+                List.copyOf(entity.getSpecialEffects()),
+                Set.copyOf(entity.getPlayableClasses())
         );
 
         return switch (entity) {
@@ -145,7 +150,8 @@ public final class ItemMapper {
                 mapRequiredLevel(baseDTO),
                 mapUniqueEquipped(baseDTO),
                 mapStats(baseDTO, equippedItemDTO),
-                mapSpecialEffects(baseDTO)
+                mapSpecialEffects(baseDTO),
+                mapPlayableClasses(baseDTO)
         );
     }
 
@@ -240,7 +246,8 @@ public final class ItemMapper {
                 case "RANGEDRIGHT" -> InventoryType.RANGEDRIGHT;
                 case "THROWN" -> InventoryType.THROWN;
                 case "RELIC" -> InventoryType.RELIC;
-                default -> throw new InvalidItemException("Could not map inventory type, reason: unsupported type " + raw);
+                default ->
+                        throw new InvalidItemException("Could not map inventory type, reason: unsupported type " + raw);
             };
         }
         throw new InvalidItemException("inventoryType cannot be null for upgrade analysis purposes");
@@ -264,6 +271,22 @@ public final class ItemMapper {
 
     private int mapRequiredLevel(ItemResponse baseDTO) {
         return Optional.ofNullable(baseDTO.requiredLevel()).orElse(0);
+    }
+
+    private EnumSet<WowClass> mapPlayableClasses(ItemResponse baseDTO) throws InvalidItemException {
+        if (baseDTO.preview() == null || baseDTO.preview().requirements() == null
+                || baseDTO.preview().requirements().playableClasses() == null
+                || baseDTO.preview().requirements().playableClasses().links() == null) {
+            return EnumSet.noneOf(WowClass.class);
+        }
+
+        return baseDTO.preview().requirements().playableClasses().links().stream()
+                .map(ItemResponse.RequirementsDTO.PlayableClassesDTO.PlayableClassDTO::id)
+                .map((id) -> {
+                    Optional<WowClass> wowClass = WowClass.fromId(id);
+                    return wowClass.orElseThrow(() -> new InvalidItemException("Invalid playable class restriction, reason: " + id));
+                })
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(WowClass.class)));
     }
 
 }

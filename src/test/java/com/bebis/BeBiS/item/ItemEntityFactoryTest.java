@@ -71,7 +71,7 @@ public class ItemEntityFactoryTest {
         return new ItemSyncData(
                 new ItemSyncData.ItemSyncCommonData(
                         123L, 0L, "Test Item", Item.Quality.EPIC, Item.InventoryType.HEAD,
-                        80, 60, true, Collections.emptyMap(), Collections.emptyList()
+                        80, 60, true, Collections.emptyMap(), Collections.emptyList(), Collections.emptySet()
                 ),
                 wType != null ? new ItemSyncData.WeaponSyncData(wType, 2.6, 100, 200, 50.0) : null,
                 aType != null ? new ItemSyncData.ArmorSyncData(aType) : null

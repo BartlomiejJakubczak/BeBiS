@@ -30,6 +30,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent.*;
@@ -332,7 +333,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
     private static Armor createArmor(long id, String name, Item.InventoryType inventoryType, int requiredLevel,
                                      Map<StatType, Integer> stats, Armor.ArmorType armorType) {
         Item.ItemMetadata metadata = new Item.ItemMetadata(
-                new Item.ItemKey(id, 0L), name, inventoryType, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of()
+                new Item.ItemKey(id, 0L), name, inventoryType, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of(), Set.of()
         );
         return new Armor(metadata, armorType);
     }
@@ -340,7 +341,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
     private static Weapon createRangedWeapon(long id, String name, int requiredLevel, Map<StatType, Integer> stats, double speed,
                                              int minDamage, int maxDamage, double dps, Weapon.WeaponType type) {
         Item.ItemMetadata metadata = new Item.ItemMetadata(
-                new Item.ItemKey(id, 0L), name, Item.InventoryType.RANGED, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of()
+                new Item.ItemKey(id, 0L), name, Item.InventoryType.RANGED, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of(), Set.of()
         );
         return new Weapon(metadata, speed, minDamage, maxDamage, dps, type);
     }

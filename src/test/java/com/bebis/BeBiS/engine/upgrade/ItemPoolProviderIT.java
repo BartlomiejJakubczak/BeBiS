@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,8 +64,28 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
                 createEquippableEntity(12L, 50, Item.InventoryType.TRINKET),
                 createEquippableEntity(13L, 50, Item.InventoryType.TRINKET),
                 // no level requirement
-                createArmorEntity(14L, 0, Armor.ArmorType.MAIL)
+                createArmorEntity(14L, 0, Armor.ArmorType.MAIL),
+                // class restricted: tier chest wearable by every plate class, but restricted to warriors
+                createClassRestrictedArmorEntity(15L, 60, Armor.ArmorType.PLATE, WowCharacter.WowClass.WARRIOR)
         )));
+    }
+
+    @ParameterizedTest
+    @MethodSource("classRestrictionProvider")
+    void shouldOfferClassRestrictedItemOnlyToItsClasses_EvenWhenOtherClassCanWearItsArmorType(WowCharacter.WowClass wowClass,
+                                                                                            boolean expectedInPool) {
+        // given / when
+        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, 60, wowClass);
+
+        // then
+        assertThat(extractIdsFromResult(result).contains(15L)).isEqualTo(expectedInPool);
+    }
+
+    private static Stream<Arguments> classRestrictionProvider() {
+        return Stream.of(
+                Arguments.of(WowCharacter.WowClass.WARRIOR, true),
+                Arguments.of(WowCharacter.WowClass.PALADIN, false) // plate at 40+, but not a warrior
+        );
     }
 
     @AfterAll
@@ -173,6 +194,13 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
 
         armorEntity.setArmorType(armorType);
 
+        return armorEntity;
+    }
+
+    private static ArmorEntity createClassRestrictedArmorEntity(long baseId, int requiredLevel, Armor.ArmorType armorType,
+                                                                WowCharacter.WowClass... playableClasses) {
+        ArmorEntity armorEntity = createArmorEntity(baseId, requiredLevel, armorType);
+        armorEntity.setPlayableClasses(new HashSet<>(Set.of(playableClasses)));
         return armorEntity;
     }
 

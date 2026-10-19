@@ -14,20 +14,18 @@ import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,9 +33,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ItemMapperTest {
-
-    // Same defaults as the ObjectMapper behind the app's RestClient (e.g. unknown JSON properties are ignored)
-    private static final ObjectMapper BLIZZARD_JSON = Jackson2ObjectMapperBuilder.json().build();
 
     private final ItemMapper itemMapper = new ItemMapper();
 
@@ -257,6 +252,23 @@ class ItemMapperTest {
         }
 
         @Test
+        void shouldMapPlayableClassesById_WhenClassNameIsLocalized() {
+            // given
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance()
+                    .withPlayableClass(1, "Krieger") // the name depends on the locale, the id doesn't
+                    .build();
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().playableClasses()).containsExactly(WowCharacter.WowClass.WARRIOR);
+        }
+
+        @Test
         void shouldFallbackToUnknownForBadEnums() {
             // given
             ItemResponse base = ItemResponseBuilder.newEquippableInstance().build();
@@ -376,6 +388,22 @@ class ItemMapperTest {
             assertThatThrownBy(() -> itemMapper.mapToSyncData(baseBadInv, dto2))
                     .isInstanceOf(InvalidItemException.class)
                     .hasMessageContaining("Could not map inventory type");
+        }
+
+        @Test
+        void shouldRejectItem_WhenPlayableClassIdDoesNotExistInClassic() {
+            // given
+            ItemResponse base = ItemResponseBuilder.newWeaponInstance()
+                    .withPlayableClass(6, "Death Knight") // a restriction we can't interpret must not become "usable by all"
+                    .build();
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
+
+            // when / then
+            assertThatThrownBy(() -> itemMapper.mapToSyncData(base, dto))
+                    .isInstanceOf(InvalidItemException.class)
+                    .hasMessageContaining("Invalid playable class restriction");
         }
 
         @Test
@@ -559,7 +587,7 @@ class ItemMapperTest {
                                                                           int expectedRequiredLevel,
                                                                           boolean expectedUnique) {
             // given
-            ItemResponse base = loadItemFixture(fixture);
+            ItemResponse base = BlizzardFixtures.loadItem(fixture);
             EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
                     .withSlot(slot)
                     .build();
@@ -589,7 +617,7 @@ class ItemMapperTest {
         @Test
         void shouldMapRecordedTwoHandWeapon_WithSpeedNormalizedFromMilliseconds() {
             // given
-            ItemResponse base = loadItemFixture("two_hand.json"); // attack_speed comes as 3600
+            ItemResponse base = BlizzardFixtures.loadItem("two_hand.json"); // attack_speed comes as 3600
             EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
                     .withSlot("MAIN_HAND")
                     .build();
@@ -606,9 +634,43 @@ class ItemMapperTest {
         }
 
         @Test
+        void shouldRestrictItemToListedClasses_WhenRecordedResponseHasPlayableClasses() {
+            // given
+            ItemResponse base = BlizzardFixtures.loadItem("two_hand.json"); // Whirlwind Axe: "Classes: Warrior"
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().playableClasses()).containsExactly(WowCharacter.WowClass.WARRIOR);
+        }
+
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "one_hand.json", // no requirements at all
+                "neck.json"      // requirements with a level only, no playable_classes
+        })
+        void shouldNotRestrictClasses_WhenRecordedResponseHasNoPlayableClasses(String fixture) {
+            // given
+            ItemResponse base = BlizzardFixtures.loadItem(fixture);
+            EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
+                    .withSlot("MAIN_HAND")
+                    .build();
+
+            // when
+            ItemSyncData result = itemMapper.mapToSyncData(base, dto);
+
+            // then
+            assertThat(result.commonData().playableClasses()).isEmpty();
+        }
+
+        @Test
         void shouldKeepEquipEffectsOnlyAsDescriptions_WhenStatsComeAsSpells() {
             // given
-            ItemResponse base = loadItemFixture("trinket.json"); // Hand of Justice: +20 AP is a spell, not a stat
+            ItemResponse base = BlizzardFixtures.loadItem("trinket.json"); // Hand of Justice: +20 AP is a spell, not a stat
             EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
                     .withSlot("TRINKET_1")
                     .build();
@@ -621,16 +683,6 @@ class ItemMapperTest {
             assertThat(result.commonData().specialEffects()).containsExactlyInAnyOrder(
                     "Equip: 2% chance on melee hit to gain 1 extra attack.",
                     "Equip: +20 Attack Power.");
-        }
-
-        private static ItemResponse loadItemFixture(String fileName) {
-            String path = "/blizzard/item/" + fileName;
-            try (InputStream json = ItemMapperTest.class.getResourceAsStream(path)) {
-                assertThat(json).as("fixture %s", path).isNotNull();
-                return BLIZZARD_JSON.readValue(json, ItemResponse.class);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
         }
     }
 
@@ -710,6 +762,30 @@ class ItemMapperTest {
             // then
             assertInstanceOf(EquippableItem.class, result);
             assertEquals("Band of Accuria", result.getMetadata().name());
+        }
+
+        @ParameterizedTest
+        @MethodSource("entityPlayableClasses")
+        void shouldMapEntityPlayableClassesToDomain(Set<WowCharacter.WowClass> playableClasses) {
+            // given
+            EquippableItemEntity entity = new EquippableItemEntity();
+            entity.setPk(new ItemEntity.CompositeKey(16865L, 0L));
+            entity.setInventoryType(Item.InventoryType.CHEST);
+            entity.setPlayableClasses(new HashSet<>(playableClasses));
+
+            // when
+            Item result = itemMapper.mapToDomain(entity);
+
+            // then
+            assertThat(result.getMetadata().playableClasses()).containsExactlyInAnyOrderElementsOf(playableClasses);
+        }
+
+        static Stream<Arguments> entityPlayableClasses() {
+            return Stream.of(
+                    Arguments.of(Set.of()), // the common case: no class restriction
+                    Arguments.of(Set.of(WowCharacter.WowClass.WARRIOR)),
+                    Arguments.of(Set.of(WowCharacter.WowClass.MAGE, WowCharacter.WowClass.WARLOCK))
+            );
         }
 
         @Test

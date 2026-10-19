@@ -91,6 +91,32 @@ public class ItemServiceIT extends BaseFullStackTest {
     }
 
     @Test
+    void shouldPersistRecordedItemWithAllItsEquipEffectsAndClassRestrictions() {
+        // given
+        ItemResponse handOfJustice = BlizzardFixtures.loadItem("trinket.json"); // two equip effects on one item
+        ItemResponse whirlwindAxe = BlizzardFixtures.loadItem("two_hand.json"); // "Classes: Warrior"
+
+        when(blizzardServiceClient.getBaseItem(handOfJustice.id())).thenReturn(handOfJustice);
+        when(blizzardServiceClient.getBaseItem(whirlwindAxe.id())).thenReturn(whirlwindAxe);
+
+        EquipmentResponse.ItemDTO trinketDTO = EquipmentResponseBuilder.newInstance(handOfJustice)
+                .withSlot("TRINKET_1")
+                .build();
+        EquipmentResponse.ItemDTO axeDTO = EquipmentResponseBuilder.newInstance(whirlwindAxe)
+                .withSlot("MAIN_HAND")
+                .build();
+
+        // when
+        callServiceForDbChecks(trinketDTO, axeDTO);
+
+        // then
+        assertThat(jdbcTemplate.queryForList("SELECT effect_description FROM item_effects WHERE base_id = ?",
+                String.class, handOfJustice.id())).hasSize(2);
+        assertThat(jdbcTemplate.queryForList("SELECT playable_class FROM item_playable_classes WHERE base_id = ?",
+                String.class, whirlwindAxe.id())).containsExactly("WARRIOR");
+    }
+
+    @Test
     void shouldGetFromRepoWhenEntityExists() {
         // given
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();

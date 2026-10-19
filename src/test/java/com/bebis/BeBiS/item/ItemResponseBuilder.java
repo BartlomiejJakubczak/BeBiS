@@ -2,6 +2,7 @@ package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,8 @@ public class ItemResponseBuilder {
     private Double dps;
     private Integer minDamage;
     private Integer maxDamage;
+
+    private List<RequirementsDTO.PlayableClassesDTO.PlayableClassDTO> playableClasses; // null = no class restriction
 
     private ItemResponseBuilder() {
     }
@@ -157,10 +160,12 @@ public class ItemResponseBuilder {
         ArmorDTO armorDTO = armorDTO();
         List<PreviewItemDTO.SpellEffectDTO> spellEffectDTOS = spellEffectDTO();
         String uniqueEquipped = uniqueEquipped();
-        if (statDTOS == null && weaponDTO == null && armorDTO == null && spellEffectDTOS == null && uniqueEquipped == null) {
+        RequirementsDTO requirementsDTO = requirementsDTO();
+        if (statDTOS == null && weaponDTO == null && armorDTO == null && spellEffectDTOS == null && uniqueEquipped == null
+                && requirementsDTO == null) {
             return null;
         }
-        return new PreviewItemDTO(statDTOS, weaponDTO, armorDTO, spellEffectDTOS, uniqueEquipped);
+        return new PreviewItemDTO(statDTOS, weaponDTO, armorDTO, spellEffectDTOS, uniqueEquipped, requirementsDTO);
     }
 
     private List<StatDTO> statsDTO() {
@@ -186,6 +191,11 @@ public class ItemResponseBuilder {
     private List<PreviewItemDTO.SpellEffectDTO> spellEffectDTO() {
         if (this.spells == null) return null;
         return spells.stream().map(PreviewItemDTO.SpellEffectDTO::new).toList();
+    }
+
+    private RequirementsDTO requirementsDTO() {
+        if (this.playableClasses == null) return null;
+        return new RequirementsDTO(new RequirementsDTO.PlayableClassesDTO(List.copyOf(this.playableClasses)));
     }
 
     private String uniqueEquipped() {
@@ -234,6 +244,15 @@ public class ItemResponseBuilder {
 
     public ItemResponseBuilder withUniqueEquipped(Boolean uniqueEquipped) {
         this.uniqueEquipped = uniqueEquipped;
+        return this;
+    }
+
+    /**
+     * Adds a class to preview_item.requirements.playable_classes, the way Blizzard sends it, e.g. (1, "Warrior").
+     */
+    public ItemResponseBuilder withPlayableClass(int classId, String className) {
+        if (this.playableClasses == null) this.playableClasses = new ArrayList<>();
+        this.playableClasses.add(new RequirementsDTO.PlayableClassesDTO.PlayableClassDTO(classId, className));
         return this;
     }
 

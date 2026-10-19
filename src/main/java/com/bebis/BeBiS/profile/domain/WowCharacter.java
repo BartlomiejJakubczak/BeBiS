@@ -1,5 +1,10 @@
 package com.bebis.BeBiS.profile.domain;
 
+import lombok.Getter;
+
+import java.util.Arrays;
+import java.util.Optional;
+
 public record WowCharacter(
         Id wowCharacterId,
         String name,
@@ -24,15 +29,26 @@ public record WowCharacter(
     }
 
     public enum WowClass {
-        WARRIOR,
-        ROGUE,
-        PALADIN,
-        SHAMAN,
-        PRIEST,
-        MAGE,
-        WARLOCK,
-        HUNTER,
-        DRUID
+        WARRIOR(1),
+        PALADIN(2),
+        HUNTER(3),
+        ROGUE(4),
+        PRIEST(5),
+        SHAMAN(7),
+        MAGE(8),
+        WARLOCK(9),
+        DRUID(11);
+
+        @Getter
+        private final int id;
+
+        WowClass(int id) {
+            this.id = id;
+        }
+
+        public static Optional<WowClass> fromId(int id) {
+            return Arrays.stream(WowClass.values()).filter(x -> x.getId() == id).findFirst();
+        }
     }
 
     public record Id(

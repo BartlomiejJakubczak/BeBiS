@@ -1,11 +1,13 @@
 package com.bebis.BeBiS.item.domain;
 
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -23,7 +25,8 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
             int requiredLevel,
             boolean uniqueEquipped,
             Map<StatType, Integer> stats,
-            List<String> specialEffects
+            List<String> specialEffects,
+            Set<WowCharacter.WowClass> playableClasses
     ) {
     }
 

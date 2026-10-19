@@ -2,12 +2,14 @@ package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.item.domain.StatType;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.item.domain.Weapon;
 import com.bebis.BeBiS.tools.EnumTools;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class WeaponBuilder {
 
@@ -22,6 +24,7 @@ public class WeaponBuilder {
 
     private Map<String, Integer> stats;
     private List<String> specialEffects;
+    private Set<WowCharacter.WowClass> playableClasses = Set.of(); // empty = usable by every class
 
     // weapon-specific stuff
     private double speed;
@@ -115,6 +118,11 @@ public class WeaponBuilder {
         return this;
     }
 
+    public WeaponBuilder withPlayableClasses(WowCharacter.WowClass... playableClasses) {
+        this.playableClasses = Set.of(playableClasses);
+        return this;
+    }
+
     public WeaponBuilder withSpecialEffects(List<String> specialEffects) {
         this.specialEffects = specialEffects;
         return this;
@@ -155,7 +163,8 @@ public class WeaponBuilder {
                 this.requiredLevel,
                 this.uniqueEquipped,
                 stats(),
-                this.specialEffects
+                this.specialEffects,
+                this.playableClasses
         );
         return new Weapon(metadata, this.speed, this.minDamage, this.maxDamage, this.dps, weaponType());
     }
