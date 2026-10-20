@@ -124,8 +124,8 @@ class ProfileMapperTest {
         assertEquals(characterName, mapped.name());
         assertEquals(dto.realm().name(), mapped.realmName());
         assertEquals(60, mapped.level());
-        assertEquals(dto.race().name(), mapped.race().name());
-        assertEquals(dto.wowClass().name(), mapped.wowClass().name());
+        assertEquals(dto.race().id(), mapped.race().getId());
+        assertEquals(dto.wowClass().id(), mapped.wowClass().getId());
     }
 
     @ParameterizedTest
@@ -139,8 +139,8 @@ class ProfileMapperTest {
     private static Stream<WowCharacterDTO> provideInvalidCharacterDTOs() {
         RealmDTO validRealm = new RealmDTO(1, "Soulseeker", "soulseeker", null);
         RealmDTO realmMissingSlug = new RealmDTO(1, "Soulseeker", null, null);
-        RaceDTO validRace = new RaceDTO(1, "NIGHT_ELF", null);
-        RaceDTO invalidRace = new RaceDTO(1, "INVALID_RACE", null);
+        RaceDTO validRace = new RaceDTO(1, "Human", null);
+        RaceDTO invalidRace = new RaceDTO(11, "Draenei", null);
         WowClassDTO validClass = new WowClassDTO(4, "Rogue", null);
         WowClassDTO invalidClass = new WowClassDTO(6, "DEATH_KNIGHT", null);
 

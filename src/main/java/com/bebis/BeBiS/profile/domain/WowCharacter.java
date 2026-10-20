@@ -14,17 +14,24 @@ public record WowCharacter(
         WowRealm realm
 ) {
     public enum Race {
-        HUMAN,
-        DWARF,
-        NIGHT_ELF,
-        GNOME,
-        ORC,
-        TROLL,
-        TAUREN,
-        UNDEAD;
+        HUMAN(1),
+        ORC(2),
+        DWARF(3),
+        NIGHT_ELF(4),
+        UNDEAD(5),
+        TAUREN(6),
+        GNOME(7),
+        TROLL(8);
 
-        public static Race fromBlizzardName(String blizzardName) {
-            return Race.valueOf(blizzardName.toUpperCase().replace("-", "_"));
+        @Getter
+        private final int id;
+
+        Race(int id) {
+            this.id = id;
+        }
+
+        public static Optional<Race> fromId(int id) {
+            return Arrays.stream(Race.values()).filter(x -> x.getId() == id).findFirst();
         }
     }
 

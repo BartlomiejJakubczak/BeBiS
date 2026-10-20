@@ -70,12 +70,9 @@ final class ProfileMapper {
     }
 
     private WowCharacter.Race mapRace(WowCharacterDTO dto) {
-        if (dto.race() != null && dto.race().name() != null) {
-            try {
-                return WowCharacter.Race.fromBlizzardName(dto.race().name());
-            } catch (IllegalArgumentException e) {
-                throw new InvalidCharacterException("invalid race, message: \n" + e.getMessage());
-            }
+        if (dto.race() != null && dto.race().id() != null) {
+            return WowCharacter.Race.fromId(dto.race().id())
+                    .orElseThrow(() -> new InvalidCharacterException("No such race of given id: " + dto.race().id()));
         }
         throw new InvalidCharacterException("race cannot be null for upgrade analysis purposes");
     }

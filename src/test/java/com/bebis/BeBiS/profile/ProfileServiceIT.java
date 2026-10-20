@@ -132,7 +132,7 @@ public class ProfileServiceIT extends BaseFullStackTest {
             entity.setEquipment(eqEntity);
             entity.setName(dto.name());
             entity.setLevel(dto.level());
-            entity.setRace(WowCharacter.Race.fromBlizzardName(dto.race().name()));
+            entity.setRace(fromBlizzardName(dto.race().name()));
             entity.setWowClass(WowCharacter.WowClass.valueOf(dto.wowClass().name().toUpperCase()));
             entity.setRealmName(dto.realm().name());
             toPersist.add(entity);
@@ -149,4 +149,7 @@ public class ProfileServiceIT extends BaseFullStackTest {
                 .toList();
     }
 
+    private WowCharacter.Race fromBlizzardName(String blizzardName) {
+        return WowCharacter.Race.valueOf(blizzardName.toUpperCase().replace("-", "_"));
+    }
 }

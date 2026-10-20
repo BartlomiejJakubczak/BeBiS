@@ -19,7 +19,7 @@ public class ProfileTestData {
     public static final int CHAR_MAX_NAME_LENGTH = 12;
     public static final int MAX_LEVEL = 60;
     public static List<RaceDTO> races = Arrays.stream(WowCharacter.Race.values())
-            .map(race -> new RaceDTO(race.ordinal(), race.name(), null))
+            .map(race -> new RaceDTO(race.getId(), race.name(), null))
             .toList();
 
     public static List<WowClassDTO> classes = Arrays.stream(WowCharacter.WowClass.values())
@@ -100,7 +100,6 @@ public class ProfileTestData {
     }
 
     public static RaceDTO getRandomRaceDTO() {
-        // not real id + name pairs, will have to look it up and change it in the future
         return races.get((int) (Math.random() * races.size()));
     }
 
