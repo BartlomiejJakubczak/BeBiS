@@ -19,6 +19,10 @@ final class EquipmentSynchronizer {
         this.mapper = mapper;
     }
 
+    /**
+     * Replaces the stored equipment with Blizzard's current snapshot. Items are resolved (and stored if new) through
+     * {@link ItemService}. Equipment slots the app doesn't track, like the shirt or tabard, are skipped.
+     */
     public void synchronize(EquipmentResponse response, EquipmentEntity equipment) {
         equipment.getItems().clear(); // a fresh snapshot
         Map<EquipmentResponse.ItemDTO, ItemEntity> resolvedItems = itemService.resolveItems(response.equipment());

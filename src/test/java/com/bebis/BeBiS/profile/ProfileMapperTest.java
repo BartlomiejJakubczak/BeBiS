@@ -183,8 +183,8 @@ class ProfileMapperTest {
         WowCharacter result = profileMapper.mapToDomain(entity);
 
         // then
-        assertEquals(characterId, result.wowCharacterId().id(), "Domain ID must match Blizzard ID");
-        assertEquals(realmSlug, result.wowCharacterId().realmSlug());
+        assertEquals(characterId, result.id().id(), "Domain ID must match Blizzard ID");
+        assertEquals(realmSlug, result.id().realmSlug());
         assertEquals("Thelemar", result.name());
         assertEquals(60, result.level());
         assertEquals(WowCharacter.Race.NIGHT_ELF, result.race());

@@ -49,7 +49,7 @@ public class CharacterSelectedListenerTest extends BaseAsyncListenerTest {
     }
 
     private static @NonNull CharacterInfo getCharacterInfo() {
-        WowCharacter wowChar = new WowCharacter(new WowCharacter.Id(1L, "soulseeker"), "Thelamar", 60,
+        WowCharacter wowChar = new WowCharacter(new WowCharacter.Id(1L, "soulseeker", 1L), "Thelamar", 60,
                 WowCharacter.Race.NIGHT_ELF, WowCharacter.WowClass.ROGUE, new WowRealm("Soulseeker", "soulseeker"));
 
         Equipment equipment = new Equipment();

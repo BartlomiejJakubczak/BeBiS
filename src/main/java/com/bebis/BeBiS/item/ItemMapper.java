@@ -5,13 +5,16 @@ import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.domain.Armor;
 import com.bebis.BeBiS.item.domain.EquippableItem;
 import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.QuestSource;
 import com.bebis.BeBiS.item.domain.StatType;
 import com.bebis.BeBiS.item.domain.Weapon;
 import com.bebis.BeBiS.item.domain.exception.InvalidItemException;
 import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
+import com.bebis.BeBiS.item.jpa.QuestRewardEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.domain.WowCharacter.WowClass;
 import com.bebis.BeBiS.tools.EnumTools;
 import org.springframework.stereotype.Component;
@@ -31,7 +34,12 @@ import static com.bebis.BeBiS.tools.MapperTools.validateRequired;
 @Component
 public final class ItemMapper {
 
-    public Item mapToDomain(ItemEntity entity) {
+    /**
+     * Maps an item together with the quests that reward it.
+     *
+     * @param questRewards rows of {@code quest_rewards} with the item's base id, empty if it isn't a quest reward
+     */
+    public Item mapToDomain(ItemEntity entity, List<QuestRewardEntity> questRewards) {
         Item.ItemMetadata meta = new Item.ItemMetadata(
                 new Item.ItemKey(entity.getPk().getBaseId(), entity.getPk().getSuffixId()),
                 entity.getName(),
@@ -42,7 +50,8 @@ public final class ItemMapper {
                 Optional.ofNullable(entity.getUniqueEquipped()).orElse(false),
                 Map.copyOf(entity.getStats()),
                 List.copyOf(entity.getSpecialEffects()),
-                Set.copyOf(entity.getPlayableClasses())
+                Set.copyOf(entity.getPlayableClasses()),
+                mapSources(questRewards)
         );
 
         return switch (entity) {
@@ -62,8 +71,21 @@ public final class ItemMapper {
         };
     }
 
-    public List<Item> mapToDomain(List<ItemEntity> entities) {
-        return entities.stream().map(this::mapToDomain).toList();
+    private Set<Item.Source> mapSources(List<QuestRewardEntity> questRewards) {
+        return questRewards.stream()
+                .map(this::mapQuestSource)
+                .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private QuestSource mapQuestSource(QuestRewardEntity reward) {
+        return new QuestSource(
+                reward.getPk().getQuestId(),
+                reward.getQuestLevel(),
+                reward.getQuestMinLevel(),
+                reward.getRewardKind(),
+                EnumTools.fromBitmask(WowClass.class, reward.getRequiredClassMask()),
+                EnumTools.fromBitmask(WowCharacter.Race.class, reward.getRequiredRaceMask())
+        );
     }
 
     public ItemSyncData mapToSyncData(ItemResponse baseDTO, EquipmentResponse.ItemDTO equippedItemDTO) throws InvalidItemException {

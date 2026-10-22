@@ -333,7 +333,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
     private static Armor createArmor(long id, String name, Item.InventoryType inventoryType, int requiredLevel,
                                      Map<StatType, Integer> stats, Armor.ArmorType armorType) {
         Item.ItemMetadata metadata = new Item.ItemMetadata(
-                new Item.ItemKey(id, 0L), name, inventoryType, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of(), Set.of()
+                new Item.ItemKey(id, 0L), name, inventoryType, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of(), Set.of(), Set.of()
         );
         return new Armor(metadata, armorType);
     }
@@ -341,7 +341,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
     private static Weapon createRangedWeapon(long id, String name, int requiredLevel, Map<StatType, Integer> stats, double speed,
                                              int minDamage, int maxDamage, double dps, Weapon.WeaponType type) {
         Item.ItemMetadata metadata = new Item.ItemMetadata(
-                new Item.ItemKey(id, 0L), name, Item.InventoryType.RANGED, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of(), Set.of()
+                new Item.ItemKey(id, 0L), name, Item.InventoryType.RANGED, Item.Quality.UNCOMMON, 21, requiredLevel, false, stats, List.of(), Set.of(), Set.of()
         );
         return new Weapon(metadata, speed, minDamage, maxDamage, dps, type);
     }

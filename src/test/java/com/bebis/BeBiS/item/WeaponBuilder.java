@@ -25,6 +25,7 @@ public class WeaponBuilder {
     private Map<String, Integer> stats;
     private List<String> specialEffects;
     private Set<WowCharacter.WowClass> playableClasses = Set.of(); // empty = usable by every class
+    private Set<Item.Source> sources = Set.of(); // empty = sources unknown
 
     // weapon-specific stuff
     private double speed;
@@ -123,6 +124,11 @@ public class WeaponBuilder {
         return this;
     }
 
+    public WeaponBuilder withSources(Item.Source... sources) {
+        this.sources = Set.of(sources);
+        return this;
+    }
+
     public WeaponBuilder withSpecialEffects(List<String> specialEffects) {
         this.specialEffects = specialEffects;
         return this;
@@ -164,7 +170,8 @@ public class WeaponBuilder {
                 this.uniqueEquipped,
                 stats(),
                 this.specialEffects,
-                this.playableClasses
+                this.playableClasses,
+                this.sources
         );
         return new Weapon(metadata, this.speed, this.minDamage, this.maxDamage, this.dps, weaponType());
     }

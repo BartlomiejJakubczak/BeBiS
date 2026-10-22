@@ -35,6 +35,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 // this forces it to create only one, hence @BeforeAll method no longer has to be static
 public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
 
+    private static final long HORDE_QUEST_REWARD = 900001L;
+    private static final long MIRRORED_QUEST_REWARD = 900002L; // rewarded by an alliance and a horde version of a quest
+    private static final long WARRIOR_QUEST_REWARD = 900003L;
+    private static final int ALLIANCE_RACE_MASK = 77; // human, dwarf, night elf, gnome
+    private static final int HORDE_RACE_MASK = 178; // orc, undead, tauren, troll
+
     @Autowired
     private ItemPoolProvider itemPoolProvider;
 
@@ -66,8 +72,47 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
                 // no level requirement
                 createArmorEntity(14L, 0, Armor.ArmorType.MAIL),
                 // class restricted: tier chest wearable by every plate class, but restricted to warriors
-                createClassRestrictedArmorEntity(15L, 60, Armor.ArmorType.PLATE, WowCharacter.WowClass.WARRIOR)
+                createClassRestrictedArmorEntity(15L, 60, Armor.ArmorType.PLATE, WowCharacter.WowClass.WARRIOR),
+                // quest rewards (leg slot, so the chest suites above stay untouched)
+                createLegsEntity(HORDE_QUEST_REWARD),
+                createLegsEntity(MIRRORED_QUEST_REWARD),
+                createLegsEntity(WARRIOR_QUEST_REWARD)
         )));
+        // quest_rewards is reference data with no FK to items: ids far above real item ids keep the seed untouched
+        insertQuestReward(HORDE_QUEST_REWARD, 900101L, 0, HORDE_RACE_MASK);
+        insertQuestReward(MIRRORED_QUEST_REWARD, 900102L, 0, ALLIANCE_RACE_MASK);
+        insertQuestReward(MIRRORED_QUEST_REWARD, 900103L, 0, HORDE_RACE_MASK);
+        insertQuestReward(WARRIOR_QUEST_REWARD, 900104L, 1, 0); // class bit 1 = warrior
+    }
+
+    @ParameterizedTest
+    @MethodSource("questRaceRestrictionProvider")
+    void shouldOfferQuestRewardOnlyToRacesThatCanTakeAnyOfItsQuests(WowCharacter.Race race, WowCharacter.WowClass wowClass,
+                                                                  Set<Long> expectedLegs) {
+        // given / when
+        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.LEGS, 60, race, wowClass);
+
+        // then
+        assertThat(extractIdsFromResult(result)).isEqualTo(expectedLegs);
+    }
+
+    private static Stream<Arguments> questRaceRestrictionProvider() {
+        return Stream.of(
+                // horde-only quest: hidden from alliance; mirrored quests: one of them always fits
+                Arguments.of(WowCharacter.Race.ORC, WowCharacter.WowClass.WARRIOR,
+                        Set.of(HORDE_QUEST_REWARD, MIRRORED_QUEST_REWARD, WARRIOR_QUEST_REWARD)),
+                Arguments.of(WowCharacter.Race.HUMAN, WowCharacter.WowClass.WARRIOR,
+                        Set.of(MIRRORED_QUEST_REWARD, WARRIOR_QUEST_REWARD))
+        );
+    }
+
+    @Test
+    void shouldHideQuestRewardFromClassesTheQuestExcludes_EvenWhenTheItemItselfIsNotClassRestricted() {
+        // given / when
+        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.LEGS, 60, WowCharacter.Race.HUMAN, WowCharacter.WowClass.PALADIN);
+
+        // then
+        assertThat(extractIdsFromResult(result)).doesNotContain(WARRIOR_QUEST_REWARD);
     }
 
     @ParameterizedTest
@@ -75,7 +120,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     void shouldOfferClassRestrictedItemOnlyToItsClasses_EvenWhenOtherClassCanWearItsArmorType(WowCharacter.WowClass wowClass,
                                                                                             boolean expectedInPool) {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, 60, wowClass);
+        List<Item> result = poolFor(Equipment.Slot.CHEST, 60, wowClass);
 
         // then
         assertThat(extractIdsFromResult(result).contains(15L)).isEqualTo(expectedInPool);
@@ -92,13 +137,14 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     void dbTeardown() {
         // no @Transactional, so manual teardown is needed
         jdbcTemplate.execute("TRUNCATE TABLE items CASCADE"); // postgre-specific syntax
+        jdbcTemplate.update("DELETE FROM quest_rewards WHERE quest_id >= 900000");
     }
 
     @ParameterizedTest
     @MethodSource("slotsToExpectedItemPoolProvider")
     void shouldGetTheSameItemPoolForRingsAndTrinketsNoMatterWhichSlot(Set<Equipment.Slot> slots, Set<Long> expectedIds) {
         slots.forEach(slot -> {
-            List<Item> result = itemPoolProvider.getItemPool(slot, 60, WowCharacter.WowClass.WARRIOR);
+            List<Item> result = poolFor(slot, 60, WowCharacter.WowClass.WARRIOR);
             assertThat(extractIdsFromResult(result)).isEqualTo(expectedIds);
         });
     }
@@ -113,7 +159,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldExcludeItemsNotTrainableForAGivenClass() {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.RANGED, 60, WowCharacter.WowClass.WARRIOR);
+        List<Item> result = poolFor(Equipment.Slot.RANGED, 60, WowCharacter.WowClass.WARRIOR);
 
         // then
         assertThat(extractIdsFromResult(result)).containsExactlyInAnyOrder(5L, 6L);
@@ -126,7 +172,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
         int level = 45;
 
         // when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, level, wowClass);
+        List<Item> result = poolFor(Equipment.Slot.CHEST, level, wowClass);
 
         // then
         assertThat(extractIdsFromResult(result)).containsExactlyInAnyOrder(1L, 2L, 3L, 14L);
@@ -135,7 +181,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldIncludeItemWithoutRequiredLevel_WhenCharacterIsLevelOne() {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, 1, WowCharacter.WowClass.WARRIOR);
+        List<Item> result = poolFor(Equipment.Slot.CHEST, 1, WowCharacter.WowClass.WARRIOR);
 
         // then
         assertThat(extractIdsFromResult(result)).containsExactly(14L);
@@ -145,10 +191,26 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @MethodSource("classAndLevelProvider")
     void shouldProvideCorrectItemsEligibleForHybridClassesAtTransitionalLevels(WowCharacter.WowClass wowClass, int level, Set<Long> expectedIds) {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.CHEST, level, wowClass);
+        List<Item> result = poolFor(Equipment.Slot.CHEST, level, wowClass);
 
         // then
         assertThat(expectedIds).containsExactlyInAnyOrderElementsOf(extractIdsFromResult(result));
+    }
+
+    // the race doesn't matter for items without quest sources, but should still be one the class can have
+    private List<Item> poolFor(Equipment.Slot slot, int level, WowCharacter.WowClass wowClass) {
+        WowCharacter.Race race = switch (wowClass) {
+            case SHAMAN -> WowCharacter.Race.ORC;
+            case HUNTER -> WowCharacter.Race.NIGHT_ELF;
+            case PALADIN -> WowCharacter.Race.DWARF;
+            default -> WowCharacter.Race.HUMAN;
+        };
+        return itemPoolProvider.getItemPool(slot, level, race, wowClass);
+    }
+
+    private void insertQuestReward(long baseId, long questId, int classMask, int raceMask) {
+        jdbcTemplate.update("INSERT INTO quest_rewards (base_id, quest_id, quest_min_level, quest_level, reward_kind, " +
+                "required_classes, required_races) VALUES (?, ?, 1, 60, 'CHOICE', ?, ?)", baseId, questId, classMask, raceMask);
     }
 
     private Set<Long> extractIdsFromResult(List<Item> result) {
@@ -195,6 +257,13 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
         armorEntity.setArmorType(armorType);
 
         return armorEntity;
+    }
+
+    private static ArmorEntity createLegsEntity(long baseId) {
+        ArmorEntity legs = new ArmorEntity();
+        setEntityMetadata(legs, baseId, 50, Item.InventoryType.LEGS);
+        legs.setArmorType(Armor.ArmorType.MAIL);
+        return legs;
     }
 
     private static ArmorEntity createClassRestrictedArmorEntity(long baseId, int requiredLevel, Armor.ArmorType armorType,

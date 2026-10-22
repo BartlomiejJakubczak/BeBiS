@@ -63,17 +63,18 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         when(blizzardUserClient.getCharacterEquipment(realmSlug, charName)).thenReturn(eqResponse);
 
         // when
-        CharacterInfo selectedCharacter = orchestrator.getCharacterInfo(charId, realmSlug, blizzAccountId);
+        CharacterInfo charInfo = orchestrator.selectCharacter(new WowCharacter.Id(charId, realmSlug, blizzAccountId));
 
         // then
-        WowCharacter characterFromSelected = selectedCharacter.wowCharacter();
-        assertThat(characterFromSelected.wowCharacterId().id()).isEqualTo(charId);
-        assertThat(characterFromSelected.wowCharacterId().realmSlug()).isEqualTo(realmSlug);
+
+        WowCharacter characterFromSelected = charInfo.wowCharacter();
+        assertThat(characterFromSelected.id().id()).isEqualTo(charId);
+        assertThat(characterFromSelected.id().realmSlug()).isEqualTo(realmSlug);
         assertThat(characterFromSelected.name()).isEqualTo(charName);
         assertThat(characterFromSelected.race()).isEqualTo(race);
         assertThat(characterFromSelected.wowClass()).isEqualTo(wowClass);
 
-        WowTalents talentsFromSelected = selectedCharacter.talents().get();
+        WowTalents talentsFromSelected = charInfo.talents().get();
         List<Specialization> expectedSpecs = List.of(
                 new Specialization("COMBAT", 31),
                 new Specialization("ASSASSINATION", 20),
@@ -81,7 +82,7 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         );
         assertThat(talentsFromSelected.specs()).isEqualTo(expectedSpecs);
 
-        Equipment equipmentFromSelected = selectedCharacter.equipment();
+        Equipment equipmentFromSelected = charInfo.equipment();
         EquippedItem equippedItem = equipmentFromSelected.getEquipment().get(Equipment.Slot.MAIN_HAND);
         assertThat(equippedItem).isNotNull();
         assertThat(equippedItem.item().getMetadata().key().baseId()).isEqualTo(response.id());
@@ -89,7 +90,7 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
 
         List<CharacterSelectedEvent> eventsFired = applicationEvents.stream(CharacterSelectedEvent.class).toList();
         assertThat(eventsFired.size()).isEqualTo(1);
-        assertThat(eventsFired.getFirst().characterInfo()).isEqualTo(selectedCharacter);
+        assertThat(eventsFired.getFirst().characterInfo()).isEqualTo(charInfo);
     }
 
     private void setupWowCharacter(long charId, long blizzAccountId, String realmSlug,

@@ -1,10 +1,14 @@
 package com.bebis.BeBiS.equipment;
 
 import com.bebis.BeBiS.equipment.domain.Equipment;
+import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.ItemMapper;
+import com.bebis.BeBiS.item.EquippableItemBuilder;
 import com.bebis.BeBiS.item.ItemResponseBuilder;
+import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
+import com.bebis.BeBiS.item.jpa.ItemEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -17,7 +21,38 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class EquipmentMapperTest {
 
-    private final EquipmentMapper mapper = new EquipmentMapper(new ItemMapper());
+    private final EquipmentMapper mapper = new EquipmentMapper();
+
+    @Test
+    void shouldPutTheSameAssembledItemIntoBothSlots_WhenTwoIdenticalRingsAreEquipped() {
+        // given
+        ItemEntity ringEntity = new EquippableItemEntity();
+        ringEntity.setPk(new ItemEntity.CompositeKey(12022L, 37L)); // Gold Ring of the Monkey, not unique-equipped
+
+        EquipmentEntity equipmentEntity = new EquipmentEntity();
+        equipmentEntity.getItems().put(Equipment.Slot.FINGER_1, equipped(ringEntity, List.of()));
+        equipmentEntity.getItems().put(Equipment.Slot.FINGER_2, equipped(ringEntity, List.of("+7 Agility")));
+
+        Item ring = EquippableItemBuilder.newRing().withBaseId(12022L).withSuffixId(37L).build();
+        Map<Item.ItemKey, Item> itemsByKey = Map.of(ring.getMetadata().key(), ring);
+
+        // when
+        Equipment result = mapper.mapToDomain(equipmentEntity, itemsByKey);
+
+        // then
+        assertThat(result.getItem(Equipment.Slot.FINGER_1)).hasValueSatisfying(equipped -> assertThat(equipped.item()).isSameAs(ring));
+        assertThat(result.getItem(Equipment.Slot.FINGER_2)).hasValueSatisfying(equipped -> {
+            assertThat(equipped.item()).isSameAs(ring);
+            assertThat(equipped.playerEnchs()).containsExactly("+7 Agility");
+        });
+    }
+
+    private static EquipmentEntity.EquippedItem equipped(ItemEntity item, List<String> enchants) {
+        EquipmentEntity.EquippedItem equippedItem = new EquipmentEntity.EquippedItem();
+        equippedItem.setItem(item);
+        equippedItem.setPlayerEnchants(enchants);
+        return equippedItem;
+    }
 
     @ParameterizedTest
     @ValueSource(strings = {"BELT", ""})

@@ -16,6 +16,13 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
     public record ItemKey(long baseId, long suffixId) {
     }
 
+    /**
+     * Everything known about an item.
+     *
+     * @param playableClasses classes allowed to <b>equip</b> the item (from Blizzard), empty if every class can
+     * @param sources         how the item can be obtained, empty if unknown (most items until drops, vendors etc. are
+     *                        exported)
+     */
     public record ItemMetadata(
             ItemKey key,
             String name,
@@ -26,7 +33,8 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
             boolean uniqueEquipped,
             Map<StatType, Integer> stats,
             List<String> specialEffects,
-            Set<WowCharacter.WowClass> playableClasses
+            Set<WowCharacter.WowClass> playableClasses,
+            Set<Source> sources
     ) {
     }
 
@@ -84,6 +92,41 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
         public String getDisplayName() {
             return displayName;
         }
+    }
+
+    /**
+     * A way of obtaining an item. Sources carry <b>acquisition</b> constraints (who can get the item), as opposed to
+     * the item's own equip constraints.
+     */
+    public sealed interface Source permits QuestSource, OtherSource {
+
+        boolean allows(WowCharacter.Race race);
+
+        boolean allows(WowCharacter.WowClass wowClass);
+    }
+
+    /**
+     * Whether a character of this race can obtain the item: true if its sources are unknown, or if <b>any</b> source
+     * allows the race (e.g. an Orc can obtain a reward of mirrored Alliance and Horde quests through the Horde one).
+     */
+    public boolean isObtainableBy(WowCharacter.Race race) {
+        return metadata.sources().isEmpty() || metadata.sources().stream().anyMatch(source -> source.allows(race));
+    }
+
+    /**
+     * Whether a character of this class can obtain the item, by the same "any source" rule as
+     * {@link #isObtainableBy(WowCharacter.Race)}. Whether the class may equip it is a separate question, see
+     * {@link ItemMetadata#playableClasses()}.
+     */
+    public boolean isObtainableBy(WowCharacter.WowClass wowClass) {
+        return metadata.sources().isEmpty() || metadata.sources().stream().anyMatch(source -> source.allows(wowClass));
+    }
+
+    /**
+     * Whether a character of this class can equip the item, derived directly from item response.
+     */
+    public boolean isEquippableBy(WowCharacter.WowClass wowClass) {
+        return metadata.playableClasses().isEmpty() || metadata.playableClasses().contains(wowClass);
     }
 
     @Override

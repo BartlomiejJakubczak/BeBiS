@@ -25,6 +25,7 @@ public class EquippableItemBuilder {
     private Map<String, Integer> stats;
     private List<String> specialEffects;
     private Set<WowCharacter.WowClass> playableClasses = Set.of(); // empty = usable by every class
+    private Set<Item.Source> sources = Set.of(); // empty = sources unknown
 
     private EquippableItemBuilder() {
 
@@ -94,6 +95,11 @@ public class EquippableItemBuilder {
         return this;
     }
 
+    public EquippableItemBuilder withSources(Item.Source... sources) {
+        this.sources = Set.of(sources);
+        return this;
+    }
+
     public EquippableItemBuilder withSpecialEffects(List<String> specialEffects) {
         this.specialEffects = specialEffects;
         return this;
@@ -110,7 +116,8 @@ public class EquippableItemBuilder {
                 this.uniqueEquipped,
                 stats(),
                 this.specialEffects,
-                this.playableClasses
+                this.playableClasses,
+                this.sources
         );
         return new EquippableItem(metadata);
     }

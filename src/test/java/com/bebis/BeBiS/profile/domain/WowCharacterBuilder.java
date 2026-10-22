@@ -2,7 +2,7 @@ package com.bebis.BeBiS.profile.domain;
 
 public class WowCharacterBuilder {
 
-    private WowCharacter.Id id = new WowCharacter.Id(1L, "soulseeker");
+    private WowCharacter.Id id = new WowCharacter.Id(1L, "soulseeker", 1L);
     private String name = "Thelamar";
     private int level = 60;
     private WowCharacter.Race race = WowCharacter.Race.NIGHT_ELF;
@@ -14,7 +14,12 @@ public class WowCharacterBuilder {
     }
 
     public WowCharacterBuilder withId(long id, String realmSlug) {
-        this.id = new WowCharacter.Id(id, realmSlug);
+        this.id = new WowCharacter.Id(id, realmSlug, this.id.blizzardAccountId());
+        return this;
+    }
+
+    public WowCharacterBuilder withId(WowCharacter.Id id) {
+        this.id = id;
         return this;
     }
 

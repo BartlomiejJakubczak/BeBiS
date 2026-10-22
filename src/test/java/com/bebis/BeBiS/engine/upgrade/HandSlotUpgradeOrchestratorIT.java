@@ -124,8 +124,8 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                     .containsExactly(tuple(OFF_HAND, powerfulEligibleTwoHand));
         });
 
-        verify(itemPoolProvider).getItemPool(eq(MAIN_HAND), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
-        verify(itemPoolProvider).getItemPool(eq(OFF_HAND), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(MAIN_HAND), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(OFF_HAND), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
     }
 
     private Weapon createPowerfulOneHand(long baseId) {

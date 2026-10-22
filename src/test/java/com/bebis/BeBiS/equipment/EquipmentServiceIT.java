@@ -322,7 +322,8 @@ public class EquipmentServiceIT extends BaseFullStackTest {
     }
 
     private void callService(WowCharacterEntity entity) {
-        service.getEquipmentForCharacter(entity);
+        service.syncEquipment(entity.getName(), entity.getPk().getRealmSlug(), entity.getEquipment());
+        service.getEquipmentForCharacter(entity.getEquipment());
         entityManager.flush();
         entityManager.clear(); // detaches the entity, clears it from Hibernate's cache
     }

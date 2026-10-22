@@ -35,10 +35,10 @@ class HandSlotUpgradeOrchestrator {
     @Async
     void findUpgrades(DualSlot slots, CharacterInfo info) {
         // TODO itemPoolProvider accept DualSlot and return a record of both pools (WeaponItemPools???)?
-        CharacterQuery query = new CharacterQuery(info.wowCharacter().wowClass(), info.wowCharacter().level());
+        CharacterQuery query = new CharacterQuery(info.wowCharacter().wowClass(), info.wowCharacter().race(), info.wowCharacter().level());
 
-        List<Item> mainHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.MAIN_HAND, query.level(), query.wowClass());
-        List<Item> offHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.OFF_HAND, query.level(), query.wowClass());
+        List<Item> mainHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.MAIN_HAND, query.level(), query.race(), query.wowClass());
+        List<Item> offHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.OFF_HAND, query.level(), query.race(), query.wowClass());
 
         EquippedItemPair itemPair = EquippedItemPair.from(slots, info.equipment());
         WeaponItemPools itemPools = new WeaponItemPools(mainHandItemPool, offHandItemPool);
@@ -50,7 +50,7 @@ class HandSlotUpgradeOrchestrator {
         results.forEach(publisher::publish);
     }
 
-    record CharacterQuery(WowCharacter.WowClass wowClass, int level) {
+    record CharacterQuery(WowCharacter.WowClass wowClass, WowCharacter.Race race, int level) {
     }
 
     record CharacterContext(ClassSpec classSpec, WowCharacter.Race race) {

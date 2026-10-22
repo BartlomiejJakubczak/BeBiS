@@ -94,5 +94,12 @@ public class WowCharacterEntity {
 
         @Column(name = "blizzard_account_id")
         private long blizzardAccountId;
+
+        /**
+         * @return the persistence equivalent of a domain character id
+         */
+        public static CompositeKey from(WowCharacter.Id id) {
+            return new CompositeKey(id.id(), id.realmSlug(), id.blizzardAccountId());
+        }
     }
 }

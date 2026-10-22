@@ -69,7 +69,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeNotAvailableEvent.class))
                 .map(UpgradeEvent.UpgradeNotAvailableEvent::slot).containsExactlyInAnyOrder(FINGER_1, FINGER_2));
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 )
         );
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
     }
 
     @Test
@@ -136,7 +136,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 )
         );
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
     }
 
     @Test
@@ -179,7 +179,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                     .containsExactly(tuple(FINGER_2, bisRing));
         });
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.wowClass())
+        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass())
         );
     }
 

@@ -6,6 +6,8 @@ import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.domain.Armor;
 import com.bebis.BeBiS.item.domain.EquippableItem;
 import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.QuestSource;
+import com.bebis.BeBiS.item.domain.RewardKind;
 import com.bebis.BeBiS.item.domain.StatType;
 import com.bebis.BeBiS.item.domain.Weapon;
 import com.bebis.BeBiS.item.domain.exception.InvalidItemException;
@@ -13,6 +15,7 @@ import com.bebis.BeBiS.item.dto.ItemSyncData;
 import com.bebis.BeBiS.item.jpa.ArmorEntity;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
 import com.bebis.BeBiS.item.jpa.ItemEntity;
+import com.bebis.BeBiS.item.jpa.QuestRewardEntity;
 import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.junit.jupiter.api.Nested;
@@ -583,9 +586,9 @@ class ItemMapperTest {
         @ParameterizedTest
         @MethodSource("recordedItems")
         void shouldMapRecordedResponse_ToInventoryTypeLevelAndUniqueness(String fixture, String slot,
-                                                                          Item.InventoryType expectedType,
-                                                                          int expectedRequiredLevel,
-                                                                          boolean expectedUnique) {
+                                                                         Item.InventoryType expectedType,
+                                                                         int expectedRequiredLevel,
+                                                                         boolean expectedUnique) {
             // given
             ItemResponse base = BlizzardFixtures.loadItem(fixture);
             EquipmentResponse.ItemDTO dto = EquipmentResponseBuilder.newInstance(base)
@@ -699,7 +702,7 @@ class ItemMapperTest {
             entity.setPk(new ItemEntity.CompositeKey(baseId, suffixId));
 
             // when
-            Item result = itemMapper.mapToDomain(entity);
+            Item result = itemMapper.mapToDomain(entity, List.of()); // linking quests is irrelevant here
 
             // then
             assertThat(result.getMetadata().key().baseId()).isEqualTo(baseId);
@@ -719,7 +722,7 @@ class ItemMapperTest {
             entity.setStats(Map.of(StatType.STRENGTH, 16));
 
             // when
-            Item result = itemMapper.mapToDomain(entity);
+            Item result = itemMapper.mapToDomain(entity, List.of());
 
             // then
             assertInstanceOf(Weapon.class, result);
@@ -738,7 +741,7 @@ class ItemMapperTest {
             entity.setInventoryType(Item.InventoryType.CHEST);
 
             // when
-            Item result = itemMapper.mapToDomain(entity);
+            Item result = itemMapper.mapToDomain(entity, List.of());
 
             // then
             assertInstanceOf(Armor.class, result);
@@ -757,7 +760,7 @@ class ItemMapperTest {
             entity.setQuality(Item.Quality.EPIC);
 
             // when
-            Item result = itemMapper.mapToDomain(entity);
+            Item result = itemMapper.mapToDomain(entity, List.of());
 
             // then
             assertInstanceOf(EquippableItem.class, result);
@@ -774,10 +777,47 @@ class ItemMapperTest {
             entity.setPlayableClasses(new HashSet<>(playableClasses));
 
             // when
-            Item result = itemMapper.mapToDomain(entity);
+            Item result = itemMapper.mapToDomain(entity, List.of());
 
             // then
             assertThat(result.getMetadata().playableClasses()).containsExactlyInAnyOrderElementsOf(playableClasses);
+        }
+
+        @Test
+        void shouldMapEachQuestRewardRowToAQuestSource_WithDecodedClassAndRaceMasks() {
+            // given
+            EquippableItemEntity entity = new EquippableItemEntity();
+            entity.setPk(new ItemEntity.CompositeKey(1490L, 0L)); // Guardian Talisman: alliance and horde quest versions
+            entity.setInventoryType(Item.InventoryType.NECK);
+
+            QuestRewardEntity allianceQuest = new QuestRewardEntity(new QuestRewardEntity.CompositeKey(1490L, 1445L),
+                    38, 50, RewardKind.GUARANTEED, 0, 77);
+            QuestRewardEntity hordeQuest = new QuestRewardEntity(new QuestRewardEntity.CompositeKey(1490L, 1475L),
+                    38, 50, RewardKind.GUARANTEED, 1, 178);
+
+            // when
+            Item result = itemMapper.mapToDomain(entity, List.of(allianceQuest, hordeQuest));
+
+            // then
+            assertThat(result.getMetadata().sources()).containsExactlyInAnyOrder(
+                    new QuestSource(1445L, 50, 38, RewardKind.GUARANTEED, Set.of(),
+                            Set.of(WowCharacter.Race.HUMAN, WowCharacter.Race.DWARF, WowCharacter.Race.NIGHT_ELF, WowCharacter.Race.GNOME)),
+                    new QuestSource(1475L, 50, 38, RewardKind.GUARANTEED, Set.of(WowCharacter.WowClass.WARRIOR),
+                            Set.of(WowCharacter.Race.ORC, WowCharacter.Race.UNDEAD, WowCharacter.Race.TAUREN, WowCharacter.Race.TROLL)));
+        }
+
+        @Test
+        void shouldMapNoSources_WhenItemIsNotAQuestReward() {
+            // given
+            EquippableItemEntity entity = new EquippableItemEntity();
+            entity.setPk(new ItemEntity.CompositeKey(17063L, 0L)); // Band of Accuria: a raid drop
+            entity.setInventoryType(Item.InventoryType.FINGER);
+
+            // when
+            Item result = itemMapper.mapToDomain(entity, List.of());
+
+            // then
+            assertThat(result.getMetadata().sources()).isEmpty();
         }
 
         static Stream<Arguments> entityPlayableClasses() {
@@ -800,7 +840,7 @@ class ItemMapperTest {
             entity.setQuality(Item.Quality.COMMON);
 
             // when
-            Item result = itemMapper.mapToDomain(entity);
+            Item result = itemMapper.mapToDomain(entity, List.of());
 
             // then
             assertEquals(0, result.getMetadata().itemLevel(), "Null Entity level should be 0 in Domain");

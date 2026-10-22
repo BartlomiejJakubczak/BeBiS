@@ -4,7 +4,6 @@ import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
-import com.bebis.BeBiS.item.ItemMapper;
 import com.bebis.BeBiS.item.ItemResponseBuilder;
 import com.bebis.BeBiS.item.ItemService;
 import com.bebis.BeBiS.item.jpa.EquippableItemEntity;
@@ -33,7 +32,7 @@ public class EquipmentSynchronizerTest {
 
     @BeforeEach
     public void setUp() {
-        synchronizer = new EquipmentSynchronizer(itemService, new EquipmentMapper(new ItemMapper()));
+        synchronizer = new EquipmentSynchronizer(itemService, new EquipmentMapper());
     }
 
     @Test

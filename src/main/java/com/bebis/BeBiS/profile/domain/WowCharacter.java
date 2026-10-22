@@ -1,19 +1,23 @@
 package com.bebis.BeBiS.profile.domain;
 
+import com.bebis.BeBiS.tools.EnumTools;
+import com.bebis.BeBiS.tools.GameIdentified;
 import lombok.Getter;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 public record WowCharacter(
-        Id wowCharacterId,
+        Id id,
         String name,
         int level,
         Race race,
         WowClass wowClass,
         WowRealm realm
 ) {
-    public enum Race {
+    /**
+     * Playable races, identified by their game id (see {@link GameIdentified}).
+     */
+    public enum Race implements GameIdentified {
         HUMAN(1),
         ORC(2),
         DWARF(3),
@@ -30,12 +34,18 @@ public record WowCharacter(
             this.id = id;
         }
 
+        /**
+         * @return the race with this game id, empty if none exists in Classic
+         */
         public static Optional<Race> fromId(int id) {
-            return Arrays.stream(Race.values()).filter(x -> x.getId() == id).findFirst();
+            return EnumTools.fromId(Race.class, id);
         }
     }
 
-    public enum WowClass {
+    /**
+     * Playable classes, identified by their game id (see {@link GameIdentified}). Ids 6 and 10 don't exist in Classic.
+     */
+    public enum WowClass implements GameIdentified {
         WARRIOR(1),
         PALADIN(2),
         HUNTER(3),
@@ -53,14 +63,22 @@ public record WowCharacter(
             this.id = id;
         }
 
+        /**
+         * @return the class with this game id, empty if none exists in Classic (e.g. 6, Death Knight)
+         */
         public static Optional<WowClass> fromId(int id) {
-            return Arrays.stream(WowClass.values()).filter(x -> x.getId() == id).findFirst();
+            return EnumTools.fromId(WowClass.class, id);
         }
     }
 
+    /**
+     * A character's identity: Blizzard's character id is only unique within a realm, and the character belongs to one
+     * Battle.net account.
+     */
     public record Id(
             long id,
-            String realmSlug
+            String realmSlug,
+            long blizzardAccountId
     ) {
     }
 

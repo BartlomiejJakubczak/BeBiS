@@ -41,7 +41,7 @@ Packages are organized by feature, and each one has the same internal layout:
 | `integration.blizzard`     | `BlizzardServiceClient` / `BlizzardUserClient` (RestClient) and raw API response DTOs                                                                   |
 | `profile`                  | Account summary, character selection, talents/specs. `CharacterProfileOrchestrator` is the facade used by `ProfileController`                           |
 | `equipment`                | Equipped gear sync and mapping (`Equipment`, `EquippedItem`, `Equipment.Slot`)                                                                          |
-| `item`                     | Item fetching, mapping and persistence. `Item` is a sealed hierarchy: `Weapon`, `Armor`, `EquippableItem`. Identity is `ItemKey(baseId, suffixId)`      |
+| `item`                     | Item fetching, mapping and persistence. `Item` is a sealed hierarchy: `Weapon`, `Armor`, `EquippableItem`. Identity is `ItemKey(baseId, suffixId)`. `ItemQueryService` is the read entry point: it returns items with their `Source`s (e.g. `QuestSource` from the seeded `quest_rewards`) |
 | `engine.power`             | Item scoring: `PowerCalculatorEngine` delegates to `AttributeScoreCalculator` and `WeaponScoreCalculator`, using stat weight registries per `ClassSpec` |
 | `engine.upgrade`           | Upgrade finding (see below)                                                                                                                             |
 | `config`, `audit`, `tools` | Spring config, auditing, small static helpers (`EnumTools`, `MapperTools`)                                                                              |
@@ -66,6 +66,7 @@ sorting.
 
 - **Encapsulation**: keep classes package-private and `final` wherever possible. Only the feature's entry points are
   `public`. Integration tests live in the same package as the class under test so they can reach package-private types.
+  Exception: beans Spring proxies by subclassing (`@Transactional`, `@Async`, `@Cacheable` methods) can't be `final`.
 - **Constructor injection** with explicit constructors, never field `@Autowired` in production code.
 - **Sealed types + pattern-matching `switch`** for closed hierarchies (`Item`, `UpgradeResult`, `UpgradeEvent`). Prefer
   exhaustive switches over `instanceof` chains.

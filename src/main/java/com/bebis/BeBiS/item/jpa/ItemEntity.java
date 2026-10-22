@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -38,7 +39,6 @@ import java.util.Set;
 @DiscriminatorColumn(name = "item_category")
 @Getter
 @Setter
-@EqualsAndHashCode
 public abstract class ItemEntity {
     @EmbeddedId
     private CompositeKey pk;
@@ -91,6 +91,24 @@ public abstract class ItemEntity {
     @Enumerated(EnumType.STRING)
     private Set<WowCharacter.WowClass> playableClasses = new HashSet<>();
 
+    /**
+     * Entities are equal when their primary keys are, which are assigned (not generated) and therefore always set.
+     * Uses the getter rather than the field, because {@code o} may be a Hibernate proxy whose own fields are empty.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ItemEntity item)) return false;
+        return Objects.equals(getPk(), item.getPk());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(getPk());
+    }
+
+    /**
+     * An item's identity: the base item id, plus the random suffix id ("of the Bear"), or 0 for items without one.
+     */
     @Embeddable
     @AllArgsConstructor
     @NoArgsConstructor
@@ -103,5 +121,19 @@ public abstract class ItemEntity {
 
         @Column(name = "suffix_id")
         private Long suffixId;
+
+        /**
+         * @return the domain equivalent of this key
+         */
+        public Item.ItemKey toItemKey() {
+            return new Item.ItemKey(getBaseId(), getSuffixId());
+        }
+
+        /**
+         * @return the persistence equivalent of a domain key
+         */
+        public static CompositeKey from(Item.ItemKey key) {
+            return new CompositeKey(key.baseId(), key.suffixId());
+        }
     }
 }

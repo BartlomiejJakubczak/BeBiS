@@ -41,7 +41,7 @@ final class ProfileMapper {
 
     public WowCharacter mapToDomain(WowCharacterEntity entity) {
         return new WowCharacter(
-                new WowCharacter.Id(entity.getPk().getId(), entity.getPk().getRealmSlug()),
+                new WowCharacter.Id(entity.getPk().getId(), entity.getPk().getRealmSlug(), entity.getPk().getBlizzardAccountId()),
                 entity.getName(),
                 entity.getLevel(),
                 entity.getRace(),
