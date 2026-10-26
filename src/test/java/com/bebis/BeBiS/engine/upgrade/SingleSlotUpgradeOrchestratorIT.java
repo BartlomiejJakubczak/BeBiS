@@ -171,6 +171,31 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
                 .anyMatch(event -> event.slot().equals(slot)));
     }
 
+    @Test
+    void shouldSignalUpgradeFoundEvent_RangedWeaponWithBetterDpsButFewerStats() {
+        // given (scored by stats alone, the current bow would win: this needs weapon DPS, which needs the RANGED slot)
+        Weapon currentBow = createRangedWeapon(10L, "Agile Shortbow", 58,
+                Map.of(StatType.AGILITY, 20, StatType.STAMINA, 5), 2.8, 70, 98, 30.0, Weapon.WeaponType.BOW);
+        Weapon hardHittingBow = createRangedWeapon(11L, "Heavy Recurve Bow", 60,
+                Map.of(StatType.AGILITY, 5), 3.0, 120, 150, 45.0, Weapon.WeaponType.BOW);
+
+        Equipment eq = new Equipment();
+        eq.putItem(Equipment.Slot.RANGED, currentBow, List.of());
+
+        CharacterInfo charInfo = createCharacterInfo(
+                WowCharacterBuilder.newWowCharacter().withWowClass(WowClass.HUNTER).withLevel(60).build(), eq,
+                Optional.of(createTalents(Map.of("BEASTMASTERY", 10, "MARKSMANSHIP", 31, "SURVIVAL", 10))));
+
+        transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentBow, hardHittingBow)));
+
+        // when
+        orchestrator.findUpgrade(Equipment.Slot.RANGED, charInfo);
+
+        // then
+        await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeFoundEvent.class))
+                .anyMatch(event -> event.upgrade().equals(hardHittingBow) && event.slot().equals(Equipment.Slot.RANGED)));
+    }
+
     @ParameterizedTest
     @MethodSource("nonHybridClassTalentsProvider")
     void shouldSignalAppropriateEventsForDifferentTalentsButSameEquipment_NonHybridClass(Map<String, Integer> specs, Class<? extends UpgradeEvent> expectedEvent) {

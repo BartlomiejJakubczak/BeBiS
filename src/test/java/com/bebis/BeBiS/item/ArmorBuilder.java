@@ -48,6 +48,21 @@ public class ArmorBuilder {
         return builder;
     }
 
+    public static ArmorBuilder newChest() {
+        ArmorBuilder builder = new ArmorBuilder();
+        builder.baseId = 14637L;
+        builder.suffixId = 0L;
+        builder.name = "Cadaverous Armor";
+        builder.inventoryType = "CHEST";
+        builder.quality = "RARE";
+        builder.itemLevel = 62;
+        builder.requiredLevel = 57;
+        builder.uniqueEquipped = false;
+        builder.stats = Map.of("ARMOR", 201, "AGILITY", 8, "STRENGTH", 8, "ATTACK_POWER", 60);
+        builder.armorType = "LEATHER";
+        return builder;
+    }
+
     public ArmorBuilder withBaseId(long baseId) {
         this.baseId = baseId;
         return this;

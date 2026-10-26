@@ -103,6 +103,8 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
         boolean allows(WowCharacter.Race race);
 
         boolean allows(WowCharacter.WowClass wowClass);
+
+        boolean isRepeatable();
     }
 
     /**
@@ -127,6 +129,15 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
      */
     public boolean isEquippableBy(WowCharacter.WowClass wowClass) {
         return metadata.playableClasses().isEmpty() || metadata.playableClasses().contains(wowClass);
+    }
+
+    /**
+     * Whether a character can wear only one copy of the item at a time: it's Unique, or any of its sources hands it out
+     * only once (a quest reward). Erring toward "once" is deliberate: it can only cost a suggestion, never make an
+     * impossible one (assumptions A1 and A3 in {@code docs/roadmap.md}).
+     */
+    public boolean isEquippableOnce() {
+        return metadata.uniqueEquipped() || metadata.sources().stream().anyMatch((source) -> !source.isRepeatable());
     }
 
     @Override

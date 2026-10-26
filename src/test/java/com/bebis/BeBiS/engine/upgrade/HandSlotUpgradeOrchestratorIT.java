@@ -30,6 +30,7 @@ import java.util.Optional;
 
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.OFF_HAND;
+import static com.bebis.BeBiS.profile.domain.WowCharacter.WowClass.ROGUE;
 import static com.bebis.BeBiS.profile.domain.WowCharacter.WowClass.WARRIOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -126,6 +127,49 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
 
         verify(itemPoolProvider).getItemPool(eq(MAIN_HAND), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
         verify(itemPoolProvider).getItemPool(eq(OFF_HAND), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
+    }
+
+    @Test
+    void shouldNeverSuggestQuestRewardForBothHands_QuestSourceFromSeededRewards() {
+        // given (Outlaw Sabre isn't Unique: only its quest_rewards rows from the V4 seed keep it to one hand)
+        WowCharacter hordeRogue = WowCharacterBuilder.newWowCharacter().withWowClass(ROGUE).withRace(WowCharacter.Race.ORC)
+                .withLevel(30).build();
+
+        Weapon outlawSabre = WeaponBuilder.newOneHandSword().withBaseId(16886L).withName("Outlaw Sabre")
+                .withQuality("RARE")
+                .withItemLevel(30)
+                .withRequiredLevel(25)
+                .withUniqueEquipped(false)
+                .withStats(Map.of("ATTACK_POWER", 15))
+                .withWeaponType("SWORD")
+                .withMinDamage(35)
+                .withMaxDamage(67)
+                .withSpeed(2.7)
+                .withDps(18.9)
+                .build();
+
+        Weapon plainSword = WeaponBuilder.newOneHandSword().withBaseId(1L).withName("Plain Sword")
+                .withQuality("UNCOMMON")
+                .withItemLevel(26)
+                .withRequiredLevel(21)
+                .withStats(Map.of())
+                .withWeaponType("SWORD")
+                .withMinDamage(20)
+                .withMaxDamage(38)
+                .withSpeed(2.4)
+                .withDps(12.1)
+                .build();
+
+        transactionTemplate.executeWithoutResult(a -> setUpWeaponsInDb(List.of(outlawSabre, plainSword)));
+
+        // when
+        orchestrator.findUpgrades(new DualSlot(MAIN_HAND, OFF_HAND), new CharacterInfo(hordeRogue, new Equipment(),
+                Optional.of(createTalents(Map.of("ASSASSINATION", 0, "COMBAT", 21, "SUBTLETY", 0)))));
+
+        // then
+        await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeFoundEvent.class))
+                .extracting(UpgradeEvent.UpgradeFoundEvent::upgrade)
+                .containsExactlyInAnyOrder(outlawSabre, plainSword));
     }
 
     private Weapon createPowerfulOneHand(long baseId) {

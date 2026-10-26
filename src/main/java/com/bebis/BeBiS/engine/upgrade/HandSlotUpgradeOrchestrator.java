@@ -3,18 +3,21 @@ package com.bebis.BeBiS.engine.upgrade;
 import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
 import com.bebis.BeBiS.engine.upgrade.domain.HandSlotCombinations;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
-import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 
+/**
+ * Runs the main hand and off hand upgrade search asynchronously: builds a pool per hand, looks up the class's allowed
+ * combinations in {@link ClassHandSlotRegistry} and publishes one result per hand.
+ */
 @Component
 class HandSlotUpgradeOrchestrator {
 
@@ -37,11 +40,11 @@ class HandSlotUpgradeOrchestrator {
         // TODO itemPoolProvider accept DualSlot and return a record of both pools (WeaponItemPools???)?
         CharacterQuery query = new CharacterQuery(info.wowCharacter().wowClass(), info.wowCharacter().race(), info.wowCharacter().level());
 
-        List<Item> mainHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.MAIN_HAND, query.level(), query.race(), query.wowClass());
-        List<Item> offHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.OFF_HAND, query.level(), query.race(), query.wowClass());
+        ItemPool mainHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.MAIN_HAND, query.level(), query.race(), query.wowClass());
+        ItemPool offHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.OFF_HAND, query.level(), query.race(), query.wowClass());
 
         EquippedItemPair itemPair = EquippedItemPair.from(slots, info.equipment());
-        WeaponItemPools itemPools = new WeaponItemPools(mainHandItemPool, offHandItemPool);
+        HandSlotItemPools itemPools = new HandSlotItemPools(mainHandItemPool, offHandItemPool);
         HandSlotCombinations combos = registry.getHandSlotCombinationFor(query.wowClass(), query.level());
         CharacterContext context = new CharacterContext(ClassSpec.getClassSpec(query.wowClass(), info.talents()), info.wowCharacter().race());
 
@@ -56,6 +59,6 @@ class HandSlotUpgradeOrchestrator {
     record CharacterContext(ClassSpec classSpec, WowCharacter.Race race) {
     }
 
-    record WeaponItemPools(List<Item> mainHandPool, List<Item> offHandPool) {
+    record HandSlotItemPools(ItemPool mainHandPool, ItemPool offHandPool) {
     }
 }

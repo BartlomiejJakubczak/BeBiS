@@ -90,7 +90,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     void shouldOfferQuestRewardOnlyToRacesThatCanTakeAnyOfItsQuests(WowCharacter.Race race, WowCharacter.WowClass wowClass,
                                                                   Set<Long> expectedLegs) {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.LEGS, 60, race, wowClass);
+        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.LEGS, 60, race, wowClass).items();
 
         // then
         assertThat(extractIdsFromResult(result)).isEqualTo(expectedLegs);
@@ -109,7 +109,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldHideQuestRewardFromClassesTheQuestExcludes_EvenWhenTheItemItselfIsNotClassRestricted() {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.LEGS, 60, WowCharacter.Race.HUMAN, WowCharacter.WowClass.PALADIN);
+        List<Item> result = itemPoolProvider.getItemPool(Equipment.Slot.LEGS, 60, WowCharacter.Race.HUMAN, WowCharacter.WowClass.PALADIN).items();
 
         // then
         assertThat(extractIdsFromResult(result)).doesNotContain(WARRIOR_QUEST_REWARD);
@@ -205,7 +205,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
             case PALADIN -> WowCharacter.Race.DWARF;
             default -> WowCharacter.Race.HUMAN;
         };
-        return itemPoolProvider.getItemPool(slot, level, race, wowClass);
+        return itemPoolProvider.getItemPool(slot, level, race, wowClass).items();
     }
 
     private void insertQuestReward(long baseId, long questId, int classMask, int raceMask) {

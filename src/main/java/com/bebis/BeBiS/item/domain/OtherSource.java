@@ -19,4 +19,9 @@ public record OtherSource() implements Item.Source {
     public boolean allows(WowCharacter.WowClass wowClass) {
         return true;
     }
+
+    @Override
+    public boolean isRepeatable() {
+        return true;
+    }
 }

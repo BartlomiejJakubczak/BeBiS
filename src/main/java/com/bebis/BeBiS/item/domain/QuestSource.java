@@ -42,4 +42,9 @@ public record QuestSource(
     public boolean allows(WowCharacter.WowClass wowClass) {
         return allowedClasses.isEmpty() || allowedClasses.contains(wowClass);
     }
+
+    @Override
+    public boolean isRepeatable() {
+        return false; // quest rewards are inherently "one-offs"
+    }
 }

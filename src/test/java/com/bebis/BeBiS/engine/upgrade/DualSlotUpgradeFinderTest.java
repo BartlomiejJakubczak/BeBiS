@@ -1,13 +1,19 @@
 package com.bebis.BeBiS.engine.upgrade;
 
-import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
+import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.item.EquippableItemBuilder;
 import com.bebis.BeBiS.item.domain.Item;
+import com.bebis.BeBiS.item.domain.QuestSource;
+import com.bebis.BeBiS.item.domain.RewardKind;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,37 +23,47 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
+import static com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeOrchestrator.SlotUpgradeQuery;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_1;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_2;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_1;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class DualSlotUpgradeFinderTest {
 
+    private static final DualSlot RINGS = new DualSlot(FINGER_1, FINGER_2);
+    private static final DualSlot TRINKETS = new DualSlot(TRINKET_1, TRINKET_2);
+
     @Mock
-    private PowerCalculatorEngine powerCalculator;
+    private ItemScorer scorer;
 
     private DualSlotUpgradeFinder finder;
 
     private final ClassSpec classSpec = ClassSpec.ROGUE_COMBAT;
+    private final WowCharacter.Race race = WowCharacter.Race.HUMAN;
 
     @BeforeEach
     void setUp() {
-        finder = new DualSlotUpgradeFinder(powerCalculator, new UpgradeResultEvaluator());
+        finder = new DualSlotUpgradeFinder(scorer, new UpgradeResultEvaluator());
     }
 
     @Test
     void shouldSignalNoItemsAvailableResult_EmptyItemPool() {
-        // given / when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(null, null), classSpec, List.of());
+        // given
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of());
+
+        // when
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, null, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
         assertThat(result.values()).hasOnlyElementsOfType(UpgradeResult.NoItemsAvailableResult.class);
-
-        verify(powerCalculator, never()).calculate(any(Item.class), any(ClassSpec.class));
     }
 
     @Test
@@ -55,91 +71,80 @@ public class DualSlotUpgradeFinderTest {
         // given
         Item currentRing1 = EquippableItemBuilder.newRing().withBaseId(1L).build();
         Item currentRing2 = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item bestRing = EquippableItemBuilder.newRing().withBaseId(3L).withUniqueEquipped(false).build();
 
-        Item bestRing = EquippableItemBuilder.newRing()
-                .withBaseId(3L)
-                .withUniqueEquipped(false).build();
-
-        when(powerCalculator.calculate(currentRing1, classSpec)).thenReturn(21.0);
-        when(powerCalculator.calculate(currentRing2, classSpec)).thenReturn(37.0);
-        when(powerCalculator.calculate(bestRing, classSpec)).thenReturn(69.0);
-
-        List<Item> itemPool = List.of(currentRing1, currentRing2, bestRing);
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(currentRing1, 21.0, currentRing2, 37.0, bestRing, 69.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(currentRing1, currentRing2), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing1, currentRing2, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
         assertThat(result.values()).asInstanceOf(collection(UpgradeResult.UpgradeFoundResult.class))
                 .extracting(UpgradeResult.UpgradeFoundResult::item).containsExactly(bestRing, bestRing);
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
     }
 
     @Test
     void shouldSignalUpgradeFoundResult_UniqueEquippedBestItem_OtherSecondBestItem() {
         // given
-        Item currentRing1 = EquippableItemBuilder.newRing().withBaseId(1L).withInventoryType("FINGER").build();
-        Item currentRing2 = EquippableItemBuilder.newRing().withBaseId(2L).withInventoryType("FINGER").build();
-        Item secondBestRing = EquippableItemBuilder.newRing().withBaseId(3L).withInventoryType("FINGER").build();
+        Item currentRing1 = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        Item currentRing2 = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item secondBestRing = EquippableItemBuilder.newRing().withBaseId(3L).build();
+        Item bestUniqueRing = EquippableItemBuilder.newRing().withBaseId(4L).withUniqueEquipped(true).build();
 
-        Item bestUniqueRing = EquippableItemBuilder.newRing()
-                .withBaseId(4L)
-                .withUniqueEquipped(true).build();
-
-        when(powerCalculator.calculate(currentRing1, classSpec)).thenReturn(21.0);
-        when(powerCalculator.calculate(currentRing2, classSpec)).thenReturn(37.0);
-        when(powerCalculator.calculate(secondBestRing, classSpec)).thenReturn(69.0);
-        when(powerCalculator.calculate(bestUniqueRing, classSpec)).thenReturn(100.0);
-
-        List<Item> itemPool = List.of(currentRing1, currentRing2, secondBestRing, bestUniqueRing);
+        ItemPool itemPool = givenPoolScoredAs(RINGS,
+                Map.of(currentRing1, 21.0, currentRing2, 37.0, secondBestRing, 69.0, bestUniqueRing, 100.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(currentRing1, currentRing2), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing1, currentRing2, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
-        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(bestUniqueRing));
-
-        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result.get(FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(secondBestRing));
+    }
 
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
+    @Test
+    void shouldSignalUpgradeFoundResult_QuestRewardBestItem_OtherSecondBestItem() {
+        // given (Dragonslayer's Signet: a quest reward that isn't Unique, so only the quest source limits it)
+        Item currentRing = EquippableItemBuilder.newRing().withBaseId(1L).build();
+        Item secondBestRing = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item questRewardRing = EquippableItemBuilder.newRing().withBaseId(18403L).withName("Dragonslayer's Signet")
+                .withUniqueEquipped(false)
+                .withSources(new QuestSource(7491L, 60, 60, RewardKind.CHOICE, Set.of(), Set.of()))
+                .build();
+
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(currentRing, 21.0, secondBestRing, 69.0, questRewardRing, 100.0));
+
+        // when
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing, null, itemPool), classSpec, race);
+
+        // then
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(questRewardRing));
+        assertThat(result.get(FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(secondBestRing));
     }
 
     @Test
     void shouldSignalUpgradeFoundAndAlreadyBiSResult_UniqueBestItemAndEquippedCurrentRing() {
         // given
-        Item uniqueRing = EquippableItemBuilder.newRing()
-                .withBaseId(1L)
-                .withUniqueEquipped(true).build();
-        Item currentRing = EquippableItemBuilder.newRing()
-                .withBaseId(2L)
-                .withUniqueEquipped(true).build();
+        Item uniqueRing = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
+        Item currentRing = EquippableItemBuilder.newRing().withBaseId(2L).withUniqueEquipped(true).build();
 
-        when(powerCalculator.calculate(uniqueRing, classSpec)).thenReturn(69.0);
-        when(powerCalculator.calculate(currentRing, classSpec)).thenReturn(21.37);
-
-        List<Item> itemPool = List.of(currentRing, uniqueRing);
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(currentRing, 21.37, uniqueRing, 69.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(null, currentRing), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, currentRing, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
-        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(uniqueRing));
-
-        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result.get(FINGER_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(currentRing));
-
-        // no equipped items so no additional calculations
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
     }
 
     @Test
@@ -150,186 +155,156 @@ public class DualSlotUpgradeFinderTest {
         Item worseTrinket1 = EquippableItemBuilder.newRing().withBaseId(3L).withInventoryType("TRINKET").build();
         Item worseTrinket2 = EquippableItemBuilder.newRing().withBaseId(4L).withInventoryType("TRINKET").build();
 
-        when(powerCalculator.calculate(topTrinket1, classSpec)).thenReturn(69.0);
-        when(powerCalculator.calculate(topTrinket2, classSpec)).thenReturn(69.0);
-        when(powerCalculator.calculate(worseTrinket1, classSpec)).thenReturn(21.0);
-        when(powerCalculator.calculate(worseTrinket2, classSpec)).thenReturn(37.0);
-
-        List<Item> itemPool = List.of(topTrinket1, topTrinket2, worseTrinket1, worseTrinket2);
+        ItemPool itemPool = givenPoolScoredAs(TRINKETS,
+                Map.of(topTrinket1, 69.0, topTrinket2, 69.0, worseTrinket1, 21.0, worseTrinket2, 37.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentTrinketPair(topTrinket1, topTrinket2), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(TRINKETS, topTrinket1, topTrinket2, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.TRINKET_1, Equipment.Slot.TRINKET_2);
-
-        assertThat(result.get(Equipment.Slot.TRINKET_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result).containsOnlyKeys(TRINKET_1, TRINKET_2);
+        assertThat(result.get(TRINKET_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(topTrinket1));
-
-        assertThat(result.get(Equipment.Slot.TRINKET_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result.get(TRINKET_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(topTrinket2));
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
     }
 
     @Test
     void shouldSignalAlreadyBiSAndUpgradeFoundResults_UniqueBiSAndWeakerItemTheOnlyOnesInPool() {
         // given
-        Item topUniqueTrinket = EquippableItemBuilder.newRing()
-                .withBaseId(1L)
-                .withUniqueEquipped(true)
-                .build();
+        Item topUniqueTrinket = EquippableItemBuilder.newRing().withBaseId(1L).withInventoryType("TRINKET")
+                .withUniqueEquipped(true).build();
         Item otherTrinket = EquippableItemBuilder.newRing().withBaseId(2L).withInventoryType("TRINKET").build();
 
-        when(powerCalculator.calculate(topUniqueTrinket, classSpec)).thenReturn(69.0);
-        when(powerCalculator.calculate(otherTrinket, classSpec)).thenReturn(21.37);
-
-        List<Item> itemPool = List.of(topUniqueTrinket, otherTrinket);
+        ItemPool itemPool = givenPoolScoredAs(TRINKETS, Map.of(topUniqueTrinket, 69.0, otherTrinket, 21.37));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentTrinketPair(topUniqueTrinket, null), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(TRINKETS, topUniqueTrinket, null, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.TRINKET_1, Equipment.Slot.TRINKET_2);
-
-        assertThat(result.get(Equipment.Slot.TRINKET_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result).containsOnlyKeys(TRINKET_1, TRINKET_2);
+        assertThat(result.get(TRINKET_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(topUniqueTrinket));
-
-        assertThat(result.get(Equipment.Slot.TRINKET_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result.get(TRINKET_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(otherTrinket));
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
     }
 
     @Test
     void shouldSignalUpgradeFoundEvents_BothUpgradesDifferentAndUniqueEquipped() {
         // given
-        Item uniqueRing1 = EquippableItemBuilder.newRing().withBaseId(1L)
-                .withUniqueEquipped(true)
-                .build();
-        Item uniqueRing2 = EquippableItemBuilder.newRing().withBaseId(2L)
-                .withUniqueEquipped(true)
-                .build();
+        Item uniqueRing1 = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
+        Item uniqueRing2 = EquippableItemBuilder.newRing().withBaseId(2L).withUniqueEquipped(true).build();
         Item currentRing = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
-        when(powerCalculator.calculate(uniqueRing1, classSpec)).thenReturn(100.0);
-        when(powerCalculator.calculate(uniqueRing2, classSpec)).thenReturn(80.0);
-        when(powerCalculator.calculate(currentRing, classSpec)).thenReturn(70.0);
-
-        List<Item> itemPool = List.of(uniqueRing1, uniqueRing2, currentRing);
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(uniqueRing1, 100.0, uniqueRing2, 80.0, currentRing, 70.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(currentRing, null), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing, null, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
-        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(uniqueRing2));
-
-        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result.get(FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(uniqueRing1));
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
     }
 
     @Test
     void shouldAlwaysAssignItemsToSameSlots_SameTotalScoreOfCandidateItemsConfigurations() {
         // given
-        Item ring1 = EquippableItemBuilder.newRing().withBaseId(1L)
-                .withInventoryType("FINGER")
-                .withUniqueEquipped(true)
-                .build();
-        Item ring2 = EquippableItemBuilder.newRing().withBaseId(2L).withInventoryType("FINGER").build();
+        Item ring1 = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
+        Item ring2 = EquippableItemBuilder.newRing().withBaseId(2L).build();
 
-        when(powerCalculator.calculate(ring1, classSpec)).thenReturn(100.0);
-        when(powerCalculator.calculate(ring2, classSpec)).thenReturn(80.0);
-
-        List<Item> itemPool = List.of(ring1, ring2);
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(ring1, 100.0, ring2, 80.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(ring1, ring2), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, ring1, ring2, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
-        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(ring1));
-
-        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result.get(FINGER_2)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(ring2));
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
-
     }
 
     @Test
     void shouldOptimizeCandidateItemsSlotAssignment_ByTotalScoreOfACandidateConfiguration() {
         // given
-        Item bestRing = EquippableItemBuilder.newRing().withBaseId(1L)
-                .withInventoryType("FINGER")
-                .withUniqueEquipped(true)
-                .build();
-        Item worstRing = EquippableItemBuilder.newRing().withBaseId(2L).withInventoryType("FINGER").build();
-        Item otherRing = EquippableItemBuilder.newRing().withBaseId(3L).withInventoryType("FINGER").build();
+        Item bestRing = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
+        Item worstRing = EquippableItemBuilder.newRing().withBaseId(2L).build();
+        Item otherRing = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
-        when(powerCalculator.calculate(bestRing, classSpec)).thenReturn(80.0);
-        when(powerCalculator.calculate(worstRing, classSpec)).thenReturn(10.0);
-        when(powerCalculator.calculate(otherRing, classSpec)).thenReturn(50.0);
-
-        List<Item> itemPool = List.of(bestRing, worstRing, otherRing);
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(bestRing, 80.0, worstRing, 10.0, otherRing, 50.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(bestRing, worstRing), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, bestRing, worstRing, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
-        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.AlreadyBiSResult.class,
                 res -> assertThat(res.item()).isEqualTo(bestRing));
-
-        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result.get(FINGER_2)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(otherRing));
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
     }
 
     @Test
-    void shouldSignalUpgradeFoundInOneSlotAndNoItemsInOtherWhenItemPoolHasSingleUniqueEquippedItem() {
+    void shouldSignalUpgradeFoundInOneSlotAndNoItemsInOther_PoolHasSingleUniqueItem() {
         // given
-        Item uniqueRing = EquippableItemBuilder.newRing()
-                .withBaseId(1L)
-                .withUniqueEquipped(true)
-                .build();
+        Item uniqueRing = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
 
-        when(powerCalculator.calculate(uniqueRing, classSpec)).thenReturn(50.0);
-
-        List<Item> itemPool = List.of(uniqueRing);
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(uniqueRing, 50.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(getCurrentRingPair(null, null), classSpec, itemPool);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, null, itemPool), classSpec, race);
 
         // then
-        assertThat(result).containsOnlyKeys(Equipment.Slot.FINGER_1, Equipment.Slot.FINGER_2);
-
-        assertThat(result.get(Equipment.Slot.FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+        assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
                 res -> assertThat(res.item()).isEqualTo(uniqueRing));
-
-        assertThat(result.get(Equipment.Slot.FINGER_2)).isInstanceOf(UpgradeResult.NoItemsAvailableResult.class);
-
-        verify(powerCalculator, times(itemPool.size())).calculate(argThat(itemPool::contains), eq(classSpec));
+        assertThat(result.get(FINGER_2)).isInstanceOf(UpgradeResult.NoItemsAvailableResult.class);
     }
 
-    private EquippedItemPair getCurrentRingPair(Item slot1, Item slot2) {
-        return new EquippedItemPair(
-                new EquippedItemPair.Item(Equipment.Slot.FINGER_1, slot1 != null ? Optional.of(new EquippedItem(slot1, List.of())) : Optional.empty()),
-                new EquippedItemPair.Item(Equipment.Slot.FINGER_2, slot2 != null ? Optional.of(new EquippedItem(slot2, List.of())) : Optional.empty()));
+    @Test
+    void shouldSignalUpgradeFoundInOneSlotAndNoItemsInOther_PoolHasSingleQuestReward() {
+        // given
+        Item questRewardRing = EquippableItemBuilder.newRing().withBaseId(18403L).withName("Dragonslayer's Signet")
+                .withUniqueEquipped(false)
+                .withSources(new QuestSource(7491L, 60, 60, RewardKind.CHOICE, Set.of(), Set.of()))
+                .build();
+
+        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(questRewardRing, 50.0));
+
+        // when
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, null, itemPool), classSpec, race);
+
+        // then
+        assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
+                res -> assertThat(res.item()).isEqualTo(questRewardRing));
+        assertThat(result.get(FINGER_2)).isInstanceOf(UpgradeResult.NoItemsAvailableResult.class);
     }
 
-    private EquippedItemPair getCurrentTrinketPair(Item slot1, Item slot2) {
-        return new EquippedItemPair(
-                new EquippedItemPair.Item(Equipment.Slot.TRINKET_1, slot1 != null ? Optional.of(new EquippedItem(slot1, List.of())) : Optional.empty()),
-                new EquippedItemPair.Item(Equipment.Slot.TRINKET_2, slot2 != null ? Optional.of(new EquippedItem(slot2, List.of())) : Optional.empty()));
+    /**
+     * Stubs the scorer to score the returned pool with the given scores. Both slots share one pool, scored for the
+     * first slot.
+     */
+    private ItemPool givenPoolScoredAs(DualSlot slots, Map<Item, Double> scores) {
+        ItemPool itemPool = new ItemPool(List.copyOf(scores.keySet()));
+        List<ScoredItem> scoredItems = scores.entrySet().stream()
+                .map(entry -> new ScoredItem(entry.getKey(), entry.getValue()))
+                .toList();
+        when(scorer.scoreItemPool(slots.slot1(), itemPool, classSpec, race)).thenReturn(new ScoredItemPool(scoredItems));
+        return itemPool;
     }
 
+    private SlotUpgradeQuery query(DualSlot slots, Item equipped1, Item equipped2, ItemPool itemPool) {
+        EquippedItemPair currentPair = new EquippedItemPair(
+                new EquippedItemPair.Item(slots.slot1(), equipped(equipped1)),
+                new EquippedItemPair.Item(slots.slot2(), equipped(equipped2)));
+        return new SlotUpgradeQuery(slots, currentPair, itemPool);
+    }
+
+    private Optional<EquippedItem> equipped(Item item) {
+        return Optional.ofNullable(item).map(it -> new EquippedItem(it, List.of()));
+    }
 }

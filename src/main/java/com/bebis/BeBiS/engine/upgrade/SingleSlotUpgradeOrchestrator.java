@@ -1,17 +1,20 @@
 package com.bebis.BeBiS.engine.upgrade;
 
+import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
 import com.bebis.BeBiS.equipment.domain.Equipment.Slot;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
-import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 
+/**
+ * Runs the upgrade search for one isolated slot asynchronously: builds the item pool, asks
+ * {@link SingleSlotUpgradeFinder} for the result and publishes it.
+ */
 @Component
 class SingleSlotUpgradeOrchestrator {
 
@@ -31,12 +34,12 @@ class SingleSlotUpgradeOrchestrator {
     void findUpgrade(Slot slot, CharacterInfo info) {
         WowCharacter character = info.wowCharacter();
 
-        List<Item> itemPool = itemPoolProvider.getItemPool(slot, character.level(), character.race(), character.wowClass());
+        ItemPool itemPool = itemPoolProvider.getItemPool(slot, character.level(), character.race(), character.wowClass());
 
-        publisher.publish(slot, upgradeFinder.findUpgrade(new SlotUpgradeQuery(info.equipment().getItem(slot), itemPool),
-                ClassSpec.getClassSpec(character.wowClass(), info.talents())));
+        publisher.publish(slot, upgradeFinder.findUpgrade(new SlotUpgradeQuery(slot, info.equipment().getItem(slot), itemPool),
+                ClassSpec.getClassSpec(character.wowClass(), info.talents()), character.race()));
     }
 
-    record SlotUpgradeQuery(Optional<EquippedItem> currentItem, List<Item> itemPool) {
+    record SlotUpgradeQuery(Slot slot, Optional<EquippedItem> currentItem, ItemPool itemPool) {
     }
 }

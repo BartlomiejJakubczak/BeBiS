@@ -9,6 +9,10 @@ import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.stereotype.Component;
 
+/**
+ * Scores an item for a slot and character: weapons go to {@link WeaponScoreCalculator} (DPS, speed and racials depend
+ * on the slot), everything else to {@link AttributeScoreCalculator}.
+ */
 @Component
 public final class PowerCalculatorEngine {
 
@@ -26,9 +30,5 @@ public final class PowerCalculatorEngine {
             case Armor a -> attributeCalculator.calculate(a, classSpec); // could be a shield
             case EquippableItem e -> attributeCalculator.calculate(e, classSpec); // could be a holdable
         };
-    }
-
-    public double calculate(Item item, ClassSpec classSpec) {
-        return attributeCalculator.calculate(item, classSpec);
     }
 }

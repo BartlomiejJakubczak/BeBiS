@@ -1,27 +1,28 @@
 package com.bebis.BeBiS.engine.upgrade;
 
-import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
-import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
+import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
+import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
-
+/**
+ * Finds the best item for a slot that doesn't interact with any other slot (head, chest, ranged, ...).
+ */
 @Component
-final class SingleSlotUpgradeFinder extends UpgradeFinder {
+final class SingleSlotUpgradeFinder {
 
+    private final ItemScorer scorer;
     private final UpgradeResultEvaluator evaluator;
 
-    SingleSlotUpgradeFinder(PowerCalculatorEngine calculator, UpgradeResultEvaluator evaluator) {
-        super(calculator);
+    SingleSlotUpgradeFinder(ItemScorer scorer, UpgradeResultEvaluator evaluator) {
+        this.scorer = scorer;
         this.evaluator = evaluator;
     }
 
-    UpgradeResult findUpgrade(SingleSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec) {
-        List<ScoredItem> scoredItems = scoreAndSortItems(query.itemPool(), classSpec);
-        return evaluator.evaluateUpgradeResult(extractEquippedItemFromPool(query.currentItem(), scoredItems), scoredItems.stream().findFirst());
+    UpgradeResult findUpgrade(SingleSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
+        ScoredItemPool scoredItems = scorer.scoreItemPool(query.slot(), query.itemPool(), classSpec, race);
+        return evaluator.evaluateUpgradeResult(scoredItems.getEquippedItem(query.currentItem()), scoredItems.bestItem());
     }
 
 }

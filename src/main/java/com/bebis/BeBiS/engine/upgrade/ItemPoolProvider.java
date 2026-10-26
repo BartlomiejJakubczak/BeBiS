@@ -1,5 +1,6 @@
 package com.bebis.BeBiS.engine.upgrade;
 
+import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.ItemQueryService;
 import com.bebis.BeBiS.item.domain.Item;
@@ -30,14 +31,20 @@ class ItemPoolProvider {
     /**
      * @return items for the slot that a character of this level, race and class can equip and obtain, unsorted
      */
-    public List<Item> getItemPool(Equipment.Slot slot, int level, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
+    public ItemPool getItemPool(Equipment.Slot slot, int level, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
         ClassItemTypeCapabilitiesResolver.ClassItemTypeCapabilities eligibleItemTypes = itemTypeResolver.getCapabilitiesFor(wowClass, level); // what the class is able to equip for given level
 
         ItemQueryService.ItemSearchCriteria criteria = new ItemQueryService.ItemSearchCriteria(slotMatcher.matchSlotToItemTypes(slot),
                 eligibleItemTypes.eligibleArmor(), eligibleItemTypes.eligibleWeapons(), wowClass, level);
 
-        return itemQueryService.findAll(criteria).stream()
-                .filter((it) -> it.isObtainableBy(race) && it.isObtainableBy(wowClass) && it.isEquippableBy(wowClass))
+        List<Item> itemPool = itemQueryService.findAll(criteria).stream()
+                .filter((it) -> isItemEligibleFor(it, race, wowClass))
                 .toList();
+
+        return new ItemPool(itemPool);
+    }
+
+    private boolean isItemEligibleFor(Item item, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
+        return item.isObtainableBy(race) && item.isObtainableBy(wowClass) && item.isEquippableBy(wowClass);
     }
 }

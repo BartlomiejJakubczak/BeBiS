@@ -58,6 +58,23 @@ public class PowerCalculatorEngineTest {
     }
 
     @Test
+    void shouldDelegateRangedWeaponCalculationToWeaponCalculator() {
+        // Given (ranged weapons need the slot too, for DPS, speed and ranged racials)
+        Weapon bow = WeaponBuilder.newRanged().build();
+        Equipment.Slot slot = Equipment.Slot.RANGED;
+        ClassSpec classSpec = ClassSpec.HUNTER_MARKSMANSHIP;
+        WowCharacter.Race race = WowCharacter.Race.NIGHT_ELF;
+
+        when(weaponCalculator.calculate(slot, bow, classSpec, race)).thenReturn(120.0);
+
+        // When
+        double score = calculator.calculate(slot, bow, classSpec, race);
+
+        // Then
+        assertThat(score).isEqualTo(120.0);
+    }
+
+    @Test
     void shouldDelegateArmorCalculationToAttributeCalculator() {
         // Given
         Armor armor = ArmorBuilder.newShield().build();
@@ -84,7 +101,7 @@ public class PowerCalculatorEngineTest {
         when(attributeCalculator.calculate(any(EquippableItem.class), eq(classSpec))).thenReturn(60.0);
 
         // When
-        double score = calculator.calculate(ring, classSpec);
+        double score = calculator.calculate(Equipment.Slot.FINGER_1, ring, classSpec, WowCharacter.Race.HUMAN);
 
         // Then
         assertThat(score).isEqualTo(60.0);

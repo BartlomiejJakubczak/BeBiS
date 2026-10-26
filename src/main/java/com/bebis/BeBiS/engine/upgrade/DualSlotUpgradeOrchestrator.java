@@ -2,18 +2,21 @@ package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
-import com.bebis.BeBiS.item.domain.Item;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
 
+/**
+ * Runs the upgrade search for a pair of interchangeable slots (rings, trinkets) asynchronously and publishes one result
+ * per slot.
+ */
 @Component
 class DualSlotUpgradeOrchestrator {
 
@@ -33,12 +36,16 @@ class DualSlotUpgradeOrchestrator {
         WowCharacter character = info.wowCharacter();
 
         // both paired slots go to the same InventoryType, hence the same itemPool for both slots
-        List<Item> itemPool = itemPoolProvider.getItemPool(slots.slot1(), character.level(), character.race(), character.wowClass());
+        ItemPool itemPool = itemPoolProvider.getItemPool(slots.slot1(), character.level(), character.race(), character.wowClass());
 
-        Map<Equipment.Slot, UpgradeResult> results = upgradeFinder.findUpgrades(EquippedItemPair.from(slots, info.equipment()),
-                ClassSpec.getClassSpec(character.wowClass(), info.talents()), itemPool);
+        SlotUpgradeQuery query = new SlotUpgradeQuery(slots, EquippedItemPair.from(slots, info.equipment()), itemPool);
+
+        Map<Equipment.Slot, UpgradeResult> results = upgradeFinder.findUpgrades(query,
+                ClassSpec.getClassSpec(character.wowClass(), info.talents()), character.race());
 
         results.forEach(publisher::publish);
     }
 
+    record SlotUpgradeQuery(DualSlot slots, EquippedItemPair currentPair, ItemPool itemPool) {
+    }
 }

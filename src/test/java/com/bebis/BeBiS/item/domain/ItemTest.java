@@ -55,6 +55,28 @@ class ItemTest {
         );
     }
 
+    @ParameterizedTest
+    @MethodSource("copyLimits")
+    void shouldBeEquippableOnce_WhenUniqueOrObtainableOnlyOnce(boolean unique, Set<Item.Source> sources, boolean expected) {
+        // given
+        Item item = EquippableItemBuilder.newRing().withUniqueEquipped(unique).withSources(sources.toArray(Item.Source[]::new)).build();
+
+        // when / then
+        assertThat(item.isEquippableOnce()).isEqualTo(expected);
+    }
+
+    static Stream<Arguments> copyLimits() {
+        return Stream.of(
+                Arguments.of(false, Set.of(), false), // sources unknown: assume repeatable
+                Arguments.of(true, Set.of(), true),
+                Arguments.of(true, Set.of(new OtherSource()), true), // Unique wins over a repeatable source
+                Arguments.of(false, Set.of(quest(1, Set.of(), Set.of())), true),
+                Arguments.of(false, Set.of(quest(1, Set.of(), ALLIANCE), quest(2, Set.of(), HORDE)), true), // mirrors (A1)
+                Arguments.of(false, Set.of(new OtherSource()), false),
+                Arguments.of(false, Set.of(quest(1, Set.of(), Set.of()), new OtherSource()), true) // conservative (A3)
+        );
+    }
+
     private static QuestSource quest(long questId, Set<WowClass> classes, Set<Race> races) {
         return new QuestSource(questId, 40, 30, RewardKind.CHOICE, classes, races);
     }
