@@ -7,6 +7,7 @@ import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
+import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -42,8 +43,8 @@ final class HandSlotUpgradeFinder {
         ScoredItemPool scoredMainHands = scorer.scoreItemPool(MAIN_HAND, itemPools.mainHandPool(), context.classSpec(), context.race());
         ScoredItemPool scoredOffHands = scorer.scoreItemPool(OFF_HAND, itemPools.offHandPool(), context.classSpec(), context.race());
 
-        SlotPair equipped = new SlotPair(scoredMainHands.getEquippedItem(currentPair.slot1().equippedItem()),
-                scoredOffHands.getEquippedItem(currentPair.slot2().equippedItem()));
+        SlotPair equipped = new SlotPair(currentPair.slot1().equippedItem().map(EquippedItem::item).flatMap(scoredMainHands::findItem),
+                currentPair.slot2().equippedItem().map(EquippedItem::item).flatMap(scoredOffHands::findItem));
 
         Optional<SlotPair> bestCandidatePair = resolveComboWinner(equipped, evaluateCombos(combos, scoredMainHands, scoredOffHands));
 
@@ -56,8 +57,8 @@ final class HandSlotUpgradeFinder {
 
     private List<SlotPair> evaluateCombos(HandSlotCombinations combos, ScoredItemPool mainHandPool, ScoredItemPool offHandPool) {
         return combos.validHandSlotTypes().stream().map((types) -> {
-            ScoredItemPool prunedMainHands = mainHandPool.extract(types.mainHand());
-            ScoredItemPool prunedOffHands = offHandPool.extract(types.offHand());
+            ScoredItemPool prunedMainHands = mainHandPool.restrictedTo(types.mainHand());
+            ScoredItemPool prunedOffHands = offHandPool.restrictedTo(types.offHand());
 
             return mapCandidatePairs(prunedMainHands, prunedOffHands);
         }).flatMap(Collection::stream).toList();

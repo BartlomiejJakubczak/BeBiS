@@ -5,6 +5,7 @@ import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
+import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.stereotype.Component;
@@ -33,8 +34,8 @@ final class DualSlotUpgradeFinder {
     Map<Equipment.Slot, UpgradeResult> findUpgrades(DualSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
         ScoredItemPool itemPool = scorer.scoreItemPool(query.slots().slot1(), query.itemPool(), classSpec, race);
 
-        SlotPair equipped = new SlotPair(itemPool.getEquippedItem(query.currentPair().slot1().equippedItem()),
-                itemPool.getEquippedItem(query.currentPair().slot2().equippedItem()));
+        SlotPair equipped = new SlotPair(query.currentPair().slot1().equippedItem().map(EquippedItem::item).flatMap(itemPool::findItem),
+                query.currentPair().slot2().equippedItem().map(EquippedItem::item).flatMap(itemPool::findItem));
 
         Optional<SlotPair> bestCandidatePair = pickBestPair(equipped, mapCandidatePairs(itemPool));
 

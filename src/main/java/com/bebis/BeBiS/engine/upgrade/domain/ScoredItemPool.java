@@ -1,6 +1,5 @@
 package com.bebis.BeBiS.engine.upgrade.domain;
 
-import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.item.domain.Item;
 
 import java.util.Comparator;
@@ -26,16 +25,16 @@ public record ScoredItemPool(List<ScoredItem> items) {
     }
 
     /**
-     * @return the pool's scored entry for the equipped item, empty if the slot is empty or the item isn't a candidate
+     * @return the pool's scored entry for the given item, empty if the item isn't a candidate
      */
-    public Optional<ScoredItem> getEquippedItem(Optional<EquippedItem> equippedItem) {
-        return equippedItem.flatMap(item -> items.stream().filter(it -> it.item().equals(item.item())).findFirst());
+    public Optional<ScoredItem> findItem(Item item) {
+        return items.stream().filter(it -> it.item().equals(item)).findFirst();
     }
 
     /**
      * @return a new pool with only the items of these inventory types, still ordered
      */
-    public ScoredItemPool extract(List<Item.InventoryType> targetTypes) {
+    public ScoredItemPool restrictedTo(List<Item.InventoryType> targetTypes) {
         return new ScoredItemPool(items.stream().filter((it) -> targetTypes.contains(it.item().getMetadata().inventoryType())).toList());
     }
 }

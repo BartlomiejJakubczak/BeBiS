@@ -34,7 +34,7 @@ class SingleSlotUpgradeOrchestrator {
     void findUpgrade(Slot slot, CharacterInfo info) {
         WowCharacter character = info.wowCharacter();
 
-        ItemPool itemPool = itemPoolProvider.getItemPool(slot, character.level(), character.race(), character.wowClass());
+        ItemPool itemPool = itemPoolProvider.getItemPool(slot, new ItemPoolProvider.Query(character.level(), character.race(), character.wowClass()));
 
         publisher.publish(slot, upgradeFinder.findUpgrade(new SlotUpgradeQuery(slot, info.equipment().getItem(slot), itemPool),
                 ClassSpec.getClassSpec(character.wowClass(), info.talents()), character.race()));

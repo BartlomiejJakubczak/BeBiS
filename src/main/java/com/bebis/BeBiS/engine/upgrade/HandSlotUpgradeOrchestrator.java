@@ -37,25 +37,23 @@ class HandSlotUpgradeOrchestrator {
 
     @Async
     void findUpgrades(DualSlot slots, CharacterInfo info) {
-        // TODO itemPoolProvider accept DualSlot and return a record of both pools (WeaponItemPools???)?
-        CharacterQuery query = new CharacterQuery(info.wowCharacter().wowClass(), info.wowCharacter().race(), info.wowCharacter().level());
+        WowCharacter character = info.wowCharacter();
+        ItemPoolProvider.Query providerQuery = new ItemPoolProvider.Query(character.level(), character.race(),
+                character.wowClass());
 
-        ItemPool mainHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.MAIN_HAND, query.level(), query.race(), query.wowClass());
-        ItemPool offHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.OFF_HAND, query.level(), query.race(), query.wowClass());
+        ItemPool mainHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.MAIN_HAND, providerQuery);
+        ItemPool offHandItemPool = itemPoolProvider.getItemPool(Equipment.Slot.OFF_HAND, providerQuery);
 
         EquippedItemPair itemPair = EquippedItemPair.from(slots, info.equipment());
         HandSlotItemPools itemPools = new HandSlotItemPools(mainHandItemPool, offHandItemPool);
-        HandSlotCombinations combos = registry.getHandSlotCombinationFor(query.wowClass(), query.level());
-        CharacterContext context = new CharacterContext(ClassSpec.getClassSpec(query.wowClass(), info.talents()), info.wowCharacter().race());
+        HandSlotCombinations combos = registry.getHandSlotCombinationFor(character.wowClass(), character.level());
+        CharacterContext context = new CharacterContext(ClassSpec.getClassSpec(character.wowClass(), info.talents()), character.race());
 
         Map<Equipment.Slot, UpgradeResult> results = finder.findUpgrades(itemPair, context, combos, itemPools);
 
         results.forEach(publisher::publish);
     }
-
-    record CharacterQuery(WowCharacter.WowClass wowClass, WowCharacter.Race race, int level) {
-    }
-
+    
     record CharacterContext(ClassSpec classSpec, WowCharacter.Race race) {
     }
 

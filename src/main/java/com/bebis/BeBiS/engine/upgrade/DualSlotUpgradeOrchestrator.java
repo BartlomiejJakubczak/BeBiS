@@ -36,7 +36,7 @@ class DualSlotUpgradeOrchestrator {
         WowCharacter character = info.wowCharacter();
 
         // both paired slots go to the same InventoryType, hence the same itemPool for both slots
-        ItemPool itemPool = itemPoolProvider.getItemPool(slots.slot1(), character.level(), character.race(), character.wowClass());
+        ItemPool itemPool = itemPoolProvider.getItemPool(slots.slot1(), new ItemPoolProvider.Query(character.level(), character.race(), character.wowClass()));
 
         SlotUpgradeQuery query = new SlotUpgradeQuery(slots, EquippedItemPair.from(slots, info.equipment()), itemPool);
 

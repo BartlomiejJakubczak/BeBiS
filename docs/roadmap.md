@@ -23,12 +23,22 @@ several mapping bugs and a missing class restriction, which are fixed first (ste
 | 3d | `EquipmentService` split into `syncEquipment` + `getEquipmentForCharacter`; `CharacterProfileOrchestrator.selectCharacter(WowCharacter.Id)` throws `CharacterNotFoundException`; `WowCharacter.Id` includes the account | ✅ `8a2f185` |
 | 3b | Quest min level as the level gate (`QuestSource.minLevel` in `isObtainableBy`) | ⏳ |
 | 3e | Export the quest giver's faction and `ExclusiveGroup`: fixes the race filter, lets us verify A1 | ⏳ new (see Findings) |
-| 4–6 | `Item.isEquippableOnce` (Unique or one-time source), `SlotPair.areSameOnceEquippables` in both pair finders, quest-reward tests incl. an Outlaw Sabre IT on the real seed | ✅ (commit after `8a2f185`) |
-| — | `UpgradeFinder` base class → composition: `ItemScorer` + self-ordering `ScoredItemPool`; fixed RANGED scoring | ✅ same commit |
+| 4–6 | `Item.isEquippableOnce` (Unique or one-time source), `SlotPair.areSameOnceEquippables` in both pair finders, quest-reward tests incl. an Outlaw Sabre IT on the real seed | ✅ `03a01f3` |
+| — | `UpgradeFinder` base class → composition: `ItemScorer` + self-ordering `ScoredItemPool`; fixed RANGED scoring | ✅ `03a01f3` |
 
-**Next session:** the user's `HandSlotUpgradeOrchestrator` TODO (pools for both hands from `ItemPoolProvider`), then
-decide the next phase. Leading candidate: a way to measure the engine's accuracy (see Backlog). Open with "read the
-plan".
+**Next session:** user reviews `03a01f3` (`git show`), then works from small to heavy (order agreed 2026-10-26):
+1. 🔧 Refactors. Done: `findItem(Item)` with the `Optional` kept outside, `restrictedTo`, `ScoredItem.isSameItemAs`,
+   `sameItem` via `Optional` chaining, `ItemPoolProvider.Query` (the TODO was dropped: two calls for two pools is
+   honest). Next: split `DualSlot` into interchangeable slots (rings, trinkets) vs complementary slots (hands),
+   rename the finders to match, move the slot groups out of `UpgradeFinderService` into the domain, drop the
+   `Optional` parameter from `ClassSpec.getClassSpec`, and remove the `SlotUpgradeQuery` duplication.
+2. 3b: quest min level as the level gate (data already in the seed).
+3. Accuracy benchmark v1 (closed-world, see Backlog) for a baseline number.
+4. One VMaNGOS session: the 3e export (giver faction, `ExclusiveGroup`) and the equip spell → stat table.
+5. Map flat-stat equip spells, then re-run the benchmark to measure the gain.
+6. Re-plan. Remember that upgrade results aren't consumed by anything yet.
+
+Open with "read the plan".
 
 ## Current: quest-reward feature
 
@@ -184,6 +194,22 @@ Assumptions the design depends on, each with how it's verified. Wrong ones shoul
 - ArchUnit tests that enforce boundaries, e.g. `engine` must not depend on `item.jpa`, and only the `item` package may
   use `ItemMapper`.
 - Names that say what a class does, e.g. split `EquipmentService.getEquipmentForCharacter` into sync and read.
+
+**Measuring accuracy (options, 2026-10-26; the user picks)**
+- Keep two questions apart. *Correctness*: does the engine obey the game's rules? Tests and properties answer that.
+  *Accuracy*: are its rankings right? Only an outside reference can answer that.
+- Correctness: property-based tests (jqwik), e.g. more of a weighted stat never lowers a score, shuffling the pool
+  never changes the result, a suggestion is always equippable and obtainable, never two of an item that can be worn
+  once.
+- Accuracy, cheapest first:
+  - **Closed-world benchmark** against published pre-raid BiS lists: per spec and slot, put the listed items in the
+    pool and measure top-1 / top-3 hits. Report it as a score with a minimum that only goes up, not as pass/fail.
+  - **Approval snapshots** of real characters' results, so changes show up as reviewed diffs (catches regressions, not
+    accuracy).
+  - **Simulation reference**: compare stat weights or rankings with a community sim (Spearman rank correlation).
+    Most work, highest fidelity.
+- Known blind spots any benchmark will mostly measure: equip spells and procs aren't scored, weights are linear
+  (no hit cap), no set bonuses, and the pool only holds items someone has synced (the catalog-seeding feature).
 
 **Future features**
 - Item catalog seeding (dungeon/raid/profession gear) so unseen items can be suggested. A hybrid approach: the catalog

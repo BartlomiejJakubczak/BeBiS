@@ -29,19 +29,23 @@ class ItemPoolProvider {
     }
 
     /**
-     * @return items for the slot that a character of this level, race and class can equip and obtain, unsorted
+     * @return items for the slot that a character of this query can equip and obtain, unsorted
      */
-    public ItemPool getItemPool(Equipment.Slot slot, int level, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
-        ClassItemTypeCapabilitiesResolver.ClassItemTypeCapabilities eligibleItemTypes = itemTypeResolver.getCapabilitiesFor(wowClass, level); // what the class is able to equip for given level
+    public ItemPool getItemPool(Equipment.Slot slot, Query query) {
+        ClassItemTypeCapabilitiesResolver.ClassItemTypeCapabilities eligibleItemTypes =
+                itemTypeResolver.getCapabilitiesFor(query.wowClass(), query.level()); // what the class is able to equip for given level
 
         ItemQueryService.ItemSearchCriteria criteria = new ItemQueryService.ItemSearchCriteria(slotMatcher.matchSlotToItemTypes(slot),
-                eligibleItemTypes.eligibleArmor(), eligibleItemTypes.eligibleWeapons(), wowClass, level);
+                eligibleItemTypes.eligibleArmor(), eligibleItemTypes.eligibleWeapons(), query.wowClass(), query.level());
 
         List<Item> itemPool = itemQueryService.findAll(criteria).stream()
-                .filter((it) -> isItemEligibleFor(it, race, wowClass))
+                .filter((it) -> isItemEligibleFor(it, query.race(), query.wowClass()))
                 .toList();
 
         return new ItemPool(itemPool);
+    }
+
+    public record Query(int level, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
     }
 
     private boolean isItemEligibleFor(Item item, WowCharacter.Race race, WowCharacter.WowClass wowClass) {

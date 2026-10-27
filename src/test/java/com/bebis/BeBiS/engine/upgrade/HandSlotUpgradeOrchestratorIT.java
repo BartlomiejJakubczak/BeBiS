@@ -125,8 +125,8 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                     .containsExactly(tuple(OFF_HAND, powerfulEligibleTwoHand));
         });
 
-        verify(itemPoolProvider).getItemPool(eq(MAIN_HAND), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
-        verify(itemPoolProvider).getItemPool(eq(OFF_HAND), eq(wowCharacter.level()), eq(wowCharacter.race()), eq(wowCharacter.wowClass()));
+        verify(itemPoolProvider).getItemPool(eq(MAIN_HAND), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
+        verify(itemPoolProvider).getItemPool(eq(OFF_HAND), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
     }
 
     @Test

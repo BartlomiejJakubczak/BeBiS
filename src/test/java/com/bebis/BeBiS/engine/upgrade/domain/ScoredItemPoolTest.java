@@ -1,6 +1,5 @@
 package com.bebis.BeBiS.engine.upgrade.domain;
 
-import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.item.ArmorBuilder;
 import com.bebis.BeBiS.item.EquippableItemBuilder;
 import com.bebis.BeBiS.item.WeaponBuilder;
@@ -65,33 +64,24 @@ class ScoredItemPoolTest {
     }
 
     @Test
-    void shouldFindScoredVersionOfEquippedItem_WhenItIsInPool() {
+    void shouldFindScoredVersionOfItem_WhenItIsInPool() {
         // given
         ScoredItemPool pool = new ScoredItemPool(List.of(new ScoredItem(ring1, 21.0), new ScoredItem(ring2, 37.0)));
 
         // when
-        Optional<ScoredItem> result = pool.getEquippedItem(Optional.of(new EquippedItem(ring1, List.of())));
+        Optional<ScoredItem> result = pool.findItem(ring1);
 
         // then
         assertThat(result).contains(new ScoredItem(ring1, 21.0));
     }
 
     @Test
-    void shouldFindNothing_WhenEquippedItemIsNotInPool() {
+    void shouldFindNothing_WhenItemIsNotInPool() {
         // given
         ScoredItemPool pool = new ScoredItemPool(List.of(new ScoredItem(ring2, 37.0)));
 
         // when / then
-        assertThat(pool.getEquippedItem(Optional.of(new EquippedItem(ring1, List.of())))).isEmpty();
-    }
-
-    @Test
-    void shouldFindNothing_WhenSlotIsEmpty() {
-        // given
-        ScoredItemPool pool = new ScoredItemPool(List.of(new ScoredItem(ring1, 21.0)));
-
-        // when / then
-        assertThat(pool.getEquippedItem(Optional.empty())).isEmpty();
+        assertThat(pool.findItem(ring1)).isEmpty();
     }
 
     @Test
@@ -105,10 +95,10 @@ class ScoredItemPoolTest {
                 new ScoredItem(sword, 10.0), new ScoredItem(shield, 90.0), new ScoredItem(otherSword, 50.0)));
 
         // when
-        ScoredItemPool weapons = pool.extract(List.of(WEAPON));
+        ScoredItemPool weapons = pool.restrictedTo(List.of(WEAPON));
 
         // then
         assertThat(weapons.items()).extracting(ScoredItem::item).containsExactly(otherSword, sword);
-        assertThat(pool.extract(List.of(SHIELD)).items()).extracting(ScoredItem::item).containsExactly(shield);
+        assertThat(pool.restrictedTo(List.of(SHIELD)).items()).extracting(ScoredItem::item).containsExactly(shield);
     }
 }

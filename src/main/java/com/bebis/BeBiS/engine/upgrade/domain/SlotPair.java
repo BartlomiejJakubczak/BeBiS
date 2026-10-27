@@ -41,9 +41,7 @@ public record SlotPair(Optional<ScoredItem> slot1, Optional<ScoredItem> slot2) {
                 + sameItem(this.slot2(), equipped.slot2()).map(it -> 1).orElse(0);
     }
 
-    private Optional<Item> sameItem(Optional<ScoredItem> a, Optional<ScoredItem> b) {
-        return a.isPresent() && b.isPresent() && a.get().item().equals(b.get().item())
-                ? Optional.of(a.get().item())
-                : Optional.empty();
+    private Optional<Item> sameItem(Optional<ScoredItem> slot1, Optional<ScoredItem> slot2) {
+        return slot1.flatMap(it1 -> slot2.filter(it1::isSameItemAs)).map(ScoredItem::item);
     }
 }

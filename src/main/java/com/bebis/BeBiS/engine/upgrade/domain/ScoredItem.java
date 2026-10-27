@@ -4,4 +4,7 @@ import com.bebis.BeBiS.item.domain.Item;
 
 public record ScoredItem(Item item, double score) {
 
+    public boolean isSameItemAs(ScoredItem s) {
+        return item.equals(s.item());
+    }
 }
