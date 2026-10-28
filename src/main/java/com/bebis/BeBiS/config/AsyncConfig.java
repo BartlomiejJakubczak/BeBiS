@@ -1,9 +1,11 @@
 package com.bebis.BeBiS.config;
 
+import org.springframework.context.annotation.AdviceMode;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @Configuration
-@EnableAsync
+@EnableAsync(mode = AdviceMode.PROXY, proxyTargetClass = true)
+// proxyTargetClass = true makes Spring use CGLIB proxies (subclassing)
 public class AsyncConfig {
 }

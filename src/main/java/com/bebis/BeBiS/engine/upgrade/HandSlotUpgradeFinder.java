@@ -43,8 +43,8 @@ final class HandSlotUpgradeFinder {
         ScoredItemPool scoredMainHands = scorer.scoreItemPool(MAIN_HAND, itemPools.mainHandPool(), context.classSpec(), context.race());
         ScoredItemPool scoredOffHands = scorer.scoreItemPool(OFF_HAND, itemPools.offHandPool(), context.classSpec(), context.race());
 
-        SlotPair equipped = new SlotPair(currentPair.slot1().equippedItem().map(EquippedItem::item).flatMap(scoredMainHands::findItem),
-                currentPair.slot2().equippedItem().map(EquippedItem::item).flatMap(scoredOffHands::findItem));
+        SlotPair equipped = new SlotPair(currentPair.slot1().map(EquippedItem::item).flatMap(scoredMainHands::findItem),
+                currentPair.slot2().map(EquippedItem::item).flatMap(scoredOffHands::findItem));
 
         Optional<SlotPair> bestCandidatePair = resolveComboWinner(equipped, evaluateCombos(combos, scoredMainHands, scoredOffHands));
 

@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.bebis.BeBiS.engine.upgrade.SingleSlotUpgradeOrchestrator.SlotUpgradeQuery;
+import static com.bebis.BeBiS.engine.upgrade.IsolatedSlotUpgradeOrchestrator.SlotUpgradeQuery;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.CHEST;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.RANGED;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,12 +33,12 @@ import static org.assertj.core.api.InstanceOfAssertFactories.type;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class SingleSlotUpgradeFinderTest {
+public class IsolatedSlotUpgradeFinderTest {
 
     @Mock
     private ItemScorer scorer;
 
-    private SingleSlotUpgradeFinder finder;
+    private IsolatedSlotUpgradeFinder finder;
 
     // test data
     private final ClassSpec classSpec = ClassSpec.ROGUE_COMBAT;
@@ -46,7 +46,7 @@ public class SingleSlotUpgradeFinderTest {
 
     @BeforeEach
     void setup() {
-        finder = new SingleSlotUpgradeFinder(scorer, new UpgradeResultEvaluator());
+        finder = new IsolatedSlotUpgradeFinder(scorer, new UpgradeResultEvaluator());
     }
 
     @Test

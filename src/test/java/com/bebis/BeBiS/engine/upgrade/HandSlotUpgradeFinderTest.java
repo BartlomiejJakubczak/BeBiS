@@ -317,10 +317,11 @@ public class HandSlotUpgradeFinderTest {
     }
 
     private EquippedItemPair getHandSlotsEquippedPair(Item mainHand, Item offHand) {
-        return new EquippedItemPair(
-                new EquippedItemPair.Item(MAIN_HAND, mainHand != null ? Optional.of(new EquippedItem(mainHand, List.of())) : Optional.empty()),
-                new EquippedItemPair.Item(OFF_HAND, offHand != null ? Optional.of(new EquippedItem(offHand, List.of())) : Optional.empty())
-        );
+        return new EquippedItemPair(equipped(mainHand), equipped(offHand));
+    }
+
+    private Optional<EquippedItem> equipped(Item item) {
+        return Optional.ofNullable(item).map(it -> new EquippedItem(it, List.of()));
     }
 
     private Weapon createPowerfulTwoHandSword() {

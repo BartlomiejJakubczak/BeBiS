@@ -1,7 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
-import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
+import com.bebis.BeBiS.engine.upgrade.domain.InterchangeableSlots;
 import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
@@ -25,41 +25,34 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.bebis.BeBiS.engine.upgrade.DualSlotUpgradeOrchestrator.SlotUpgradeQuery;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_1;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_2;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_1;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_2;
+import static com.bebis.BeBiS.engine.upgrade.InterchangeableSlotsUpgradeOrchestrator.SlotUpgradeQuery;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class DualSlotUpgradeFinderTest {
-
-    private static final DualSlot RINGS = new DualSlot(FINGER_1, FINGER_2);
-    private static final DualSlot TRINKETS = new DualSlot(TRINKET_1, TRINKET_2);
-
+public class InterchangeableSlotUpgradeFinderTest {
     @Mock
     private ItemScorer scorer;
 
-    private DualSlotUpgradeFinder finder;
+    private InterchangeableSlotUpgradeFinder finder;
 
     private final ClassSpec classSpec = ClassSpec.ROGUE_COMBAT;
     private final WowCharacter.Race race = WowCharacter.Race.HUMAN;
 
     @BeforeEach
     void setUp() {
-        finder = new DualSlotUpgradeFinder(scorer, new UpgradeResultEvaluator());
+        finder = new InterchangeableSlotUpgradeFinder(scorer, new UpgradeResultEvaluator());
     }
 
     @Test
     void shouldSignalNoItemsAvailableResult_EmptyItemPool() {
         // given
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of());
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of());
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, null, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, null, null, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -73,10 +66,10 @@ public class DualSlotUpgradeFinderTest {
         Item currentRing2 = EquippableItemBuilder.newRing().withBaseId(2L).build();
         Item bestRing = EquippableItemBuilder.newRing().withBaseId(3L).withUniqueEquipped(false).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(currentRing1, 21.0, currentRing2, 37.0, bestRing, 69.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(currentRing1, 21.0, currentRing2, 37.0, bestRing, 69.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing1, currentRing2, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, currentRing1, currentRing2, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -92,11 +85,11 @@ public class DualSlotUpgradeFinderTest {
         Item secondBestRing = EquippableItemBuilder.newRing().withBaseId(3L).build();
         Item bestUniqueRing = EquippableItemBuilder.newRing().withBaseId(4L).withUniqueEquipped(true).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS,
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS,
                 Map.of(currentRing1, 21.0, currentRing2, 37.0, secondBestRing, 69.0, bestUniqueRing, 100.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing1, currentRing2, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, currentRing1, currentRing2, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -116,10 +109,10 @@ public class DualSlotUpgradeFinderTest {
                 .withSources(new QuestSource(7491L, 60, 60, RewardKind.CHOICE, Set.of(), Set.of()))
                 .build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(currentRing, 21.0, secondBestRing, 69.0, questRewardRing, 100.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(currentRing, 21.0, secondBestRing, 69.0, questRewardRing, 100.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing, null, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, currentRing, null, itemPool), classSpec, race);
 
         // then
         assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
@@ -134,10 +127,10 @@ public class DualSlotUpgradeFinderTest {
         Item uniqueRing = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
         Item currentRing = EquippableItemBuilder.newRing().withBaseId(2L).withUniqueEquipped(true).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(currentRing, 21.37, uniqueRing, 69.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(currentRing, 21.37, uniqueRing, 69.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, currentRing, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, null, currentRing, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -155,11 +148,11 @@ public class DualSlotUpgradeFinderTest {
         Item worseTrinket1 = EquippableItemBuilder.newRing().withBaseId(3L).withInventoryType("TRINKET").build();
         Item worseTrinket2 = EquippableItemBuilder.newRing().withBaseId(4L).withInventoryType("TRINKET").build();
 
-        ItemPool itemPool = givenPoolScoredAs(TRINKETS,
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.TRINKETS,
                 Map.of(topTrinket1, 69.0, topTrinket2, 69.0, worseTrinket1, 21.0, worseTrinket2, 37.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(TRINKETS, topTrinket1, topTrinket2, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.TRINKETS, topTrinket1, topTrinket2, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(TRINKET_1, TRINKET_2);
@@ -176,10 +169,10 @@ public class DualSlotUpgradeFinderTest {
                 .withUniqueEquipped(true).build();
         Item otherTrinket = EquippableItemBuilder.newRing().withBaseId(2L).withInventoryType("TRINKET").build();
 
-        ItemPool itemPool = givenPoolScoredAs(TRINKETS, Map.of(topUniqueTrinket, 69.0, otherTrinket, 21.37));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.TRINKETS, Map.of(topUniqueTrinket, 69.0, otherTrinket, 21.37));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(TRINKETS, topUniqueTrinket, null, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.TRINKETS, topUniqueTrinket, null, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(TRINKET_1, TRINKET_2);
@@ -196,10 +189,10 @@ public class DualSlotUpgradeFinderTest {
         Item uniqueRing2 = EquippableItemBuilder.newRing().withBaseId(2L).withUniqueEquipped(true).build();
         Item currentRing = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(uniqueRing1, 100.0, uniqueRing2, 80.0, currentRing, 70.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(uniqueRing1, 100.0, uniqueRing2, 80.0, currentRing, 70.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, currentRing, null, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, currentRing, null, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -215,10 +208,10 @@ public class DualSlotUpgradeFinderTest {
         Item ring1 = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
         Item ring2 = EquippableItemBuilder.newRing().withBaseId(2L).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(ring1, 100.0, ring2, 80.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(ring1, 100.0, ring2, 80.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, ring1, ring2, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, ring1, ring2, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -235,10 +228,10 @@ public class DualSlotUpgradeFinderTest {
         Item worstRing = EquippableItemBuilder.newRing().withBaseId(2L).build();
         Item otherRing = EquippableItemBuilder.newRing().withBaseId(3L).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(bestRing, 80.0, worstRing, 10.0, otherRing, 50.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(bestRing, 80.0, worstRing, 10.0, otherRing, 50.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, bestRing, worstRing, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, bestRing, worstRing, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -253,10 +246,10 @@ public class DualSlotUpgradeFinderTest {
         // given
         Item uniqueRing = EquippableItemBuilder.newRing().withBaseId(1L).withUniqueEquipped(true).build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(uniqueRing, 50.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(uniqueRing, 50.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, null, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, null, null, itemPool), classSpec, race);
 
         // then
         assertThat(result).containsOnlyKeys(FINGER_1, FINGER_2);
@@ -273,10 +266,10 @@ public class DualSlotUpgradeFinderTest {
                 .withSources(new QuestSource(7491L, 60, 60, RewardKind.CHOICE, Set.of(), Set.of()))
                 .build();
 
-        ItemPool itemPool = givenPoolScoredAs(RINGS, Map.of(questRewardRing, 50.0));
+        ItemPool itemPool = givenPoolScoredAs(InterchangeableSlots.FINGERS, Map.of(questRewardRing, 50.0));
 
         // when
-        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(RINGS, null, null, itemPool), classSpec, race);
+        Map<Equipment.Slot, UpgradeResult> result = finder.findUpgrades(query(InterchangeableSlots.FINGERS, null, null, itemPool), classSpec, race);
 
         // then
         assertThat(result.get(FINGER_1)).isInstanceOfSatisfying(UpgradeResult.UpgradeFoundResult.class,
@@ -285,23 +278,20 @@ public class DualSlotUpgradeFinderTest {
     }
 
     /**
-     * Stubs the scorer to score the returned pool with the given scores. Both slots share one pool, scored for the
-     * first slot.
+     * Stubs the scorer to score the returned pool with the given scores. Both slots share one pool, scored once for
+     * the slot the pair picks for scoring.
      */
-    private ItemPool givenPoolScoredAs(DualSlot slots, Map<Item, Double> scores) {
+    private ItemPool givenPoolScoredAs(InterchangeableSlots slots, Map<Item, Double> scores) {
         ItemPool itemPool = new ItemPool(List.copyOf(scores.keySet()));
         List<ScoredItem> scoredItems = scores.entrySet().stream()
                 .map(entry -> new ScoredItem(entry.getKey(), entry.getValue()))
                 .toList();
-        when(scorer.scoreItemPool(slots.slot1(), itemPool, classSpec, race)).thenReturn(new ScoredItemPool(scoredItems));
+        when(scorer.scoreItemPool(slots.pickSlotForScoring(), itemPool, classSpec, race)).thenReturn(new ScoredItemPool(scoredItems));
         return itemPool;
     }
 
-    private SlotUpgradeQuery query(DualSlot slots, Item equipped1, Item equipped2, ItemPool itemPool) {
-        EquippedItemPair currentPair = new EquippedItemPair(
-                new EquippedItemPair.Item(slots.slot1(), equipped(equipped1)),
-                new EquippedItemPair.Item(slots.slot2(), equipped(equipped2)));
-        return new SlotUpgradeQuery(slots, currentPair, itemPool);
+    private SlotUpgradeQuery query(InterchangeableSlots slots, Item equipped1, Item equipped2, ItemPool itemPool) {
+        return new SlotUpgradeQuery(slots, new EquippedItemPair(equipped(equipped1), equipped(equipped2)), itemPool);
     }
 
     private Optional<EquippedItem> equipped(Item item) {

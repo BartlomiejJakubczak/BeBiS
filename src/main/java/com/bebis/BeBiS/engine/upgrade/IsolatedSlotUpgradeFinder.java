@@ -11,17 +11,17 @@ import org.springframework.stereotype.Component;
  * Finds the best item for a slot that doesn't interact with any other slot (head, chest, ranged, ...).
  */
 @Component
-final class SingleSlotUpgradeFinder {
+final class IsolatedSlotUpgradeFinder {
 
     private final ItemScorer scorer;
     private final UpgradeResultEvaluator evaluator;
 
-    SingleSlotUpgradeFinder(ItemScorer scorer, UpgradeResultEvaluator evaluator) {
+    IsolatedSlotUpgradeFinder(ItemScorer scorer, UpgradeResultEvaluator evaluator) {
         this.scorer = scorer;
         this.evaluator = evaluator;
     }
 
-    UpgradeResult findUpgrade(SingleSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
+    UpgradeResult findUpgrade(IsolatedSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
         ScoredItemPool scoredItems = scorer.scoreItemPool(query.slot(), query.itemPool(), classSpec, race);
         return evaluator.evaluateUpgradeResult(query.currentItem().map(EquippedItem::item).flatMap(scoredItems::findItem), scoredItems.bestItem());
     }

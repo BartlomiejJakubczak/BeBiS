@@ -1,10 +1,12 @@
 package com.bebis.BeBiS.engine.upgrade;
 
-import com.bebis.BeBiS.equipment.domain.Equipment;
+import com.bebis.BeBiS.equipment.domain.Equipment.Slot;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.*;
 import static com.bebis.BeBiS.item.domain.Item.InventoryType;
@@ -13,7 +15,7 @@ import static com.bebis.BeBiS.item.domain.Item.InventoryType;
 @Component
 final class SlotItemTypeMatcher {
 
-    private final Map<Equipment.Slot, Set<InventoryType>> slotToInventoryType = Map.ofEntries(
+    private final Map<Slot, Set<InventoryType>> slotToInventoryType = Map.ofEntries(
             Map.entry(HEAD, Set.of(InventoryType.HEAD)),
             Map.entry(NECK, Set.of(InventoryType.NECK)),
             Map.entry(SHOULDER, Set.of(InventoryType.SHOULDER)),
@@ -33,7 +35,7 @@ final class SlotItemTypeMatcher {
             Map.entry(RANGED, Set.of(InventoryType.RANGED, InventoryType.RANGEDRIGHT, InventoryType.THROWN))
     );
 
-    Set<InventoryType> matchSlotToItemTypes(Equipment.Slot slot) {
-        return slotToInventoryType.get(slot);
+    Set<InventoryType> matchSlotsToItemTypes(Set<Slot> slots) {
+        return slots.stream().map(slotToInventoryType::get).flatMap(Collection::stream).collect(Collectors.toSet());
     }
 }

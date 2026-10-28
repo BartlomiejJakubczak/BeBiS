@@ -5,15 +5,16 @@ import com.bebis.BeBiS.equipment.domain.EquippedItem;
 
 import java.util.Optional;
 
-public record EquippedItemPair(Item slot1, Item slot2) {
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.OFF_HAND;
 
-    public record Item(Equipment.Slot slot, Optional<EquippedItem> equippedItem) {
+public record EquippedItemPair(Optional<EquippedItem> slot1, Optional<EquippedItem> slot2) {
+
+    public static EquippedItemPair from(InterchangeableSlots slots, Equipment equipment) {
+        return new EquippedItemPair(equipment.getItem(slots.slot1()), equipment.getItem(slots.slot2()));
     }
 
-    public static EquippedItemPair from(DualSlot slots, Equipment equipment) {
-        return new EquippedItemPair(
-                new Item(slots.slot1(), equipment.getItem(slots.slot1())),
-                new Item(slots.slot2(), equipment.getItem(slots.slot2()))
-        );
+    public static EquippedItemPair handSlotsPair(Equipment equipment) {
+        return new EquippedItemPair(equipment.getItem(MAIN_HAND), equipment.getItem(OFF_HAND));
     }
 }

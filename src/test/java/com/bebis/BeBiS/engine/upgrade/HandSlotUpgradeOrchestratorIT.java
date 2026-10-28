@@ -1,7 +1,6 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.base.BaseNonTransactionalFullstackTest;
-import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.WeaponBuilder;
@@ -27,6 +26,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.OFF_HAND;
@@ -112,7 +112,7 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 potentialOneHandUpgrade, powerfulEligibleTwoHand, createPowerfulOneHand(5L), createPowerfulTwoHand(6L))));
 
         // when
-        orchestrator.findUpgrades(new DualSlot(MAIN_HAND, OFF_HAND), new CharacterInfo(wowCharacter, eq,
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq,
                 Optional.of(createTalents(Map.of("ARMS", 31, "FURY", 20, "PROTECTION", 0)))));
 
         // then
@@ -125,8 +125,8 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                     .containsExactly(tuple(OFF_HAND, powerfulEligibleTwoHand));
         });
 
-        verify(itemPoolProvider).getItemPool(eq(MAIN_HAND), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
-        verify(itemPoolProvider).getItemPool(eq(OFF_HAND), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
+        verify(itemPoolProvider).getItemPool(eq(Set.of(MAIN_HAND)), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
+        verify(itemPoolProvider).getItemPool(eq(Set.of(OFF_HAND)), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
     }
 
     @Test
@@ -163,7 +163,7 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
         transactionTemplate.executeWithoutResult(a -> setUpWeaponsInDb(List.of(outlawSabre, plainSword)));
 
         // when
-        orchestrator.findUpgrades(new DualSlot(MAIN_HAND, OFF_HAND), new CharacterInfo(hordeRogue, new Equipment(),
+        orchestrator.findUpgradesFor(new CharacterInfo(hordeRogue, new Equipment(),
                 Optional.of(createTalents(Map.of("ASSASSINATION", 0, "COMBAT", 21, "SUBTLETY", 0)))));
 
         // then

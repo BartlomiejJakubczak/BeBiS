@@ -14,6 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * Test base class that starts the whole application context. Similar to {@link com.bebis.BeBiS.base.BaseNonTransactionalFullstackTest},
+ * the differences being that transactions here are governed by @Transactional, so for example they are automatically
+ * rolled back after each test and redis gets cleared after each test.
+ */
 @SpringBootTest
 @TestPropertySource(properties = {"spring.jpa.hibernate.ddl-auto=validate"})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE) // replace H2 from DataJpaTest with postgre

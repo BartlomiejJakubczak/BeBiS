@@ -29,9 +29,13 @@ several mapping bugs and a missing class restriction, which are fixed first (ste
 **Next session:** user reviews `03a01f3` (`git show`), then works from small to heavy (order agreed 2026-10-26):
 1. 🔧 Refactors. Done: `findItem(Item)` with the `Optional` kept outside, `restrictedTo`, `ScoredItem.isSameItemAs`,
    `sameItem` via `Optional` chaining, `ItemPoolProvider.Query` (the TODO was dropped: two calls for two pools is
-   honest). Next: split `DualSlot` into interchangeable slots (rings, trinkets) vs complementary slots (hands),
-   rename the finders to match, move the slot groups out of `UpgradeFinderService` into the domain, drop the
-   `Optional` parameter from `ClassSpec.getClassSpec`, and remove the `SlotUpgradeQuery` duplication.
+   honest). Done, uncommitted: `DualSlot` split (the `InterchangeableSlots` enum; hands need no type), the finders
+   renamed, each orchestrator owns its slots behind a package-private `UpgradeOrchestrator`, `UpgradeFinderService`
+   iterates the injected list, CGLIB proxies for `@Async` (`proxyTargetClass = true`), `UpgradeEvent.slot()`, and
+   the coverage IT `UpgradeFinderServiceIT` (every slot gets exactly one event; mutation-checked). Kept: the
+   `Optional` talents in `ClassSpec.getClassSpec` (below level 10, or with unspent points, there are legitimately no
+   talents; user, 2026-10-28). Left: unify how the finders get class spec and race (two `SlotUpgradeQuery` records
+   plus `CharacterContext`).
 2. 3b: quest min level as the level gate (data already in the seed).
 3. Accuracy benchmark v1 (closed-world, see Backlog) for a baseline number.
 4. One VMaNGOS session: the 3e export (giver faction, `ExclusiveGroup`) and the equip spell → stat table.
@@ -180,13 +184,19 @@ Assumptions the design depends on, each with how it's verified. Wrong ones shoul
   `calculate` overload fixed RANGED scoring: weapon DPS and ranged racials were ignored (now covered by
   `SingleSlotUpgradeOrchestratorIT`).
 - ✅ `GameIdentified` + generic `EnumTools.fromId` / `fromBitmask` (`8a2f185`).
-- **Open learning items from the 2026-10-26 review (user's, not delegated):**
-  - `SlotPair.sameItem` still uses `isPresent` / `get`: express it with `Optional`'s chaining operations.
-  - `ScoredItemPool.getEquippedItem(Optional<EquippedItem>)` takes an `Optional` parameter (a known smell) and is
-    named like a getter. `extract(types)` is a filter, not an extraction.
-  - `DualSlotUpgradeOrchestrator.SlotUpgradeQuery` holds `DualSlot` and an `EquippedItemPair` that already knows its
-    slots.
-  - `HandSlotUpgradeOrchestrator` TODO: one `ItemPoolProvider` call for both hands.
+- ✅ The 2026-10-26 learning items (`sameItem` chaining, `findItem`, `restrictedTo`, `SlotUpgradeQuery` slots, the
+  hand TODO) were done in `147d675` and the `DualSlot` split.
+- **Test infrastructure rework (2026-10-28):** the base-class tree bundles independent concerns. They are
+  transactions (rollback vs commit), Blizzard mocks, cache clearing and which containers run. The resilience tests need
+  Redis and cache clearing but real HTTP, so no single tree fits. Replace the tree with composition: containers as
+  importable pieces (`@ImportTestcontainers` holders for Postgres and Redis, static so they're shared), composed
+  annotations for the Blizzard mocks (class-level `@MockitoBean(types = …)`, Spring 6.2+) and cache clearing (a JUnit
+  extension or `TestExecutionListener`), and plain `@Transactional` where a rollback is wanted. Meanwhile the
+  non-transactional base duplicates the Blizzard mocks, so no IT can call the real API.
+- **Observable async (2026-10-28):** `@Async` orchestrators return `CompletableFuture`, and `UpgradeFinderService`
+  combines them (`allOf`). The caller then knows when all slots are done and sees failures; today a `void @Async`
+  exception is only logged. Tests can `join()` instead of polling. Do it with the stat-caps feature, which needs the
+  service to collect every orchestrator's results anyway. Domain accuracy comes first (user, 2026-10-28).
 
 **Keeping the codebase navigable (suggested 2026-10-22):**
 - A one-page architecture overview in the README: per feature, the write path (sync) and the read path (query), and who
@@ -215,6 +225,12 @@ Assumptions the design depends on, each with how it's verified. Wrong ones shoul
 - Item catalog seeding (dungeon/raid/profession gear) so unseen items can be suggested. A hybrid approach: the catalog
   from mangos, stats from the Blizzard item endpoint.
 - Equip spells → stats via a `spell_id → (StatType, value)` export.
+- **Stat caps (e.g. hit cap at 60), raised 2026-10-28, not designed yet.** Caps break the engine's core assumption that
+  slots are independent: whether hit on a helm is worth anything depends on every other piece. The likely shape:
+  orchestrators produce per-slot candidates, and a set-level step in `UpgradeFinderService` (it has `CharacterInfo`)
+  checks the totals against the caps and swaps over-cap pieces for the next best mix. The service will then call the
+  orchestrators more than once, so they must stay stateless and repeatable. Value above the cap drops to ~0, so weights
+  stop being linear. Related: the "weights are linear" blind spot under Measuring accuracy.
 - **Progression tiers ("level 60 problem")**, brainstormed 2026-10-20:
   - **Idea:** place the character on a tier ladder, e.g. pre-raid → MC/Ony → BWL → AQ40 → Naxx (grouping is the
     user's call), and suggest upgrades from the next tier. Optionally, an LLM explains the result in plain language;

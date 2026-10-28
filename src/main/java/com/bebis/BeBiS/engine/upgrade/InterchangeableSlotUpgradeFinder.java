@@ -21,21 +21,21 @@ import java.util.Optional;
  * item that can be worn only once ({@link com.bebis.BeBiS.item.domain.Item#isEquippableOnce()}) never fills both.
  */
 @Component
-final class DualSlotUpgradeFinder {
+final class InterchangeableSlotUpgradeFinder {
 
     private final ItemScorer scorer;
     private final UpgradeResultEvaluator evaluator;
 
-    DualSlotUpgradeFinder(ItemScorer scorer, UpgradeResultEvaluator evaluator) {
+    InterchangeableSlotUpgradeFinder(ItemScorer scorer, UpgradeResultEvaluator evaluator) {
         this.scorer = scorer;
         this.evaluator = evaluator;
     }
 
-    Map<Equipment.Slot, UpgradeResult> findUpgrades(DualSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
-        ScoredItemPool itemPool = scorer.scoreItemPool(query.slots().slot1(), query.itemPool(), classSpec, race);
+    Map<Equipment.Slot, UpgradeResult> findUpgrades(InterchangeableSlotsUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
+        ScoredItemPool itemPool = scorer.scoreItemPool(query.slots().pickSlotForScoring(), query.itemPool(), classSpec, race);
 
-        SlotPair equipped = new SlotPair(query.currentPair().slot1().equippedItem().map(EquippedItem::item).flatMap(itemPool::findItem),
-                query.currentPair().slot2().equippedItem().map(EquippedItem::item).flatMap(itemPool::findItem));
+        SlotPair equipped = new SlotPair(query.currentPair().slot1().map(EquippedItem::item).flatMap(itemPool::findItem),
+                query.currentPair().slot2().map(EquippedItem::item).flatMap(itemPool::findItem));
 
         Optional<SlotPair> bestCandidatePair = pickBestPair(equipped, mapCandidatePairs(itemPool));
 

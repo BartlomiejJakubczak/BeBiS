@@ -1,7 +1,6 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.base.BaseNonTransactionalFullstackTest;
-import com.bebis.BeBiS.engine.upgrade.domain.DualSlot;
 import com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.item.EquippableItemBuilder;
@@ -23,9 +22,12 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_1;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_2;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_1;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_2;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.awaitility.Awaitility.await;
@@ -33,10 +35,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @RecordApplicationEvents
-public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
+public class InterchangeableSlotsUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
+
+    private static final Set<Equipment.Slot> RINGS_AND_TRINKETS = Set.of(FINGER_1, FINGER_2, TRINKET_1, TRINKET_2);
 
     @Autowired
-    private DualSlotUpgradeOrchestrator orchestrator;
+    private InterchangeableSlotsUpgradeOrchestrator orchestrator;
 
     @MockitoSpyBean
     private ItemPoolProvider itemPoolProvider;
@@ -57,33 +61,31 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
     }
 
     @Test
-    void shouldSignalUpgradeNotAvailableEventForBothSlots_EmptyItemPool() {
+    void shouldSignalUpgradeNotAvailableEventForEveryRingAndTrinketSlot_EmptyItemPool() {
         // given
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().withLevel(9).build();
-        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // when
-        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeNotAvailableEvent.class))
-                .map(UpgradeEvent.UpgradeNotAvailableEvent::slot).containsExactlyInAnyOrder(FINGER_1, FINGER_2));
+                .map(UpgradeEvent.UpgradeNotAvailableEvent::slot).containsExactlyInAnyOrderElementsOf(RINGS_AND_TRINKETS));
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
+        verify(itemPoolProvider).getItemPool(eq(RINGS_AND_TRINKETS), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
     }
 
     @Test
     void shouldSignalUpgradeFoundEventForBothSlots() {
         // given
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().build();
-        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // save an eligible ring to db
         Item theOneRing = EquippableItemBuilder.newRing().withBaseId(1L).withInventoryType("FINGER").build();
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(theOneRing)));
 
         // when
-        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeFoundEvent.class))
@@ -94,7 +96,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 )
         );
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
+        verify(itemPoolProvider).getItemPool(eq(RINGS_AND_TRINKETS), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
     }
 
     @Test
@@ -122,10 +124,9 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
 
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(worseRing, bisRing)));
 
-        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // when
-        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, eq, Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, Optional.empty()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.BiSAlreadyEquippedEvent.class))
@@ -136,7 +137,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 )
         );
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
+        verify(itemPoolProvider).getItemPool(eq(RINGS_AND_TRINKETS), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass())));
     }
 
     @Test
@@ -163,10 +164,9 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
 
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(worseRing, bisRing)));
 
-        DualSlot dualSlot = new DualSlot(FINGER_1, FINGER_2);
 
         // when
-        orchestrator.findUpgrades(dualSlot, new CharacterInfo(wowCharacter, eq, Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, Optional.empty()));
 
         // then
 
@@ -179,7 +179,7 @@ public class DualSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                     .containsExactly(tuple(FINGER_2, bisRing));
         });
 
-        verify(itemPoolProvider).getItemPool(eq(dualSlot.slot1()), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass()))
+        verify(itemPoolProvider).getItemPool(eq(RINGS_AND_TRINKETS), eq(new ItemPoolProvider.Query(wowCharacter.level(), wowCharacter.race(), wowCharacter.wowClass()))
         );
     }
 

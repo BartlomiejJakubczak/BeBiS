@@ -41,10 +41,10 @@ import static org.awaitility.Awaitility.await;
 
 
 @RecordApplicationEvents
-public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
+public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstackTest {
 
     @Autowired
-    private SingleSlotUpgradeOrchestrator orchestrator;
+    private IsolatedSlotUpgradeOrchestrator orchestrator;
 
     @Autowired
     private EntityManager entityManager;
@@ -75,7 +75,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentItem, bestItem, otherItem)));
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeFoundEvent.class))
@@ -120,7 +120,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentItem, lowerItem1, lowerItem2)));
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(BiSAlreadyEquippedEvent.class))
@@ -163,7 +163,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
                 Optional.of(createTalents(Map.of("ASSASSINATION", 31, "COMBAT", 20, "SUBTLETY", 0))));
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeNotAvailableEvent.class))
@@ -189,7 +189,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentBow, hardHittingBow)));
 
         // when
-        orchestrator.findUpgrade(Equipment.Slot.RANGED, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeFoundEvent.class))
@@ -219,7 +219,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
                 eq, Optional.of(createTalents(specs)));
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(expectedEvent)).isNotEmpty());
@@ -258,7 +258,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
                 eq, Optional.of(createTalents(specs)));
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(expectedEvent)).isNotEmpty());
@@ -293,7 +293,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
                 Optional.of(createTalents(Map.of("ARMS", 20, "FURY", 31, "PROTECTION", 0))));
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeFoundEvent.class))
@@ -320,7 +320,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
                 WowCharacterBuilder.newWowCharacter().withLevel(1).withWowClass(WowClass.ROGUE).build(), eq, Optional.empty());
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeFoundEvent.class))
@@ -346,7 +346,7 @@ public class SingleSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullsta
         CharacterInfo charInfo = createCharacterInfo(WowCharacterBuilder.newWowCharacter().withLevel(9).withWowClass(WowClass.WARRIOR).build(), eq, Optional.empty());
 
         // when
-        orchestrator.findUpgrade(slot, charInfo);
+        orchestrator.findUpgradesFor(charInfo);
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeFoundEvent.class))
