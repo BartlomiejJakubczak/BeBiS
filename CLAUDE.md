@@ -115,14 +115,18 @@ sorting.
       e.g. `TWOHWEAPON`, `HAND`.
     - Domain-level builders (`WeaponBuilder`, ...) and SQL inserts use domain enum names, e.g. `TWO_HAND`, `HANDS`.
     - Real recorded responses live in `src/test/resources/blizzard/` and back the contract tests in
-      `ItemMapperTest.RecordedBlizzardResponses`. When Blizzard surprises you, add the response there.
+      `ItemMapperTest.RecordedBlizzardResponses` and `SpecializationMapperTest.RecordedBlizzardResponses` (loaded with
+      `BlizzardFixtures`). When Blizzard surprises you, add the response there.
+    - Write or change a Blizzard DTO only against a recorded response, requested with the same `locale` as the app.
+      The talents DTO was written from the docs and read retail's shape, so every character resolved to `CLASS_NONE`.
 - Keep test data realistic for Classic. Low-level items are mostly armor and weapons. Rings appear around level 15+,
   necks 20+, and trinkets 35+. For a low-level scenario use, say, a chest piece, not jewelry.
 
 ## Domain notes (WoW Classic)
 
-- `ClassSpec` is `CLASS_SPEC`. Characters with no clear spec fall back to `CLASS_NONE`. The active spec is derived from
-  the talent tree; ties throw `TalentTreeTieInException`.
+- `ClassSpec` is `CLASS_SPEC`. Characters with no clear spec fall back to `CLASS_NONE`. The active spec is the tree
+  with the most points in the active talent group (Classic Era has dual spec). A tie means no clear spec, so it's
+  `CLASS_NONE` too, until the user can choose (`docs/roadmap.md` → spec choice).
 - Items with random suffixes ("of the Bear") share a `baseId` and differ by `suffixId`. The base item of a suffixable
   item can have no stats at all, so its `preview_item` may be missing or empty. The suffixed instance always carries
   stats, which is why stats are taken from the equipped-item DTO (`EquipmentResponse.ItemDTO`), not from the base item.
@@ -132,7 +136,21 @@ sorting.
   A missing field means "not set", not invalid data: mappers map it to a neutral default (`false`, `0`) instead of
   throwing. Only reject data that is genuinely required for analysis.
 
+## Planning docs
+
+- `docs/roadmap.md`: open work only, most urgent first, each item with its problem stated first. Read it at the start
+  of a session. Delete finished items (the commit message is the record) and keep it short.
+- `docs/decisions.md` (decisions and assumptions), `docs/findings.md` (facts about Blizzard, VMaNGOS and the codebase),
+  `docs/ideas.md` (parked ideas). They're portfolio-visible, so nothing private goes in.
+
 ## Working with me (Claude)
+
+- I implement and you review. Repetitive work (compile fixes, builders, missing tests) is yours; tag each step as
+  **worth fighting**, **skim** or **delegate**, so my learning time goes where it pays off.
+- Before a step, explain why it's done this way, then give breadcrumbs, docs and a "done when". Hints are graded:
+  nudge, then a stronger hint, then the answer.
+- Review replies: each issue starts with *what* and a short *why*; complex ones get more context. End with only the
+  current step, in one line. More clues only when I ask.
 
 - The developer cares about the learning process that comes with project development. Never provide code as an answer
   upfront, unless directly asked.

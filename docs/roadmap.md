@@ -1,273 +1,101 @@
-# BeBiS roadmap: single-copy quest rewards (and the prerequisites they uncovered)
+# BeBiS roadmap
 
-## Goal
+Open work only, most urgent first. Every item states its **problem** first, in game terms, so it makes sense without
+the conversation it came from. Finished items are deleted; `git log` keeps the record. Reference material lives next
+door:
 
-The upgrade finders should never suggest the same quest reward in two slots (e.g. "Sword of Omen" in both hands): you
-can only complete a quest once. Fixing this properly needs to know which items are quest rewards. Blizzard's API doesn't
-say, so that knowledge comes from an offline VMaNGOS export shipped as Flyway reference data. Along the way it uncovered
-several mapping bugs and a missing class restriction, which are fixed first (steps 0–0c).
+- [decisions.md](decisions.md): what we decided and why, and the assumptions the design rests on
+- [findings.md](findings.md): facts about the Blizzard API, VMaNGOS and our own codebase
+- [ideas.md](ideas.md): parked ideas and features that aren't planned yet
 
-## Status
+**Recently done:** talents read from the real Classic Era response (every character used to resolve to `CLASS_NONE`),
+`d56b9f1` slot ownership moved into the orchestrators, `147d675` engine lookups and pool queries, `03a01f3` quest
+rewards are single-copy.
 
-| Step | What | State |
-|---|---|---|
-| 0 | Missing `required_level` no longer rejects items (→ 0) | ✅ `e1d20bd` |
-| — | Weapon `maxDamage` mapped from `minValue` | ✅ `1a2ec71` (user) |
-| 0b | Every Blizzard inventory type code mapped explicitly + recorded fixtures | ✅ `898d843` |
-| 0c | Item class restrictions (`playable_classes`), class mapping by id, `item_effects` index | ✅ `834d29d` |
-| 1a–1b | Pick VMaNGOS, load it into MariaDB | ✅ |
-| 1c–1e | Export query (`tools/vmangos-export`) | ✅ `b22dbb0` |
-| 2 | V3 schema (`CHECK` on reward_kind) + generated V4 seed (1738 rows), Race mapped by id | ✅ `b22dbb0` |
-| 3a | `QuestRewardEntity`, `ItemQueryService` (batch load + in-memory join), `QuestSource` with decoded masks, race/class obtainability filter | ✅ `8a2f185` |
-| 3c | Equipment read path through `ItemQueryService.findAll(Set<ItemKey>)`, entity equals/hashCode on the PK, `isEquippableBy` | ✅ `8a2f185` |
-| 3d | `EquipmentService` split into `syncEquipment` + `getEquipmentForCharacter`; `CharacterProfileOrchestrator.selectCharacter(WowCharacter.Id)` throws `CharacterNotFoundException`; `WowCharacter.Id` includes the account | ✅ `8a2f185` |
-| 3b | Quest min level as the level gate (`QuestSource.minLevel` in `isObtainableBy`) | ⏳ |
-| 3e | Export the quest giver's faction and `ExclusiveGroup`: fixes the race filter, lets us verify A1 | ⏳ new (see Findings) |
-| 4–6 | `Item.isEquippableOnce` (Unique or one-time source), `SlotPair.areSameOnceEquippables` in both pair finders, quest-reward tests incl. an Outlaw Sabre IT on the real seed | ✅ `03a01f3` |
-| — | `UpgradeFinder` base class → composition: `ItemScorer` + self-ordering `ScoredItemPool`; fixed RANGED scoring | ✅ `03a01f3` |
+## Next (order agreed 2026-10-26)
 
-**Next session:** user reviews `03a01f3` (`git show`), then works from small to heavy (order agreed 2026-10-26):
-1. 🔧 Refactors. Done: `findItem(Item)` with the `Optional` kept outside, `restrictedTo`, `ScoredItem.isSameItemAs`,
-   `sameItem` via `Optional` chaining, `ItemPoolProvider.Query` (the TODO was dropped: two calls for two pools is
-   honest). Done, uncommitted: `DualSlot` split (the `InterchangeableSlots` enum; hands need no type), the finders
-   renamed, each orchestrator owns its slots behind a package-private `UpgradeOrchestrator`, `UpgradeFinderService`
-   iterates the injected list, CGLIB proxies for `@Async` (`proxyTargetClass = true`), `UpgradeEvent.slot()`, and
-   the coverage IT `UpgradeFinderServiceIT` (every slot gets exactly one event; mutation-checked). Kept: the
-   `Optional` talents in `ClassSpec.getClassSpec` (below level 10, or with unspent points, there are legitimately no
-   talents; user, 2026-10-28). Left: unify how the finders get class spec and race (two `SlotUpgradeQuery` records
-   plus `CharacterContext`).
-2. 3b: quest min level as the level gate (data already in the seed).
-3. Accuracy benchmark v1 (closed-world, see Backlog) for a baseline number.
-4. One VMaNGOS session: the 3e export (giver faction, `ExclusiveGroup`) and the equip spell → stat table.
-5. Map flat-stat equip spells, then re-run the benchmark to measure the gain.
-6. Re-plan. Remember that upgrade results aren't consumed by anything yet.
+### 1. Quest rewards ignore the quest's level (3b)
 
-Open with "read the plan".
+**Problem:** a quest reward usually has no level requirement on the item itself; the requirement is on the quest. The
+pool's SQL only checks the item's `required_level`, so these rewards pass at any level. Example: Whirlwind Axe has
+`required_level` 0, but its quest (1792) needs level 30, so a level-12 warrior is offered it.
 
-## Current: quest-reward feature
+**Idea:** gate on the quest, the same way race and class already are: an item with quest sources is obtainable at
+level L when *any* of its quests has `minLevel <= L`. The data is already seeded (`quest_min_level`, mapped to
+`QuestSource.minLevel`). Per decisions.md, filters on sources live in the domain, not in `ItemQueryService`'s SQL.
 
-**1c–1e. Export: ✅ written by Claude** (`tools/vmangos-export/quest_rewards_export.sql` + README).
-- Pipeline: latest row per quest and item (`ROW_NUMBER`) → unpivot (10× `UNION ALL`) → BoP gear from
-  non-repeatable quests → rendered as one multi-row `INSERT`.
-- Output: 1738 rows, **one per (item, quest)**.
-- Dropped, based on the data: the "exactly one quest" rule (169 items have several quests, mostly faction mirrors, and
-  a character still gets one copy) and the "no other source" filters (0 vendor items; the few loot overlaps are BoE or
-  container loot). "Create item" spells are *not* crafting (e.g. Drakefire Amulet), so they're not used as a filter.
+**Where:** `Item.isObtainableBy`, `ItemPoolProvider.isItemEligibleFor` (its `Query` already carries the level).
 
-**2. Schema:** `V3__Create_quest_rewards.sql` with PK **`(base_id, quest_id)`** and no FK to `items` (it's
-reference data). Then `V4__Seed_quest_rewards.sql`, generated by the export (see its README).
+**Done when:** `ItemPoolProviderIT` shows a quest reward missing below its quest's min level and present at it.
 
-**3. Persistence + read service (decided 2026-10-21):**
-- ✅ `QuestRewardEntity` (`@Immutable`, PK `(base_id, quest_id)`, `requiredClassMask` / `requiredRaceMask`).
-- ✅ `QuestRewardRepository.findAllByPkBaseIds(Set<Long>)`. It's a pure loader; no race parameter.
-- **`ItemQueryService` (public, `item` package):**
-  1. Runs the existing pool query. The SQL filters on item columns (types, level, item class restriction) stay.
-  2. Batch-loads the quest rows with one `IN` query.
-  3. Groups them by `base_id` (`Collectors.groupingBy`).
-  4. Calls `mapToDomain(ItemEntity, List<QuestRewardEntity>)` and returns finished `Item`s.
-- **`ItemPoolProvider`:** calls `ItemQueryService` (and no longer touches `item.jpa`). It applies the filters that
-  depend on sources through domain behaviour: `item.isObtainableBy(race)` = no quest sources, or *any* quest source
-  allows the race. 3b adds the quest min level and classes to the same method.
-- Rule of thumb: **filters on item columns go in SQL; filters on sources go in the domain.**
+### 2. Accuracy benchmark v1
 
-**4. Domain:** `sealed interface Item.Source permits QuestSource`, `Set<Source> sources` on `ItemMetadata`.
-`QuestSource(questId, questLevel, minLevel, rewardKind, allowedClasses, allowedRaces)` with decoded sets.
-`Item.isSingleCopy()` = the item is Unique, or its sources are one-time (`Source.isRepeatable()`: quest `false`,
-anything else `true`).
-- **Combinator (decided 2026-10-23):** `anyMatch(!isRepeatable)`. No sources means repeatable. One-time plus
-  repeatable source counts as one copy (A3).
-- **Unique rename:** Classic Era only has **Unique** (see Findings), so `uniqueEquipped` is the API's word, not the
-  game's. Rename it in the domain. The mapper is where the API's vocabulary gets translated. Open: does the column follow
-  (V5)?
+**Problem:** nothing tells us whether the rankings are any good, so every tuning is blind, and there's no number to
+show for the project.
 
-**5. Engine:** `SlotPair.hasUniqueConflict` → `isSingleCopy()` (keep `equals`, consider renaming to
-`exceedsCopyLimit`). Also `DualSlotUpgradeFinder.mapCandidatePairs:47`.
+**Idea:** a closed-world benchmark: per spec and slot, put the items of a published pre-raid BiS list into the pool and
+measure top-1 / top-3 hits. Report it as a score with a floor that only goes up, not as pass/fail. Options and blind
+spots: ideas.md → Measuring accuracy.
 
-**6. Tests:**
-- ✅ `SlotPairTest` matrix, `ItemTest` copy-limit matrix
-- ✅ hand and dual finder cases with a quest reward. Outlaw Sabre is the realistic one: a one-hander that isn't Unique,
-  so only the new rule catches it
-- mapper `sources`
-- pool level and class filters
-- ✅ an orchestrator IT asserting a quest reward is never in both slots (`HandSlotUpgradeOrchestratorIT`, Outlaw Sabre
-  gets its quest source from the real V4 seed)
+### 3. One VMaNGOS export session: factions, exclusive quests, equip spells
 
-**3c. Equipment package (assessed 2026-10-21):**
-- **Must:** `EquipmentMapper` builds items with `itemMapper.mapToDomain(entity)`, so they have **no sources**.
-  Equipped items should come from `ItemQueryService` too: add a lookup by `ItemKey`s, and let `EquipmentMapper` only
-  place finished `Item`s into slots. After that, `ItemMapper.mapToDomain(ItemEntity)` loses its last outside caller.
-- **Should:**
-  - `EquipmentService.getEquipmentForCharacter` calls Blizzard and rewrites the DB inside a "get" (a hidden side
-    effect, i.e. a command/query separation violation). It also takes a `profile.jpa` entity across package lines.
-  - `EquipmentRepository` declares `Long` as its id, but the real id is `WowCharacterEntity.CompositeKey`, and nothing
-    uses the repository. Delete or fix it.
-- **Could:**
-  - `Equipment` is mutable through `@Setter` / `getEquipment()`, which exposes its internal map. Make it immutable
-    (`Map.copyOf`).
-  - The field `equipment` inside class `Equipment` is a confusing name.
-  - `EquippedItem.playerEnchs` is an abbreviation.
+**Problem:** two data gaps.
+- **Faction leaks:** 1547 of the 1737 seeded quest rewards have `RequiredRaces = 0` ("any race"), even when only one
+  faction can talk to the quest giver. So Horde-only rewards are offered to Alliance characters (Dragonslayer's Signet,
+  quest 7491 from Overlord Runthak).
+- **Equip spells aren't scored:** most secondary stats in Classic (hit, crit, attack power) come as equip spells
+  (`preview_item.spells[]`), not as `stats`, so those items are undervalued.
 
-## Decisions
+**Idea:** in one sitting, export the quest giver's faction and `ExclusiveGroup` for `quest_rewards`, plus a
+`spell_id → (StatType, value)` table for flat-stat auras (findings.md → VMaNGOS). Then verify assumption A1 and
+recount the seed: the README says 1738 rows and 169 multi-quest items, but the seed has 1737 and 151.
 
-- **Data source:** VMaNGOS (has `patch` versioning, useful later), exported once from a throwaway `mariadb:11.4`
-  container (`--name mariadb`, `127.0.0.1:2137`, DB `mangos`). Flyway never reads MariaDB; it only runs our exported
-  SQL against Postgres.
-- **Separate tables, joined on read.** Items are insert-once in `ItemService`, so facts that aren't from Blizzard live
-  in their own tables rather than as columns that would need backfills.
-- **Equip vs acquisition constraints:** class restrictions on the *item* go on `items` (from Blizzard). Class/race
-  requirements of the *quest* go in `quest_rewards`. A suggestion must satisfy both.
-- **One owner per fact:** export raw facts (`MinLevel`, not "effective level") and derive in the app.
-- **Identity:** `ItemKey(baseId, suffixId)`. Quest rewards never roll suffixes.
-- **Class identity:** Blizzard class ids (1 Warrior … 11 Druid), which are also the bit positions (`id - 1`) in the
-  mangos bitmasks.
+**Where:** `tools/vmangos-export`, a new migration, `QuestSource.allows(race)`.
 
-## Assumptions
+### 4. Score equip spells, then re-run the benchmark
 
-Assumptions the design depends on, each with how it's verified. Wrong ones should fail a test, not surprise us.
+**Problem:** the same undervaluation as in 3, now fixable with the exported table.
 
-| # | Assumption | Status | Evidence, cost if wrong |
-|---|---|---|---|
-| A1 | A character can complete at most one of the quests that reward the same item | ✅ accepted 2026-10-23 as a conservative default (unverified) | Can't be checked yet: the export lacks the quest giver's faction, `ExclusiveGroup` and quest starters (3e). If it's wrong, we miss a suggestion but never make an impossible one. After 3e: verify it, then guard it with a test on the seed |
-| A3 | An item with a one-time source and a repeatable one counts as one copy | ✅ accepted 2026-10-23, exact today | No such item exists yet (only quest sources are exported). Errs on the safe side (missed suggestion). Revisit when drop/vendor/crafting sources are exported |
-| A2 | Classic Era has no unique-equipped, only Unique (one copy in bags and bank) | verified | Unique-equipped arrived in patch 2.3.0. Band of Accuria fixture: `"unique_equipped": "Unique"` |
+**Idea:** map flat-stat equip spells to stats when items are mapped, then re-run the benchmark to measure the gain.
 
-## Findings
+### 5. Re-plan
 
-**Blizzard API**
-- Unset fields are either omitted or sent as `0` (`required_level`). Both mean "not set".
-- Inventory type codes follow the client's `INVTYPE_*` constants (`TWOHWEAPON`, `HAND`, `ROBE`). This is fixed, and
-  recorded fixtures live in `src/test/resources/blizzard/item/`.
-- `preview_item.requirements.playable_classes.links[]` gives `{id, name}`. `name` is localized (`?locale=en_GB`), so
-  map by `id`.
-- Secondary stats come as equip spells (`preview_item.spells[].spell.id`), not `stats`.
-- The API is shared across game versions, so field names are retail's: Classic Era sends Vanilla's **Unique** in
-  `unique_equipped`.
+Upgrade results aren't consumed by anything yet (no endpoint, no UI), so decide what comes after accuracy.
 
-**VMaNGOS DB**
-- `item_template` and `quest_template` are both keyed `(entry, patch)`, so take the latest row per entry. All columns
-  are `NOT NULL DEFAULT 0`, where 0 = not set.
-- Quest rewards aren't marked on items; the link lives only in `quest_template`.
-- Quest-reward gear: 1633 BoP, 16 BoE (tradeable, so **not** single-copy), 2 quest items, 3 none.
-- 113 class-quest rewards have no class restriction on the item itself (e.g. Primitive Hatchet, quest
-  `RequiredClasses 1245`).
-- Crafted items are a source too (e.g. Glacial Vest via spell 28207).
-- Equip spells in `spell_template`: `effect1 = 6` (apply aura), `effectApplyAuraName1` (99 AP, 54 hit, 42 proc) and
-  value `effectBasePoints1 + effectDieSides1`.
-- **`RequiredRaces = 0` doesn't mean every race.** 1547 of 1737 seed rows have it. Faction usually comes from the quest
-  giver: quest 7491 (Onyxia's head → Dragonslayer's Signet) is Horde-only (Overlord Runthak) with mask 0, and its
-  Alliance mirror 7496 has mask 0 too. So `QuestSource.allows(race)` lets most faction-only rewards through to the other faction → 3e.
-- **Same item, several quests, overlapping masks:** 113 of 151 multi-quest items. Samples are faction mirrors via the
-  giver (Dragonslayer's Signet), alternative quests (Blade of Cunning: three Alliance quests, all mask 77, Unique) and
-  duplicate entries (Outlaw Sabre: quests 909 and 6922, both "Baron Aquanis", both Horde, one-hand, not Unique). The
-  open question is whether one Horde character can complete both; most likely an old and a new version of one quest.
-  Either way A1 already covers it; check at 3e.
-- Seed vs README drift: the seed has 1737 rows and 151 multi-quest items, but the README says 1738 and 169. Recount at
-  the next export.
+## Later (not ordered)
 
-**Codebase**
-- Three bugs so far came from invented test data. API-level builders must use real API codes (documented in
-  `CLAUDE.md`).
+- **Spec choice for ties and dual spec.** A tied character (e.g. 15/15) has no clear spec, and with dual spec a
+  player may want gear for the inactive group or a secondary tree. Resolve the spec during `selectCharacter` as a
+  sealed result (resolved, tied with candidates, no talents), let the user pick when it's tied, and pass the chosen
+  spec to the upgrade search. It has to happen before the `@Async` engine runs: nobody can be asked from in there.
+- **404s count as Blizzard outages.** A 404 means "no such resource" (e.g. characters below level 10), but the fetchers
+  retry it, and the circuit breaker, shared by the item and spec fetchers, counts it as a failure. A few could block
+  item fetching for 20 s. `EquipmentService.syncEquipment` has no fallback, so a 404 there fails `selectCharacter`.
+  Don't retry or count 404s, and decide what selecting a level 1–9 character should do.
+- **Small engine cleanups.** `ItemScoringContext` is only used in `engine.upgrade`, so it could be package-private
+  there. The three orchestrators each build `ItemPoolProvider.Query` from `CharacterInfo`; one factory would keep that
+  in one place.
+- **Equipment package cleanup.** `EquipmentRepository` declares `Long` as its id (the real one is
+  `WowCharacterEntity.CompositeKey`) and nothing uses it: delete it. `Equipment` is mutable (`@Setter`, and
+  `getEquipment()` hands out its map), so make it immutable (`Map.copyOf`). Names: the field `equipment` inside
+  `Equipment`, and `EquippedItem.playerEnchs`.
+- **"Unique-equipped" is the API's word, not the game's.** Classic only has Unique (decisions.md → A2), so rename
+  `uniqueEquipped` in the domain. Open: does the column follow (V5)?
+- **Test infrastructure.** The base-class tree bundles independent concerns (transactions, Blizzard mocks, cache
+  clearing, which containers run), and the resilience tests fit no branch of it. Replace it with composition:
+  `@ImportTestcontainers` holders for Postgres and Redis, composed annotations for the Blizzard mocks (class-level
+  `@MockitoBean(types = …)`, Spring 6.2+) and cache clearing, and plain `@Transactional` where a rollback is wanted.
+- **Observable async.** A failing `void @Async` orchestrator is only logged. Return `CompletableFuture` and combine
+  them in `UpgradeFinderService` (`allOf`), so callers see failures and tests can `join()` instead of polling. Do it
+  with the stat-caps feature (ideas.md), which needs the service to collect all results anyway.
+- **Portfolio polish** (what reviewers notice): a README with an architecture overview (per feature the write and read
+  path and who may call whom, as a Mermaid diagram), CI (GitHub Actions running `./mvnw verify`), a Dockerfile, OpenAPI
+  docs, ADRs (decisions.md is the draft) and ArchUnit rules (e.g. `engine` must not depend on `item.jpa`, only `item`
+  may use `ItemMapper`).
 
-## Backlog
+## Known limitations (accepted for now)
 
-**Portfolio polish (what reviewers notice):**
-- a README with an architecture overview and the decisions behind it
-- CI (GitHub Actions running `./mvnw verify` with Testcontainers)
-- a Dockerfile for the app
-- OpenAPI docs for the REST API
-- a short ADR folder (e.g. "why a separate quest_rewards table")
-
-**Refactors (worth fighting: visible in the repo and common in interviews)**
-- ✅ **Done (2026-10-26):** `UpgradeFinder` base class replaced with composition. `ItemScorer` (a domain service) turns
-  an `ItemPool` into a `ScoredItemPool`, and the pool's constructor keeps the order promise. Finders depend on the
-  scorer, and their tests build scored pools instead of stubbing the calculator per item. Removing the slotless
-  `calculate` overload fixed RANGED scoring: weapon DPS and ranged racials were ignored (now covered by
-  `SingleSlotUpgradeOrchestratorIT`).
-- ✅ `GameIdentified` + generic `EnumTools.fromId` / `fromBitmask` (`8a2f185`).
-- ✅ The 2026-10-26 learning items (`sameItem` chaining, `findItem`, `restrictedTo`, `SlotUpgradeQuery` slots, the
-  hand TODO) were done in `147d675` and the `DualSlot` split.
-- **Test infrastructure rework (2026-10-28):** the base-class tree bundles independent concerns. They are
-  transactions (rollback vs commit), Blizzard mocks, cache clearing and which containers run. The resilience tests need
-  Redis and cache clearing but real HTTP, so no single tree fits. Replace the tree with composition: containers as
-  importable pieces (`@ImportTestcontainers` holders for Postgres and Redis, static so they're shared), composed
-  annotations for the Blizzard mocks (class-level `@MockitoBean(types = …)`, Spring 6.2+) and cache clearing (a JUnit
-  extension or `TestExecutionListener`), and plain `@Transactional` where a rollback is wanted. Meanwhile the
-  non-transactional base duplicates the Blizzard mocks, so no IT can call the real API.
-- **Observable async (2026-10-28):** `@Async` orchestrators return `CompletableFuture`, and `UpgradeFinderService`
-  combines them (`allOf`). The caller then knows when all slots are done and sees failures; today a `void @Async`
-  exception is only logged. Tests can `join()` instead of polling. Do it with the stat-caps feature, which needs the
-  service to collect every orchestrator's results anyway. Domain accuracy comes first (user, 2026-10-28).
-
-**Keeping the codebase navigable (suggested 2026-10-22):**
-- A one-page architecture overview in the README: per feature, the write path (sync) and the read path (query), and who
-  may call whom. Include a Mermaid diagram. This doubles as portfolio material.
-- ArchUnit tests that enforce boundaries, e.g. `engine` must not depend on `item.jpa`, and only the `item` package may
-  use `ItemMapper`.
-- Names that say what a class does, e.g. split `EquipmentService.getEquipmentForCharacter` into sync and read.
-
-**Measuring accuracy (options, 2026-10-26; the user picks)**
-- Keep two questions apart. *Correctness*: does the engine obey the game's rules? Tests and properties answer that.
-  *Accuracy*: are its rankings right? Only an outside reference can answer that.
-- Correctness: property-based tests (jqwik), e.g. more of a weighted stat never lowers a score, shuffling the pool
-  never changes the result, a suggestion is always equippable and obtainable, never two of an item that can be worn
-  once.
-- Accuracy, cheapest first:
-  - **Closed-world benchmark** against published pre-raid BiS lists: per spec and slot, put the listed items in the
-    pool and measure top-1 / top-3 hits. Report it as a score with a minimum that only goes up, not as pass/fail.
-  - **Approval snapshots** of real characters' results, so changes show up as reviewed diffs (catches regressions, not
-    accuracy).
-  - **Simulation reference**: compare stat weights or rankings with a community sim (Spearman rank correlation).
-    Most work, highest fidelity.
-- Known blind spots any benchmark will mostly measure: equip spells and procs aren't scored, weights are linear
-  (no hit cap), no set bonuses, and the pool only holds items someone has synced (the catalog-seeding feature).
-
-**Future features**
-- Item catalog seeding (dungeon/raid/profession gear) so unseen items can be suggested. A hybrid approach: the catalog
-  from mangos, stats from the Blizzard item endpoint.
-- Equip spells → stats via a `spell_id → (StatType, value)` export.
-- **Stat caps (e.g. hit cap at 60), raised 2026-10-28, not designed yet.** Caps break the engine's core assumption that
-  slots are independent: whether hit on a helm is worth anything depends on every other piece. The likely shape:
-  orchestrators produce per-slot candidates, and a set-level step in `UpgradeFinderService` (it has `CharacterInfo`)
-  checks the totals against the caps and swaps over-cap pieces for the next best mix. The service will then call the
-  orchestrators more than once, so they must stay stateless and repeatable. Value above the cap drops to ~0, so weights
-  stop being linear. Related: the "weights are linear" blind spot under Measuring accuracy.
-- **Progression tiers ("level 60 problem")**, brainstormed 2026-10-20:
-  - **Idea:** place the character on a tier ladder, e.g. pre-raid → MC/Ony → BWL → AQ40 → Naxx (grouping is the
-    user's call), and suggest upgrades from the next tier. Optionally, an LLM explains the result in plain language;
-    the engine decides, the LLM only phrases it.
-  - **Patch ≠ difficulty.** Ashkandi (BWL) is patch 4 while Zin'rokh (ZG) is patch 5. Lionheart Helm (crafted) and
-    every MC drop are patch 0. The tier must come from the item's **source** (instance → curated
-    `ContentTierRegistry`), with `patch` at most a hint. "Introduced in" = `MIN(patch)` (Bonereaver's Edge has
-    0, 5 and 8).
-  - **Tier BiS doesn't need external lists:** run the existing engine on a pool restricted to tiers ≤ T, so it's
-    consistent with our own stat weights. A character's tier is where their current gear score reaches roughly X%
-    of that tier's BiS score.
-  - **Product decisions (user, 2026-10-20):**
-    - **Auto mode** uses a curated difficulty ranking of instances. **Target mode** compares current gear against an
-      instance the user picks.
-    - Ladder variants follow the "nearest acquisition" principle, with absolute BiS always on top.
-    - Crafted gear is mostly a pre-raid source. PvP gear is skipped for now.
-    - Reputation gear is an alternative with high effort, gated by the faction's patch.
-  - **Shaping ideas:**
-    - Give every source an *effort* score: dungeon < 20-man < 40-man raid; reputation scaled by rank; crafted by
-      materials. The ladder variants are then the **Pareto front** of (score gain, effort), i.e. the best gain at
-      each effort level.
-    - Reputation gear is easy to detect: `npc_vendor` + `item_template.required_reputation_faction/rank`.
-    - Ship in slices: v1 auto ladder, v2 target mode, v3 effort-based variants, v4 LLM explanations.
-  - **Data needed:** item → source instance, via `creature_loot_template` / `reference_loot_template` → creature →
-    `creature.map`. This is the expensive part; design and export it when the feature starts, not before.
-
-**Known limitations**
-- Choice-group exclusivity (two items from one quest's choices).
-- Completed quests per character.
-- A quest reward counts as one copy however many quests reward it (A1), even if it also has a repeatable source (A3).
-
-## Working agreement
-
-- The user implements and Claude reviews. Repetitive work (compile fixes, builders, missing tests) is Claude's.
-- Before each step, Claude explains why it's done this way, then gives breadcrumbs, docs and a "done when".
-- **Review replies:** each issue starts with *what* and a short *why*. More complex issues get more context and
-  breadcrumbs. Replies end with only the **current step** in one line. Clues come only on request.
-- Work is tagged **worth fighting**, **skim** or **delegate**, to keep learning time well spent.
-- Hints are graded: nudge, then stronger hint, then the answer.
-- Claude keeps this plan updated and compact.
+- Two rewards from one quest's choices can both be suggested (choice groups aren't modelled).
+- Completed quests are unknown, so a reward from a quest the character already did can still be suggested.
+- A quest reward counts as one copy however many quests reward it (A1), even with a repeatable source too (A3).
+- A failed talents fetch looks the same as "no talents": both get class-generic weights.
