@@ -1,6 +1,7 @@
-package com.bebis.BeBiS.item;
+package com.bebis.BeBiS.integration.blizzard;
 
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
+import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
@@ -21,12 +22,19 @@ public final class BlizzardFixtures {
     }
 
     public static ItemResponse loadItem(String fileName) {
-        String path = "/blizzard/item/" + fileName;
+        return load("/blizzard/item/" + fileName, ItemResponse.class);
+    }
+
+    public static SpecializationResponse loadSpecialization(String fileName) {
+        return load("/blizzard/specs/" + fileName, SpecializationResponse.class);
+    }
+
+    private static <T> T load(String path, Class<T> type) {
         try (InputStream json = BlizzardFixtures.class.getResourceAsStream(path)) {
             if (json == null) {
                 throw new IllegalArgumentException("Missing fixture " + path);
             }
-            return BLIZZARD_JSON.readValue(json, ItemResponse.class);
+            return BLIZZARD_JSON.readValue(json, type);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.item;
 
 import com.bebis.BeBiS.equipment.EquipmentResponseBuilder;
+import com.bebis.BeBiS.integration.blizzard.BlizzardFixtures;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.item.domain.Armor;

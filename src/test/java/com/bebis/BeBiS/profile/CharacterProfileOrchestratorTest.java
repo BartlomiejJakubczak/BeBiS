@@ -4,7 +4,6 @@ import com.bebis.BeBiS.equipment.EquipmentService;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
-import com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.domain.WowCharacterBuilder;
 import com.bebis.BeBiS.profile.domain.WowTalents;
@@ -21,9 +20,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.List;
 import java.util.Optional;
 
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -63,8 +62,7 @@ class CharacterProfileOrchestratorTest {
         WowCharacterEntity storedCharacter = storedCharacter(THELAMAR_ID, "Thelamar");
         WowCharacter character = WowCharacterBuilder.newWowCharacter().withId(THELAMAR_ID).withName("Thelamar").build();
         Equipment equipment = new Equipment();
-        Optional<WowTalents> talents = Optional.of(new WowTalents(List.of(
-                new Specialization("COMBAT", 31), new Specialization("ASSASSINATION", 20), new Specialization("SUBTLETY", 0))));
+        WowTalents talents = newWowTalents().withSpec("COMBAT", 31).withSpec("ASSASSINATION", 20).build();
 
         when(characterRepository.findById(WowCharacterEntity.CompositeKey.from(THELAMAR_ID))).thenReturn(Optional.of(storedCharacter));
         when(profileMapper.mapToDomain(storedCharacter)).thenReturn(character);

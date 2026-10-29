@@ -1,15 +1,15 @@
 package com.bebis.BeBiS.profile;
 
 import com.bebis.BeBiS.base.BaseFullStackTest;
+import com.bebis.BeBiS.integration.blizzard.BlizzardFixtures;
 import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.bebis.BeBiS.profile.domain.WowTalents;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.Optional;
 
-import static com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -25,32 +25,19 @@ public class SpecializationServiceIT extends BaseFullStackTest {
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
 
-        SpecializationResponse response = ProfileTestData.generateSpecializationResponse(
-                List.of("Arms", "Fury", "Protection"),
-                List.of(31, 20, 0)
-        );
+        SpecializationResponse response = BlizzardFixtures.loadSpecialization("spent_points_above_10.json");
 
         when(blizzardUserClient.getCharacterSpecialization(eq(realmSlug), eq(charName))).thenReturn(response);
 
         // when
-        Optional<WowTalents> result = service.getTalentsForCharacter(realmSlug, charName);
-        List<Specialization> specs = result.get().specs();
+        WowTalents result = service.getTalentsForCharacter(realmSlug, charName);
 
         // then
-        assertThat(specs.size()).isEqualTo(3);
-
-        assertThat(specs.get(0).name()).isEqualTo("ARMS");
-        assertThat(specs.get(0).points()).isEqualTo(31);
-
-        assertThat(specs.get(1).name()).isEqualTo("FURY");
-        assertThat(specs.get(1).points()).isEqualTo(20);
-
-        assertThat(specs.get(2).name()).isEqualTo("PROTECTION");
-        assertThat(specs.get(2).points()).isEqualTo(0);
+        assertThat(result).isEqualTo(newWowTalents().withSpec("COMBAT", 32).withSpec("ASSASSINATION", 12).build());
     }
 
     @Test
-    void shouldGetEmptyOptionalWhenResponseIsNull() {
+    void shouldGetWowTalentsWithEmptySpecsWhenResponseIsNull() {
         // given
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
@@ -58,26 +45,45 @@ public class SpecializationServiceIT extends BaseFullStackTest {
         when(blizzardUserClient.getCharacterSpecialization(eq(realmSlug), eq(charName))).thenReturn(null);
 
         // when
-        Optional<WowTalents> result = service.getTalentsForCharacter(realmSlug, charName);
+        WowTalents result = service.getTalentsForCharacter(realmSlug, charName);
 
         // then
-        assertThat(result).isEmpty();
+        assertThat(result.specs()).isEmpty();
     }
 
     @Test
-    void shouldGetEmptyOptionalWhenResponseHasEmptySpecs() {
+    void shouldGetWowTalentsWithEmptySpecsWhenResponseHasEmptySpecs() {
         // given
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
 
-        SpecializationResponse response = ProfileTestData.generateSpecializationResponseWithNullSpecs();
+        SpecializationResponse response = BlizzardFixtures.loadSpecialization("unspent_points_above_10.json");
 
         when(blizzardUserClient.getCharacterSpecialization(eq(realmSlug), eq(charName))).thenReturn(response);
 
         // when
-        Optional<WowTalents> result = service.getTalentsForCharacter(realmSlug, charName);
+        WowTalents result = service.getTalentsForCharacter(realmSlug, charName);
 
         // then
-        assertThat(result).isEmpty();
+        assertThat(result.specs()).isEmpty();
+    }
+
+    @Test
+    void shouldGetWowTalentsWithEmptySpecsWhenInvalidSpecThrownException() {
+        // given
+        String realmSlug = "soulseeker";
+        String charName = "Thelamar";
+
+        List<SpecializationResponse.Specialization> specs = List.of(new SpecializationResponse.Specialization("", 15));
+        SpecializationResponse.SpecializationGroup group = new SpecializationResponse.SpecializationGroup(true, specs);
+        SpecializationResponse response = new SpecializationResponse(List.of(group));
+
+        when(blizzardUserClient.getCharacterSpecialization(eq(realmSlug), eq(charName))).thenReturn(response);
+
+        // when / then
+        WowTalents result = service.getTalentsForCharacter(realmSlug, charName);
+
+        // then
+        assertThat(result.specs()).isEmpty();
     }
 }

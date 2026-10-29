@@ -3,17 +3,15 @@ package com.bebis.BeBiS.engine.upgrade;
 import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
 import com.bebis.BeBiS.engine.upgrade.domain.InterchangeableSlots;
 import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment.Slot;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.ClassSpec;
-import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
-
-import static com.bebis.BeBiS.profile.domain.ClassSpec.getClassSpec;
 
 /**
  * Runs the upgrade search for the interchangeable slot pairs (rings, trinkets): builds one item pool for
@@ -36,16 +34,15 @@ class InterchangeableSlotsUpgradeOrchestrator implements UpgradeOrchestrator {
     @Override
     @Async
     public void findUpgradesFor(CharacterInfo info) {
-        WowCharacter character = info.wowCharacter();
-        ClassSpec classSpec = getClassSpec(character.wowClass(), info.talents());
-
         ItemPool itemPool = itemPoolProvider.getItemPool(InterchangeableSlots.allSlots(),
-                new ItemPoolProvider.Query(character.level(), character.race(), character.wowClass()));
+                new ItemPoolProvider.Query(info.level(), info.race(), info.wowClass()));
+
+        ClassSpec classSpec = info.classSpec();
 
         for (InterchangeableSlots slots : InterchangeableSlots.values()) {
             SlotUpgradeQuery query = new SlotUpgradeQuery(slots, EquippedItemPair.from(slots, info.equipment()),
                     itemPoolProvider.restrictToSlots(slots.slots(), itemPool));
-            Map<Slot, UpgradeResult> results = upgradeFinder.findUpgrades(query, classSpec, character.race());
+            Map<Slot, UpgradeResult> results = upgradeFinder.findUpgrades(query, new ItemScoringContext(classSpec, info.race()));
             results.forEach(publisher::publish);
         }
     }

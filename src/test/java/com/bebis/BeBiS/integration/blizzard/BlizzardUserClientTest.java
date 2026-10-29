@@ -120,7 +120,7 @@ public class BlizzardUserClientTest {
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
 
-        server.expect(requestTo(baseUrl + "/profile/wow/character/" + realmSlug + "/" + charName + "/equipment" + BlizzardUserClient.LOCALE_QUERY_PARAM))
+        server.expect(requestTo(baseUrl + "/profile/wow/character/" + realmSlug + "/" + "thelamar" + "/equipment" + BlizzardUserClient.LOCALE_QUERY_PARAM))
                 .andExpect(header("Authorization", "Bearer fake-user-token"))
                 .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 
@@ -136,9 +136,9 @@ public class BlizzardUserClientTest {
         // given
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
-        SpecializationResponse mockResponse = new SpecializationResponse(null, List.of(), null);
+        SpecializationResponse mockResponse = new SpecializationResponse(List.of());
 
-        server.expect(requestTo(baseUrl + "/profile/wow/character/" + realmSlug + "/" + charName + "/specializations" + BlizzardUserClient.LOCALE_QUERY_PARAM))
+        server.expect(requestTo(baseUrl + "/profile/wow/character/" + realmSlug + "/" + "thelamar" + "/specializations" + BlizzardUserClient.LOCALE_QUERY_PARAM))
                 .andExpect(header("Authorization", "Bearer fake-user-token"))
                 .andRespond(withSuccess(objectMapper.writeValueAsString(mockResponse), MediaType.APPLICATION_JSON));
 

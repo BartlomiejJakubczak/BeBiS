@@ -8,8 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -37,10 +35,9 @@ public class SpecializationServiceTest {
 
         SpecializationResponse response = mock(SpecializationResponse.class);
         WowTalents mockTalents = mock(WowTalents.class);
-        Optional<WowTalents> talents = Optional.of(mockTalents);
 
         when(fetcher.fetchSpecialization(eq(realmSlug), eq(characterName))).thenReturn(response);
-        when(mapper.fromDTO(eq(response))).thenReturn(talents);
+        when(mapper.fromDTO(eq(response))).thenReturn(mockTalents);
 
         // when
         service.getTalentsForCharacter(realmSlug, characterName);

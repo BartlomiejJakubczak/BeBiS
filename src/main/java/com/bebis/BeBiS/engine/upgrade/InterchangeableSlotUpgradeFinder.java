@@ -1,13 +1,12 @@
 package com.bebis.BeBiS.engine.upgrade;
 
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
-import com.bebis.BeBiS.profile.domain.ClassSpec;
-import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -31,8 +30,8 @@ final class InterchangeableSlotUpgradeFinder {
         this.evaluator = evaluator;
     }
 
-    Map<Equipment.Slot, UpgradeResult> findUpgrades(InterchangeableSlotsUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
-        ScoredItemPool itemPool = scorer.scoreItemPool(query.slots().pickSlotForScoring(), query.itemPool(), classSpec, race);
+    Map<Equipment.Slot, UpgradeResult> findUpgrades(InterchangeableSlotsUpgradeOrchestrator.SlotUpgradeQuery query, ItemScoringContext context) {
+        ScoredItemPool itemPool = scorer.scoreItemPool(query.slots().pickSlotForScoring(), query.itemPool(), context);
 
         SlotPair equipped = new SlotPair(query.currentPair().slot1().map(EquippedItem::item).flatMap(itemPool::findItem),
                 query.currentPair().slot2().map(EquippedItem::item).flatMap(itemPool::findItem));

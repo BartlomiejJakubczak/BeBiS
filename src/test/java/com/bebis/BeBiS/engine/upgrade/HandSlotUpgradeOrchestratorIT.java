@@ -13,7 +13,6 @@ import com.bebis.BeBiS.item.jpa.WeaponEntity;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
 import com.bebis.BeBiS.profile.domain.WowCharacterBuilder;
-import com.bebis.BeBiS.profile.domain.WowTalents;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -25,9 +24,9 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.OFF_HAND;
 import static com.bebis.BeBiS.profile.domain.WowCharacter.WowClass.ROGUE;
@@ -112,8 +111,7 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 potentialOneHandUpgrade, powerfulEligibleTwoHand, createPowerfulOneHand(5L), createPowerfulTwoHand(6L))));
 
         // when
-        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq,
-                Optional.of(createTalents(Map.of("ARMS", 31, "FURY", 20, "PROTECTION", 0)))));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, newWowTalents().withSpec("ARMS", 31).withSpec("FURY", 20).build()));
 
         // then
         await().untilAsserted(() -> {
@@ -164,7 +162,7 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
 
         // when
         orchestrator.findUpgradesFor(new CharacterInfo(hordeRogue, new Equipment(),
-                Optional.of(createTalents(Map.of("ASSASSINATION", 0, "COMBAT", 21, "SUBTLETY", 0)))));
+                newWowTalents().withSpec("COMBAT", 21).build()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeFoundEvent.class))
@@ -181,13 +179,6 @@ public class HandSlotUpgradeOrchestratorIT extends BaseNonTransactionalFullstack
                 .withSpeed(2.0)
                 .withDps(80.0)
                 .build();
-    }
-
-    private WowTalents createTalents(Map<String, Integer> specs) {
-        List<WowTalents.Specialization> listSpec = specs.entrySet().stream()
-                .map((spec) -> new WowTalents.Specialization(spec.getKey(), spec.getValue()))
-                .toList();
-        return new WowTalents(listSpec);
     }
 
     private Weapon createPowerfulTwoHand(long baseId) {

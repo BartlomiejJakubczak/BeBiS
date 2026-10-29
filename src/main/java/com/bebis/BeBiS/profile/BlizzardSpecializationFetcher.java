@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 import static com.bebis.BeBiS.config.ResilienceConfig.ResilienceConstants.BLIZZARD_FETCHER;
 
 @Component
@@ -32,6 +34,6 @@ class BlizzardSpecializationFetcher {
 
     private SpecializationResponse fetchSpecializationFallback(String realmSlug, String characterName, Exception e) {
         log.error("Blizzard API failed for specialization for character {} with realm slug {}. Reason: {}", characterName, realmSlug, e.getMessage());
-        return new SpecializationResponse(null, null, null);
+        return new SpecializationResponse(List.of());
     }
 }

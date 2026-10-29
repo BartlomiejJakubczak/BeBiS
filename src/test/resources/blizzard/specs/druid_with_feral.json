@@ -1,0 +1,567 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/bloodfang/dru/specializations?namespace=profile-classic1x-eu"
+    }
+  },
+  "character": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/bloodfang/dru?namespace=profile-classic1x-eu"
+    },
+    "name": "Dru",
+    "id": 26931257,
+    "realm": {
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/realm/5224?namespace=dynamic-classic1x-eu"
+      },
+      "name": "Bloodfang",
+      "id": 5224,
+      "slug": "bloodfang"
+    }
+  },
+  "specialization_groups": [
+    {
+      "is_active": true,
+      "specializations": [
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 796
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Ferocity",
+                  "id": 16938
+                },
+                "description": "Reduces the cost of your Maul, Swipe, Claw, and Rake abilities by 5 Rage or Energy.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 799
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Feral Instinct",
+                  "id": 16951
+                },
+                "description": "Increases threat caused in Bear and Dire Bear Form by 15% and reduces the chance enemies have to detect you while Prowling.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 798
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Sharpened Claws",
+                  "id": 16944
+                },
+                "description": "Increases your critical strike chance while in Bear, Dire Bear or Cat Form by 6%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 804
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Feral Charge",
+                  "id": 16979
+                },
+                "description": "Causes you to charge an enemy, immobilizing and interrupting any spell being cast for 4 sec.",
+                "cast_time": "Instant",
+                "power_cost": "5 Rage",
+                "range": "8-25 yd range",
+                "cooldown": "15 sec cooldown"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 794
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Thick Hide",
+                  "id": 16933
+                },
+                "description": "Increases your Armor contribution from items by 10%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 801
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Primal Fury",
+                  "id": 16961
+                },
+                "description": "Gives you a 100% chance to gain an additional 5 Rage anytime you get a critical strike while in Bear and Dire Bear Form.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 803
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Predatory Strikes",
+                  "id": 16975
+                },
+                "description": "Increases your melee attack power in Cat, Bear and Dire Bear Forms by 150% of your level.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 1162
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Faerie Fire (Feral)",
+                  "id": 16857
+                },
+                "description": "Decrease the armor of the target by 175 for 40 sec.  While affected, the target cannot stealth or turn invisible.",
+                "cast_time": "Instant",
+                "power_cost": null,
+                "range": "30 yd range",
+                "cooldown": "6 sec cooldown"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 805
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Savage Fury",
+                  "id": 16999
+                },
+                "description": "Increases the damage caused by your Claw, Rake, Maul and Swipe abilities by 20%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 808
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Heart of the Wild",
+                  "id": 24894
+                },
+                "description": "Increases your Intellect by 20%.  In addition, while in Bear or Dire Bear Form your Stamina is increased by 20% and while in Cat Form your Strength is increased by 20%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 809
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Leader of the Pack",
+                  "id": 17007
+                },
+                "description": "While in Cat, Bear or Dire Bear Form, the Leader of the Pack increases ranged and melee critical chance of all party members within 45 yards by 3%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 1
+            }
+          ],
+          "specialization_name": "Feral Combat",
+          "spent_points": 33
+        },
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 761
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Nature's Grasp",
+                  "id": 16689
+                },
+                "description": "While active, any time an enemy strikes the caster they have a 100% chance to become afflicted by Entangling Roots (Rank 1).  Only useable outdoors.  1 charge.  Lasts 45 sec.",
+                "cast_time": "Instant cast",
+                "power_cost": "50 Mana",
+                "cooldown": "1 min cooldown"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 921
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Nature's Grasp",
+                  "id": 17249
+                },
+                "description": "Increases the chance for your Nature's Grasp to entangle an enemy by 65%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 4
+            },
+            {
+              "talent": {
+                "id": 791
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Natural Weapons",
+                  "id": 16906
+                },
+                "description": "Increases the damage you deal with physical attacks in all forms by 10%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 788
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Omen of Clarity",
+                  "id": 16864
+                },
+                "description": "Imbues the Druid with natural energy.  Each of the Druid's melee attacks has a chance of causing the caster to enter a Clearcasting state.  The Clearcasting state reduces the Mana, Rage or Energy cost of your next damage or healing spell or offensive ability by 100%.  Lasts 10 min.",
+                "cast_time": "Instant cast",
+                "power_cost": "120 Mana"
+              },
+              "talent_rank": 1
+            }
+          ],
+          "specialization_name": "Balance",
+          "spent_points": 11
+        },
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 822
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Furor",
+                  "id": 17061
+                },
+                "description": "Gives you 100% chance to gain 10 Rage when you shapeshift into Bear and Dire Bear Form or 40 Energy when you shapeshift into Cat Form.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 826
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Enrage",
+                  "id": 17082
+                },
+                "description": "The Enrage ability now instantly generates 10 Rage.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 2
+            }
+          ],
+          "specialization_name": "Restoration",
+          "spent_points": 7
+        }
+      ]
+    },
+    {
+      "is_active": false,
+      "specializations": [
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 821
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Mark of the Wild",
+                  "id": 17055
+                },
+                "description": "Increases the effects of your Mark of the Wild and Gift of the Wild spells by 35%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 824
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Healing Touch",
+                  "id": 17073
+                },
+                "description": "Reduces the cast time of your Healing Touch spell by 0.5 sec.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 829
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Reflection",
+                  "id": 17108
+                },
+                "description": "Allows 15% of your Mana regeneration to continue while casting.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 827
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Insect Swarm",
+                  "id": 5570
+                },
+                "description": "The enemy target is swarmed by insects, decreasing their chance to hit by 2% and causing 66 Nature damage over 12 sec.",
+                "cast_time": "Instant cast",
+                "power_cost": "45 Mana",
+                "range": "30 yd range"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 823
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Nature's Focus",
+                  "id": 17063
+                },
+                "description": "Gives you a 14% chance to avoid interruption caused by damage while casting the Healing Touch, Regrowth and Tranquility spells.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 843
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Tranquil Spirit",
+                  "id": 24970
+                },
+                "description": "Reduces the mana cost of your Healing Touch and Tranquility spells by 6%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 830
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Rejuvenation",
+                  "id": 17113
+                },
+                "description": "Increases the effect of your Rejuvenation spell by 15%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 831
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Nature's Swiftness",
+                  "id": 17116
+                },
+                "description": "When activated, your next Nature spell becomes an instant cast spell.",
+                "cast_time": "Instant",
+                "power_cost": null,
+                "cooldown": "3 min cooldown"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 828
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Gift of Nature",
+                  "id": 24946
+                },
+                "description": "Increases the effect of all healing spells by 10%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 5
+            }
+          ],
+          "specialization_name": "Restoration",
+          "spent_points": 27
+        },
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 762
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Wrath",
+                  "id": 16818
+                },
+                "description": "Reduces the cast time of your Wrath spell by 0.5 sec.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 761
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Nature's Grasp",
+                  "id": 16689
+                },
+                "description": "While active, any time an enemy strikes the caster they have a 100% chance to become afflicted by Entangling Roots (Rank 1).  Only useable outdoors.  1 charge.  Lasts 45 sec.",
+                "cast_time": "Instant cast",
+                "power_cost": "50 Mana",
+                "cooldown": "1 min cooldown"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 763
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Moonfire",
+                  "id": 16825
+                },
+                "description": "Increases the damage and critical strike chance of your Moonfire spell by 10%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 764
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Nature's Reach",
+                  "id": 16820
+                },
+                "description": "Increases the range of your Wrath, Entangling Roots, Faerie Fire, Moonfire, Starfire, and Hurricane spells by 20%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 781
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Natural Shapeshifter",
+                  "id": 16834
+                },
+                "description": "Reduces the mana cost of all shapeshifting by 20%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 792
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Vengeance",
+                  "id": 16913
+                },
+                "description": "Increases the critical strike damage bonus of your Starfire, Moonfire, and Wrath spells by 100%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 789
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Nature's Grace",
+                  "id": 16880
+                },
+                "description": "All spell criticals grace you with a blessing of nature, reducing the casting time of your next spell by 0.5 sec.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 783
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Moonglow",
+                  "id": 16847
+                },
+                "description": "Reduces the Mana cost of your Moonfire, Starfire, Wrath, Healing Touch, Regrowth and Rejuvenation spells by 9%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 3
+            }
+          ],
+          "specialization_name": "Balance",
+          "spent_points": 24
+        }
+      ]
+    }
+  ]
+}

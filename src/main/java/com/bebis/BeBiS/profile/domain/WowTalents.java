@@ -1,40 +1,46 @@
 package com.bebis.BeBiS.profile.domain;
 
-import com.bebis.BeBiS.profile.domain.exception.InvalidTalentTreeException;
-import com.bebis.BeBiS.profile.domain.exception.TalentTreeTieInException;
-
 import java.util.Comparator;
-import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
-public record WowTalents(List<Specialization> specs) {
+/**
+ * The points a character has spent per talent tree, taken from the active talent group (Classic Era has dual spec).
+ * <p>
+ * Only trees with points are listed, because Blizzard leaves 0-point trees out. An empty set means no talents: the
+ * character is below level 10, hasn't spent any points, or the talents couldn't be fetched. Tree names are the
+ * normalized ones the mapper produces ({@code "BEASTMASTERY"}, {@code "FERALCOMBAT"}), which {@link ClassSpec} matches.
+ */
+public record WowTalents(Set<Specialization> specs) {
 
-    public static final String NO_SPEC = "NONE";
+    private static final String NO_SPEC = "NONE";
 
     public WowTalents {
-        if (specs.size() != 3)
-            throw new InvalidTalentTreeException("There should always be 3 specs per talent tree");
+        specs = Set.copyOf(specs);
     }
 
+    /**
+     * One talent tree and the points spent in it.
+     */
     public record Specialization(String name, int points) {
     }
 
-    public String getActiveSpec() throws TalentTreeTieInException {
-        int maxPoints = specs.stream()
-                .max(Comparator.comparingInt(Specialization::points))
-                .get()
-                .points;
+    /**
+     * The tree with the most points, which decides the character's {@link ClassSpec}.
+     *
+     * @return the tree's name, or {@code "NONE"} when no points are spent or the top trees tie
+     */
+    public String getActiveSpec() {
+        Optional<Specialization> topSpec = specs.stream().max(Comparator.comparingInt(Specialization::points));
 
-        long topSpecCount = specs.stream()
-                .filter((spec) -> spec.points == maxPoints)
-                .count();
-        if (topSpecCount > 1)
-            throw new TalentTreeTieInException("Tie-in in talents detected");
-
-        return specs.stream()
-                .filter((spec) -> spec.points == maxPoints)
-                .findFirst()
-                .get()
-                .name;
+        return topSpec.map((top) -> {
+            long topSpecCount = specs.stream().filter((s) -> s.points == top.points).count();
+            if (topSpecCount > 1) return NO_SPEC; // for now just NO_SPEC to remain deterministic
+            return top.name;
+        }).orElse(NO_SPEC);
     }
 
+    public static WowTalents none() {
+        return new WowTalents(Set.of());
+    }
 }

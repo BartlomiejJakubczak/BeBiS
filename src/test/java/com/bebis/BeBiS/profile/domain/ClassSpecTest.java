@@ -4,36 +4,27 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
+import static com.bebis.BeBiS.profile.domain.ClassSpec.getClassSpec;
 import static com.bebis.BeBiS.profile.domain.WowCharacter.WowClass;
-import static com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class ClassSpecTest {
 
     @ParameterizedTest
     @MethodSource("classSpecsProvider")
-    void shouldGetExactClassSpecCorrectly(WowClass wowClass, Optional<WowTalents> talents, ClassSpec expectedSpec) {
+    void shouldGetExactClassSpecCorrectly(WowClass wowClass, WowTalents talents, ClassSpec expectedSpec) {
         // when
-        ClassSpec actualSpec = ClassSpec.getClassSpec(wowClass, talents);
+        ClassSpec actualSpec = getClassSpec(wowClass, talents);
 
         // then
         assertThat(actualSpec).isEqualTo(expectedSpec);
     }
 
-    private static Optional<WowTalents> getWowTalentsWithMostPointsIn(String specName) {
-        return Optional.of(
-                new WowTalents(
-                        List.of(
-                                new Specialization(specName, 31),
-                                new Specialization("SPEC_2", 20),
-                                new Specialization("SPEC_3", 0)
-                        )
-                )
-        );
+    private static WowTalents getWowTalentsWithMostPointsIn(String specName) {
+        return newWowTalents().withSpec(specName, 31).withSpec("SPEC_2", 20).build();
     }
 
     private static Stream<Arguments> classSpecsProvider() {
@@ -60,7 +51,7 @@ public class ClassSpecTest {
 
                 // Druid
                 Arguments.of(WowClass.DRUID, getWowTalentsWithMostPointsIn("BALANCE"), ClassSpec.DRUID_BALANCE),
-                Arguments.of(WowClass.DRUID, getWowTalentsWithMostPointsIn("FERAL"), ClassSpec.DRUID_FERAL),
+                Arguments.of(WowClass.DRUID, getWowTalentsWithMostPointsIn("FERALCOMBAT"), ClassSpec.DRUID_FERAL),
                 Arguments.of(WowClass.DRUID, getWowTalentsWithMostPointsIn("RESTORATION"), ClassSpec.DRUID_RESTORATION),
 
                 // Hunter
@@ -84,23 +75,23 @@ public class ClassSpecTest {
                 Arguments.of(WowClass.WARLOCK, getWowTalentsWithMostPointsIn("DESTRUCTION"), ClassSpec.WARLOCK_DESTRUCTION),
 
                 // Base Baseline Defaults (Fresh characters/Respecs)
-                Arguments.of(WowClass.WARRIOR, Optional.empty(), ClassSpec.WARRIOR_NONE),
-                Arguments.of(WowClass.PALADIN, Optional.empty(), ClassSpec.PALADIN_NONE),
-                Arguments.of(WowClass.ROGUE, Optional.empty(), ClassSpec.ROGUE_NONE),
-                Arguments.of(WowClass.SHAMAN, Optional.empty(), ClassSpec.SHAMAN_NONE),
-                Arguments.of(WowClass.DRUID, Optional.empty(), ClassSpec.DRUID_NONE),
-                Arguments.of(WowClass.HUNTER, Optional.empty(), ClassSpec.HUNTER_NONE),
-                Arguments.of(WowClass.PRIEST, Optional.empty(), ClassSpec.PRIEST_NONE),
-                Arguments.of(WowClass.MAGE, Optional.empty(), ClassSpec.MAGE_NONE),
-                Arguments.of(WowClass.WARLOCK, Optional.empty(), ClassSpec.WARLOCK_NONE)
+                Arguments.of(WowClass.WARRIOR, newWowTalents().build(), ClassSpec.WARRIOR_NONE),
+                Arguments.of(WowClass.PALADIN, newWowTalents().build(), ClassSpec.PALADIN_NONE),
+                Arguments.of(WowClass.ROGUE, newWowTalents().build(), ClassSpec.ROGUE_NONE),
+                Arguments.of(WowClass.SHAMAN, newWowTalents().build(), ClassSpec.SHAMAN_NONE),
+                Arguments.of(WowClass.DRUID, newWowTalents().build(), ClassSpec.DRUID_NONE),
+                Arguments.of(WowClass.HUNTER, newWowTalents().build(), ClassSpec.HUNTER_NONE),
+                Arguments.of(WowClass.PRIEST, newWowTalents().build(), ClassSpec.PRIEST_NONE),
+                Arguments.of(WowClass.MAGE, newWowTalents().build(), ClassSpec.MAGE_NONE),
+                Arguments.of(WowClass.WARLOCK, newWowTalents().build(), ClassSpec.WARLOCK_NONE)
         );
     }
 
     @ParameterizedTest
     @MethodSource("corruptedClassSpecsProvider")
-    void shouldFallbackToNoneSuffixedClassSpecWhenDataIsCorrupted(WowClass wowClass, Optional<WowTalents> talents, ClassSpec expectedFallback) {
+    void shouldFallbackToNoneSuffixedClassSpecWhenDataIsCorrupted(WowClass wowClass, WowTalents talents, ClassSpec expectedFallback) {
         // when
-        ClassSpec actualSpec = ClassSpec.getClassSpec(wowClass, talents);
+        ClassSpec actualSpec = getClassSpec(wowClass, talents);
 
         // then
         assertThat(actualSpec).isEqualTo(expectedFallback);

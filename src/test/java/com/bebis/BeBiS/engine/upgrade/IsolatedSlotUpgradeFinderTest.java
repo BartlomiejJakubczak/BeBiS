@@ -1,6 +1,7 @@
 package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
@@ -43,6 +44,7 @@ public class IsolatedSlotUpgradeFinderTest {
     // test data
     private final ClassSpec classSpec = ClassSpec.ROGUE_COMBAT;
     private final WowCharacter.Race race = WowCharacter.Race.HUMAN;
+    private final ItemScoringContext context = new ItemScoringContext(classSpec, race);
 
     @BeforeEach
     void setup() {
@@ -58,7 +60,7 @@ public class IsolatedSlotUpgradeFinderTest {
         ItemPool itemPool = givenPoolScoredAs(CHEST, Map.of(worseChest, 21.0, betterChest, 37.0));
 
         // when
-        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, Optional.empty(), itemPool), classSpec, race);
+        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, Optional.empty(), itemPool), context);
 
         // then
         assertThat(result).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
@@ -71,7 +73,7 @@ public class IsolatedSlotUpgradeFinderTest {
         ItemPool itemPool = givenPoolScoredAs(CHEST, Map.of());
 
         // when
-        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, Optional.empty(), itemPool), classSpec, race);
+        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, Optional.empty(), itemPool), context);
 
         // then
         assertThat(result).isInstanceOf(UpgradeResult.NoItemsAvailableResult.class);
@@ -87,7 +89,7 @@ public class IsolatedSlotUpgradeFinderTest {
         ItemPool itemPool = givenPoolScoredAs(CHEST, Map.of(currentChest, 21.0, otherChest, 37.0, bestChest, 69.0));
 
         // when
-        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, equipped(currentChest), itemPool), classSpec, race);
+        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, equipped(currentChest), itemPool), context);
 
         // then
         assertThat(result).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
@@ -104,7 +106,7 @@ public class IsolatedSlotUpgradeFinderTest {
         ItemPool itemPool = givenPoolScoredAs(CHEST, Map.of(currentChest, eqItemScore, otherChest, otherItemScore));
 
         // when
-        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, equipped(currentChest), itemPool), classSpec, race);
+        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(CHEST, equipped(currentChest), itemPool), context);
 
         // then
         assertThat(result).asInstanceOf(type(UpgradeResult.AlreadyBiSResult.class))
@@ -131,7 +133,7 @@ public class IsolatedSlotUpgradeFinderTest {
         ItemPool itemPool = givenPoolScoredAs(RANGED, Map.of(currentBow, 30.0, betterBow, 45.0));
 
         // when
-        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(RANGED, equipped(currentBow), itemPool), classSpec, race);
+        UpgradeResult result = finder.findUpgrade(new SlotUpgradeQuery(RANGED, equipped(currentBow), itemPool), context);
 
         // then
         assertThat(result).asInstanceOf(type(UpgradeResult.UpgradeFoundResult.class))
@@ -146,7 +148,7 @@ public class IsolatedSlotUpgradeFinderTest {
         List<ScoredItem> scoredItems = scores.entrySet().stream()
                 .map(entry -> new ScoredItem(entry.getKey(), entry.getValue()))
                 .toList();
-        when(scorer.scoreItemPool(slot, itemPool, classSpec, race)).thenReturn(new ScoredItemPool(scoredItems));
+        when(scorer.scoreItemPool(slot, itemPool, context)).thenReturn(new ScoredItemPool(scoredItems));
         return itemPool;
     }
 

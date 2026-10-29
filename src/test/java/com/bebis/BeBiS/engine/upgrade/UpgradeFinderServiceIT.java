@@ -12,10 +12,10 @@ import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -35,7 +35,7 @@ public class UpgradeFinderServiceIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldPublishExactlyOneEventPerSlot_EmptyEquipment() {
         // given
-        CharacterInfo info = new CharacterInfo(WowCharacterBuilder.newWowCharacter().build(), new Equipment(), Optional.empty());
+        CharacterInfo info = new CharacterInfo(WowCharacterBuilder.newWowCharacter().build(), new Equipment(), newWowTalents().build());
 
         // when
         upgradeFinderService.findUpgradesFor(info);

@@ -4,7 +4,6 @@ import com.bebis.BeBiS.profile.domain.WowCharacter.WowClass;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 public enum ClassSpec {
@@ -21,7 +20,7 @@ public enum ClassSpec {
     SHAMAN_ENHANCEMENT(WowClass.SHAMAN, "ENHANCEMENT"),
     SHAMAN_ELEMENTAL(WowClass.SHAMAN, "ELEMENTAL"),
     SHAMAN_RESTORATION(WowClass.SHAMAN, "RESTORATION"),
-    DRUID_FERAL(WowClass.DRUID, "FERAL"),
+    DRUID_FERAL(WowClass.DRUID, "FERALCOMBAT"),
     DRUID_RESTORATION(WowClass.DRUID, "RESTORATION"),
     DRUID_BALANCE(WowClass.DRUID, "BALANCE"),
     HUNTER_BEASTMASTERY(WowClass.HUNTER, "BEASTMASTERY"),
@@ -64,8 +63,14 @@ public enum ClassSpec {
         this.specName = specName;
     }
 
-    public static ClassSpec getClassSpec(WowClass wowClass, Optional<WowTalents> talents) {
-        String specName = talents.map(WowTalents::getActiveSpec).orElse(WowTalents.NO_SPEC);
+    /**
+     * Resolves the spec from the tree with the most points.
+     *
+     * @return the class's spec, or {@code <CLASS>_NONE} when no points are spent, the top trees tie or the tree
+     * doesn't belong to the class
+     */
+    public static ClassSpec getClassSpec(WowClass wowClass, WowTalents talents) {
+        String specName = talents.getActiveSpec();
         ClassSpec spec = LOOKUP_TABLE.get(wowClass + "_" + specName);
         return (spec != null) ? spec : ClassSpec.valueOf(wowClass + "_NONE");
     }

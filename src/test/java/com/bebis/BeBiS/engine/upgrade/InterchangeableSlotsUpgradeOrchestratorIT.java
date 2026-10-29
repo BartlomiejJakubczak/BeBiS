@@ -21,13 +21,10 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_1;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.FINGER_2;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_1;
-import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.TRINKET_2;
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
+import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.awaitility.Awaitility.await;
@@ -66,7 +63,7 @@ public class InterchangeableSlotsUpgradeOrchestratorIT extends BaseNonTransactio
         WowCharacter wowCharacter = WowCharacterBuilder.newWowCharacter().withLevel(9).build();
 
         // when
-        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, new Equipment(), newWowTalents().build()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeNotAvailableEvent.class))
@@ -85,7 +82,7 @@ public class InterchangeableSlotsUpgradeOrchestratorIT extends BaseNonTransactio
         transactionTemplate.executeWithoutResult(a -> setUpItemsInDb(List.of(theOneRing)));
 
         // when
-        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, new Equipment(), Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, new Equipment(), newWowTalents().build()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.UpgradeFoundEvent.class))
@@ -126,7 +123,7 @@ public class InterchangeableSlotsUpgradeOrchestratorIT extends BaseNonTransactio
 
 
         // when
-        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, newWowTalents().build()));
 
         // then
         await().untilAsserted(() -> assertThat(applicationEvents.stream(UpgradeEvent.BiSAlreadyEquippedEvent.class))
@@ -166,7 +163,7 @@ public class InterchangeableSlotsUpgradeOrchestratorIT extends BaseNonTransactio
 
 
         // when
-        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, Optional.empty()));
+        orchestrator.findUpgradesFor(new CharacterInfo(wowCharacter, eq, newWowTalents().build()));
 
         // then
 

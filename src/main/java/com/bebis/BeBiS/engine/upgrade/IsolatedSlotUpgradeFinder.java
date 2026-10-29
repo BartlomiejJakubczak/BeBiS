@@ -1,10 +1,9 @@
 package com.bebis.BeBiS.engine.upgrade;
 
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
-import com.bebis.BeBiS.profile.domain.ClassSpec;
-import com.bebis.BeBiS.profile.domain.WowCharacter;
 import org.springframework.stereotype.Component;
 
 /**
@@ -21,8 +20,8 @@ final class IsolatedSlotUpgradeFinder {
         this.evaluator = evaluator;
     }
 
-    UpgradeResult findUpgrade(IsolatedSlotUpgradeOrchestrator.SlotUpgradeQuery query, ClassSpec classSpec, WowCharacter.Race race) {
-        ScoredItemPool scoredItems = scorer.scoreItemPool(query.slot(), query.itemPool(), classSpec, race);
+    UpgradeResult findUpgrade(IsolatedSlotUpgradeOrchestrator.SlotUpgradeQuery query, ItemScoringContext context) {
+        ScoredItemPool scoredItems = scorer.scoreItemPool(query.slot(), query.itemPool(), context);
         return evaluator.evaluateUpgradeResult(query.currentItem().map(EquippedItem::item).flatMap(scoredItems::findItem), scoredItems.bestItem());
     }
 

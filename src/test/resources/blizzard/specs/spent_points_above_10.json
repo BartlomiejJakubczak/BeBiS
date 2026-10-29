@@ -1,0 +1,280 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/soulseeker/thelamar/specializations?namespace=profile-classic1x-eu"
+    }
+  },
+  "character": {
+    "key": {
+      "href": "https://eu.api.blizzard.com/profile/wow/character/soulseeker/thelamar?namespace=profile-classic1x-eu"
+    },
+    "name": "Thelamar",
+    "id": 78491091,
+    "realm": {
+      "key": {
+        "href": "https://eu.api.blizzard.com/data/wow/realm/6113?namespace=dynamic-classic1x-eu"
+      },
+      "name": "Soulseeker",
+      "id": 6113,
+      "slug": "soulseeker"
+    }
+  },
+  "specialization_groups": [
+    {
+      "is_active": true,
+      "specializations": [
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 201
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Sinister Strike",
+                  "id": 13863
+                },
+                "description": "Reduces the Energy cost of your Sinister Strike ability by 5.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 203
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Gouge",
+                  "id": 13792
+                },
+                "description": "Increases the effect duration of your Gouge ability by 1.5 sec.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 181
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Precision",
+                  "id": 13845
+                },
+                "description": "Increases your chance to hit with melee weapons by 5%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 204
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Endurance",
+                  "id": 13872
+                },
+                "description": "Reduces the cooldown of your Sprint and Evasion abilities by 1.5 min.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 222
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Sprint",
+                  "id": 13875
+                },
+                "description": "Gives a 100% chance to remove all movement impairing effects when you activate your Sprint ability.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 186
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Lightning Reflexes",
+                  "id": 13712
+                },
+                "description": "Increases your Dodge chance by 1%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 221
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Dual Wield Specialization",
+                  "id": 13852
+                },
+                "description": "Increases the damage done by your offhand weapon by 50%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 223
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Blade Flurry",
+                  "id": 13877
+                },
+                "description": "Increases your attack speed by 20%.  In addition, attacks strike an additional nearby opponent.  Lasts 15 sec.",
+                "cast_time": "Instant",
+                "power_cost": "25 Energy",
+                "cooldown": "2 min cooldown"
+              },
+              "talent_rank": 1
+            },
+            {
+              "talent": {
+                "id": 242
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Sword Specialization",
+                  "id": 13964
+                },
+                "description": "Gives you a 5% chance to get an extra attack on the same target after dealing damage with your Sword.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 1703
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Weapon Expertise",
+                  "id": 30920
+                },
+                "description": "Increases your skill with Sword, Fist and Dagger weapons by 5.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 2
+            },
+            {
+              "talent": {
+                "id": 1122
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Aggression",
+                  "id": 18429
+                },
+                "description": "Increases the damage of your Sinister Strike and Eviscerate abilities by 6%.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 205
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Adrenaline Rush",
+                  "id": 13750
+                },
+                "description": "Increases your Energy regeneration rate by 100% for 15 sec.",
+                "cast_time": "Instant",
+                "power_cost": null,
+                "cooldown": "5 min cooldown"
+              },
+              "talent_rank": 1
+            }
+          ],
+          "specialization_name": "Combat",
+          "spent_points": 32
+        },
+        {
+          "talents": [
+            {
+              "talent": {
+                "id": 270
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Malice",
+                  "id": 14142
+                },
+                "description": "Increases your critical strike chance by 5%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 5
+            },
+            {
+              "talent": {
+                "id": 273
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Ruthlessness",
+                  "id": 14161
+                },
+                "description": "Gives your finishing moves a 60% chance to add a combo point to your target.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 277
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Improved Slice and Dice",
+                  "id": 14167
+                },
+                "description": "Increases the duration of your Slice and Dice ability by 45%.",
+                "cast_time": "Passive",
+                "power_cost": null
+              },
+              "talent_rank": 3
+            },
+            {
+              "talent": {
+                "id": 281
+              },
+              "spell_tooltip": {
+                "spell": {
+                  "name": "Relentless Strikes",
+                  "id": 14179
+                },
+                "description": "Your finishing moves have a 20% chance per combo point to restore 25 energy.",
+                "cast_time": "Passive"
+              },
+              "talent_rank": 1
+            }
+          ],
+          "specialization_name": "Assassination",
+          "spent_points": 12
+        }
+      ]
+    }
+  ]
+}

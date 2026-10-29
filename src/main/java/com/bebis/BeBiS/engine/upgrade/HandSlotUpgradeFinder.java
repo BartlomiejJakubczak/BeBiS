@@ -2,6 +2,7 @@ package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
 import com.bebis.BeBiS.engine.upgrade.domain.HandSlotCombinations;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.SlotPair;
@@ -18,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.bebis.BeBiS.engine.upgrade.HandSlotUpgradeOrchestrator.CharacterContext;
 import static com.bebis.BeBiS.engine.upgrade.HandSlotUpgradeOrchestrator.HandSlotItemPools;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.OFF_HAND;
@@ -39,9 +39,9 @@ final class HandSlotUpgradeFinder {
         this.evaluator = evaluator;
     }
 
-    Map<Equipment.Slot, UpgradeResult> findUpgrades(EquippedItemPair currentPair, CharacterContext context, HandSlotCombinations combos, HandSlotItemPools itemPools) {
-        ScoredItemPool scoredMainHands = scorer.scoreItemPool(MAIN_HAND, itemPools.mainHandPool(), context.classSpec(), context.race());
-        ScoredItemPool scoredOffHands = scorer.scoreItemPool(OFF_HAND, itemPools.offHandPool(), context.classSpec(), context.race());
+    Map<Equipment.Slot, UpgradeResult> findUpgrades(EquippedItemPair currentPair, ItemScoringContext context, HandSlotCombinations combos, HandSlotItemPools itemPools) {
+        ScoredItemPool scoredMainHands = scorer.scoreItemPool(MAIN_HAND, itemPools.mainHandPool(), context);
+        ScoredItemPool scoredOffHands = scorer.scoreItemPool(OFF_HAND, itemPools.offHandPool(), context);
 
         SlotPair equipped = new SlotPair(currentPair.slot1().map(EquippedItem::item).flatMap(scoredMainHands::findItem),
                 currentPair.slot2().map(EquippedItem::item).flatMap(scoredOffHands::findItem));

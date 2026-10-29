@@ -2,6 +2,7 @@ package com.bebis.BeBiS.engine.upgrade;
 
 import com.bebis.BeBiS.engine.power.core.PowerCalculatorEngine;
 import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.item.WeaponBuilder;
@@ -31,6 +32,7 @@ class ItemScorerTest {
 
     private final ClassSpec classSpec = ClassSpec.ROGUE_COMBAT;
     private final WowCharacter.Race race = WowCharacter.Race.HUMAN;
+    private final ItemScoringContext context = new ItemScoringContext(classSpec, race);
 
     @BeforeEach
     void setUp() {
@@ -47,7 +49,7 @@ class ItemScorerTest {
         when(calculator.calculate(OFF_HAND, highSword, classSpec, race)).thenReturn(100.0);
 
         // when
-        ScoredItemPool result = scorer.scoreItemPool(OFF_HAND, new ItemPool(List.of(lowSword, highSword)), classSpec, race);
+        ScoredItemPool result = scorer.scoreItemPool(OFF_HAND, new ItemPool(List.of(lowSword, highSword)), context);
 
         // then
         assertThat(result.items()).containsExactly(new ScoredItem(highSword, 100.0), new ScoredItem(lowSword, 10.0));
@@ -56,7 +58,7 @@ class ItemScorerTest {
     @Test
     void shouldNotCallCalculator_WhenPoolIsEmpty() {
         // when
-        ScoredItemPool result = scorer.scoreItemPool(OFF_HAND, new ItemPool(List.of()), classSpec, race);
+        ScoredItemPool result = scorer.scoreItemPool(OFF_HAND, new ItemPool(List.of()), context);
 
         // then
         assertThat(result.items()).isEmpty();

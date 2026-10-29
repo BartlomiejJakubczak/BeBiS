@@ -29,13 +29,12 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.bebis.BeBiS.engine.upgrade.event.UpgradeEvent.*;
 import static com.bebis.BeBiS.profile.domain.WowCharacter.WowClass;
-import static com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -70,7 +69,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withWowClass(WowClass.ROGUE).withLevel(60).build(), eq,
-                Optional.of(createTalents(Map.of("ASSASSINATION", 31, "COMBAT", 20, "SUBTLETY", 0))));
+                newWowTalents().withSpec("ASSASSINATION", 31).withSpec("COMBAT", 20).build());
 
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentItem, bestItem, otherItem)));
 
@@ -115,7 +114,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withWowClass(WowClass.ROGUE).withLevel(60).build(), eq,
-                Optional.of(createTalents(Map.of("ASSASSINATION", 31, "COMBAT", 20, "SUBTLETY", 0))));
+                newWowTalents().withSpec("ASSASSINATION", 31).withSpec("COMBAT", 20).build());
 
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentItem, lowerItem1, lowerItem2)));
 
@@ -160,7 +159,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withWowClass(WowClass.ROGUE).build(), eq,
-                Optional.of(createTalents(Map.of("ASSASSINATION", 31, "COMBAT", 20, "SUBTLETY", 0))));
+                newWowTalents().withSpec("ASSASSINATION", 31).withSpec("COMBAT", 20).build());
 
         // when
         orchestrator.findUpgradesFor(charInfo);
@@ -184,7 +183,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withWowClass(WowClass.HUNTER).withLevel(60).build(), eq,
-                Optional.of(createTalents(Map.of("BEASTMASTERY", 10, "MARKSMANSHIP", 31, "SURVIVAL", 10))));
+                newWowTalents().withSpec("BEASTMASTERY", 10).withSpec("MARKSMANSHIP", 31).withSpec("SURVIVAL", 10).build());
 
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentBow, hardHittingBow)));
 
@@ -198,7 +197,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
     @ParameterizedTest
     @MethodSource("nonHybridClassTalentsProvider")
-    void shouldSignalAppropriateEventsForDifferentTalentsButSameEquipment_NonHybridClass(Map<String, Integer> specs, Class<? extends UpgradeEvent> expectedEvent) {
+    void shouldSignalAppropriateEventsForDifferentTalentsButSameEquipment_NonHybridClass(WowTalents talents, Class<? extends UpgradeEvent> expectedEvent) {
         // given
         Equipment.Slot slot = Equipment.Slot.CHEST;
 
@@ -216,7 +215,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withLevel(60).withWowClass(WowClass.ROGUE).build(),
-                eq, Optional.of(createTalents(specs)));
+                eq, talents);
 
         // when
         orchestrator.findUpgradesFor(charInfo);
@@ -227,14 +226,14 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
     private static Stream<Arguments> nonHybridClassTalentsProvider() {
         return Stream.of(
-                Arguments.of(Map.of("ASSASSINATION", 31, "COMBAT", 20, "SUBTLETY", 0), UpgradeFoundEvent.class),
-                Arguments.of(Map.of("ASSASSINATION", 20, "COMBAT", 31, "SUBTLETY", 0), BiSAlreadyEquippedEvent.class)
+                Arguments.of(newWowTalents().withSpec("ASSASSINATION", 31).withSpec("COMBAT", 20).build(), UpgradeFoundEvent.class),
+                Arguments.of(newWowTalents().withSpec("ASSASSINATION", 20).withSpec("COMBAT", 31).build(), BiSAlreadyEquippedEvent.class)
         );
     }
 
     @ParameterizedTest
     @MethodSource("hybridClassTalentsProvider")
-    void shouldSignalAppropriateEventsForDifferentTalentsButSameEquipment_HybridClass(Map<String, Integer> specs, Class<? extends UpgradeEvent> expectedEvent) {
+    void shouldSignalAppropriateEventsForDifferentTalentsButSameEquipment_HybridClass(WowTalents talents, Class<? extends UpgradeEvent> expectedEvent) {
         // given
         Equipment.Slot slot = Equipment.Slot.CHEST;
 
@@ -255,7 +254,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withLevel(60).withWowClass(WowClass.PALADIN).build(),
-                eq, Optional.of(createTalents(specs)));
+                eq, talents);
 
         // when
         orchestrator.findUpgradesFor(charInfo);
@@ -266,8 +265,8 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
     private static Stream<Arguments> hybridClassTalentsProvider() {
         return Stream.of(
-                Arguments.of(Map.of("PROTECTION", 31, "RETRIBUTION", 20, "HOLY", 0), BiSAlreadyEquippedEvent.class),
-                Arguments.of(Map.of("PROTECTION", 20, "RETRIBUTION", 0, "HOLY", 31), UpgradeFoundEvent.class)
+                Arguments.of(newWowTalents().withSpec("PROTECTION", 31).withSpec("RETRIBUTION", 20).build(), BiSAlreadyEquippedEvent.class),
+                Arguments.of(newWowTalents().withSpec("PROTECTION", 20).withSpec("HOLY", 31).build(), UpgradeFoundEvent.class)
         );
     }
 
@@ -290,7 +289,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         CharacterInfo charInfo = createCharacterInfo(
                 WowCharacterBuilder.newWowCharacter().withWowClass(WowClass.WARRIOR).withLevel(60).build(), eq,
-                Optional.of(createTalents(Map.of("ARMS", 20, "FURY", 31, "PROTECTION", 0))));
+                newWowTalents().withSpec("ARMS", 20).withSpec("FURY", 31).build());
 
         // when
         orchestrator.findUpgradesFor(charInfo);
@@ -317,7 +316,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentChest, upgradeChest)));
 
         CharacterInfo charInfo = createCharacterInfo(
-                WowCharacterBuilder.newWowCharacter().withLevel(1).withWowClass(WowClass.ROGUE).build(), eq, Optional.empty());
+                WowCharacterBuilder.newWowCharacter().withLevel(1).withWowClass(WowClass.ROGUE).build(), eq, newWowTalents().build());
 
         // when
         orchestrator.findUpgradesFor(charInfo);
@@ -343,7 +342,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
 
         transactionTemplate.executeWithoutResult((a) -> setUpItemsInDb(List.of(currentChest, upgradeChest)));
 
-        CharacterInfo charInfo = createCharacterInfo(WowCharacterBuilder.newWowCharacter().withLevel(9).withWowClass(WowClass.WARRIOR).build(), eq, Optional.empty());
+        CharacterInfo charInfo = createCharacterInfo(WowCharacterBuilder.newWowCharacter().withLevel(9).withWowClass(WowClass.WARRIOR).build(), eq, newWowTalents().build());
 
         // when
         orchestrator.findUpgradesFor(charInfo);
@@ -371,14 +370,7 @@ public class IsolatedSlotUpgradeOrchestratorIT extends BaseNonTransactionalFulls
         return new Weapon(metadata, speed, minDamage, maxDamage, dps, type);
     }
 
-    private WowTalents createTalents(Map<String, Integer> specs) {
-        List<Specialization> listSpec = specs.entrySet().stream()
-                .map((spec) -> new Specialization(spec.getKey(), spec.getValue()))
-                .toList();
-        return new WowTalents(listSpec);
-    }
-
-    private CharacterInfo createCharacterInfo(WowCharacter wowCharacter, Equipment eq, Optional<WowTalents> talents) {
+    private CharacterInfo createCharacterInfo(WowCharacter wowCharacter, Equipment eq, WowTalents talents) {
         return new CharacterInfo(wowCharacter, eq, talents);
     }
 

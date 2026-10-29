@@ -5,7 +5,6 @@ import com.bebis.BeBiS.engine.upgrade.UpgradeFinderService;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
-import com.bebis.BeBiS.profile.domain.WowRealm;
 import com.bebis.BeBiS.profile.domain.WowTalents;
 import com.bebis.BeBiS.profile.event.CharacterSelectedEvent;
 import org.jspecify.annotations.NonNull;
@@ -15,10 +14,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
 
-import static com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
+import static com.bebis.BeBiS.profile.domain.WowCharacterBuilder.newWowCharacter;
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -49,17 +47,10 @@ public class CharacterSelectedListenerTest extends BaseAsyncListenerTest {
     }
 
     private static @NonNull CharacterInfo getCharacterInfo() {
-        WowCharacter wowChar = new WowCharacter(new WowCharacter.Id(1L, "soulseeker", 1L), "Thelamar", 60,
-                WowCharacter.Race.NIGHT_ELF, WowCharacter.WowClass.ROGUE, new WowRealm("Soulseeker", "soulseeker"));
-
+        WowCharacter wowChar = newWowCharacter().build();
         Equipment equipment = new Equipment();
+        WowTalents talents = newWowTalents().withSpec("COMBAT", 31).withSpec("ASSASSINATION", 20).build();
 
-        WowTalents talents = new WowTalents(List.of(
-                new Specialization("COMBAT", 31),
-                new Specialization("ASSASSINATION", 20),
-                new Specialization("SUBTLETY", 0)
-        ));
-
-        return new CharacterInfo(wowChar, equipment, Optional.of(talents));
+        return new CharacterInfo(wowChar, equipment, talents);
     }
 }

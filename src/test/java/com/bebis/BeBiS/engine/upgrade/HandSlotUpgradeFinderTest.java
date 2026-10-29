@@ -4,6 +4,7 @@ import com.bebis.BeBiS.engine.upgrade.domain.EquippedItemPair;
 import com.bebis.BeBiS.engine.upgrade.domain.HandSlotCombinations;
 import com.bebis.BeBiS.engine.upgrade.domain.HandSlotTypes;
 import com.bebis.BeBiS.engine.upgrade.domain.ItemPool;
+import com.bebis.BeBiS.engine.upgrade.domain.ItemScoringContext;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItem;
 import com.bebis.BeBiS.engine.upgrade.domain.ScoredItemPool;
 import com.bebis.BeBiS.engine.upgrade.domain.UpgradeResult;
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static com.bebis.BeBiS.engine.upgrade.HandSlotUpgradeOrchestrator.CharacterContext;
 import static com.bebis.BeBiS.engine.upgrade.HandSlotUpgradeOrchestrator.HandSlotItemPools;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.MAIN_HAND;
 import static com.bebis.BeBiS.equipment.domain.Equipment.Slot.OFF_HAND;
@@ -47,7 +47,7 @@ public class HandSlotUpgradeFinderTest {
     private HandSlotUpgradeFinder finder;
 
     // test data
-    private final CharacterContext defaultContext = new CharacterContext(ClassSpec.ROGUE_COMBAT, WowCharacter.Race.NIGHT_ELF);
+    private final ItemScoringContext defaultContext = new ItemScoringContext(ClassSpec.ROGUE_COMBAT, WowCharacter.Race.NIGHT_ELF);
     private final HandSlotCombinations defaultCombos = HandSlotCombinations.from(new HandSlotTypes(List.of(WEAPON, WEAPONMAINHAND), List.of(WEAPON, WEAPONOFFHAND)));
 
     @BeforeEach
@@ -70,7 +70,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSignalUpgradeFoundResultAndSlotClearedResult_TwoHandStrongerThanCurrentCombination() {
         // given
-        CharacterContext context = new CharacterContext(ClassSpec.WARRIOR_ARMS, WowCharacter.Race.ORC);
+        ItemScoringContext context = new ItemScoringContext(ClassSpec.WARRIOR_ARMS, WowCharacter.Race.ORC);
         HandSlotCombinations combos = HandSlotCombinations.from(new HandSlotTypes(List.of(TWO_HAND), List.of()),
                 new HandSlotTypes(List.of(WEAPON, WEAPONMAINHAND), List.of(WEAPON, WEAPONOFFHAND, SHIELD)));
 
@@ -99,7 +99,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSignalUpgradeFoundResults_TwoOneHandersBetterThanCurrentTwoHand() {
         // given
-        CharacterContext context = new CharacterContext(ClassSpec.PALADIN_PROTECTION, WowCharacter.Race.HUMAN);
+        ItemScoringContext context = new ItemScoringContext(ClassSpec.PALADIN_PROTECTION, WowCharacter.Race.HUMAN);
         HandSlotCombinations combos = HandSlotCombinations.from(new HandSlotTypes(List.of(TWO_HAND), List.of()),
                 new HandSlotTypes(List.of(WEAPON, WEAPONMAINHAND), List.of(SHIELD)));
 
@@ -128,7 +128,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSelectNextBestOffHandWeapon_CurrentBestWeaponUniqueEquipped() {
         // given
-        CharacterContext context = defaultContext;
+        ItemScoringContext context = defaultContext;
 
         Item powerfulUniqueWeapon = WeaponBuilder.newOneHandSword().withBaseId(1L).withUniqueEquipped(true).build();
         Item secondBestWeapon = WeaponBuilder.newOneHandSword().withBaseId(2L).build();
@@ -155,7 +155,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSignalBisAlreadyEquippedAndNoItemsAvailableResults_CurrentCasterTwoHandIsBetterThanTheOtherCombination() {
         // given
-        CharacterContext context = new CharacterContext(ClassSpec.DRUID_BALANCE, WowCharacter.Race.NIGHT_ELF);
+        ItemScoringContext context = new ItemScoringContext(ClassSpec.DRUID_BALANCE, WowCharacter.Race.NIGHT_ELF);
         HandSlotCombinations combos = HandSlotCombinations.from(
                 new HandSlotTypes(List.of(TWO_HAND), List.of()),
                 new HandSlotTypes(List.of(WEAPON, WEAPONMAINHAND), List.of(HOLDABLE))
@@ -186,7 +186,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSignalBisAlreadyEquippedForBothSlots_BiSCombinationAlreadyWorn() {
         // given
-        CharacterContext context = new CharacterContext(ClassSpec.WARRIOR_PROTECTION, WowCharacter.Race.HUMAN);
+        ItemScoringContext context = new ItemScoringContext(ClassSpec.WARRIOR_PROTECTION, WowCharacter.Race.HUMAN);
         HandSlotCombinations combos = HandSlotCombinations.from(
                 new HandSlotTypes(List.of(TWO_HAND), List.of()),
                 new HandSlotTypes(List.of(WEAPON, WEAPONMAINHAND), List.of(WEAPON, WEAPONOFFHAND, SHIELD))
@@ -219,7 +219,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldPrioritizeComboWithEquippedMatchesOnScoreTie() {
         // given
-        CharacterContext context = defaultContext;
+        ItemScoringContext context = defaultContext;
 
         Item equippedMain = WeaponBuilder.newOneHandSword().withBaseId(1L).withName("Equipped MH").build();
         Item equippedOff = WeaponBuilder.newOneHandSword().withBaseId(2L).withName("Equipped OH").build();
@@ -248,7 +248,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSignalUpgradesForBothSlotsWhenTransitioningFromTwoHandToOneHandPlusShieldIsBetter() {
         // given
-        CharacterContext context = new CharacterContext(ClassSpec.WARRIOR_NONE, WowCharacter.Race.ORC);
+        ItemScoringContext context = new ItemScoringContext(ClassSpec.WARRIOR_NONE, WowCharacter.Race.ORC);
         HandSlotCombinations combos = HandSlotCombinations.from(
                 new HandSlotTypes(List.of(TWO_HAND), List.of()),
                 new HandSlotTypes(List.of(WEAPON, WEAPONMAINHAND), List.of(SHIELD)) // No off-hand allowed/available
@@ -279,7 +279,7 @@ public class HandSlotUpgradeFinderTest {
     @Test
     void shouldSelectNextBestOffHandWeapon_BestWeaponIsQuestReward() {
         // given (Outlaw Sabre: a one-handed quest reward that isn't Unique, so only its quest source keeps it to one hand)
-        CharacterContext context = new CharacterContext(ClassSpec.ROGUE_COMBAT, WowCharacter.Race.ORC);
+        ItemScoringContext context = new ItemScoringContext(ClassSpec.ROGUE_COMBAT, WowCharacter.Race.ORC);
 
         Item outlawSabre = WeaponBuilder.newOneHandSword().withBaseId(16886L).withName("Outlaw Sabre")
                 .withUniqueEquipped(false)
@@ -307,12 +307,12 @@ public class HandSlotUpgradeFinderTest {
      * Stubs the scorer to score the returned pool with the given scores for this hand. The same weapon usually scores
      * differently in each hand.
      */
-    private ItemPool givenPoolScoredAs(Equipment.Slot slot, CharacterContext context, Map<? extends Item, Double> scores) {
+    private ItemPool givenPoolScoredAs(Equipment.Slot slot, ItemScoringContext context, Map<? extends Item, Double> scores) {
         ItemPool itemPool = new ItemPool(List.copyOf(scores.keySet()));
         List<ScoredItem> scoredItems = scores.entrySet().stream()
                 .map(entry -> new ScoredItem(entry.getKey(), entry.getValue()))
                 .toList();
-        when(scorer.scoreItemPool(slot, itemPool, context.classSpec(), context.race())).thenReturn(new ScoredItemPool(scoredItems));
+        when(scorer.scoreItemPool(slot, itemPool, context)).thenReturn(new ScoredItemPool(scoredItems));
         return itemPool;
     }
 

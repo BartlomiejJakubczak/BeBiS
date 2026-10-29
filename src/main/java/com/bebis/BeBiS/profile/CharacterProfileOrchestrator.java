@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 
 
 @Component
@@ -74,7 +73,7 @@ public class CharacterProfileOrchestrator {
         return equipmentService.getEquipmentForCharacter(eq);
     }
 
-    private Optional<WowTalents> processTalents(WowCharacter character) {
+    private WowTalents processTalents(WowCharacter character) {
         return specService.getTalentsForCharacter(character.id().realmSlug(), character.name());
     }
 

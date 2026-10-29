@@ -90,11 +90,12 @@ public class BlizzardUserOAuthIT extends BaseWiremockTest {
         // given
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
+        String charNameInUrl = "thelamar"; // Blizzard returns a 404 for capitalized names
 
         stubFor(
                 get(urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/equipment"))
                         .withPathParam("realmSlug", equalTo(realmSlug))
-                        .withPathParam("charName", equalTo(charName))
+                        .withPathParam("charName", equalTo(charNameInUrl))
                         .withHeader(namespaceHeader, equalTo(userNamespace))
                         .withQueryParam("locale", equalTo(locale)) // wiremock ignores everything that is after "?" by default
                         .willReturn(okJson("""
@@ -108,7 +109,7 @@ public class BlizzardUserOAuthIT extends BaseWiremockTest {
         verify(getRequestedFor(
                 urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/equipment"))
                 .withPathParam("realmSlug", equalTo(realmSlug))
-                .withPathParam("charName", equalTo(charName))
+                .withPathParam("charName", equalTo(charNameInUrl))
                 .withHeader("Authorization", equalTo("Bearer fake-user-token")));
     }
 
@@ -117,15 +118,16 @@ public class BlizzardUserOAuthIT extends BaseWiremockTest {
         // given
         String realmSlug = "soulseeker";
         String charName = "Thelamar";
+        String charNameInUrl = "thelamar"; // Blizzard returns a 404 for capitalized names
 
         stubFor(
                 get(urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/specializations"))
                         .withPathParam("realmSlug", equalTo(realmSlug))
-                        .withPathParam("charName", equalTo(charName))
+                        .withPathParam("charName", equalTo(charNameInUrl))
                         .withHeader(namespaceHeader, equalTo(userNamespace))
                         .withQueryParam("locale", equalTo(locale))
                         .willReturn(okJson("""
-                                {"specializations": []}
+                                {"specialization_groups": []}
                                 """)));
 
         // when
@@ -135,7 +137,7 @@ public class BlizzardUserOAuthIT extends BaseWiremockTest {
         verify(getRequestedFor(
                 urlPathTemplate("/profile/wow/character/{realmSlug}/{charName}/specializations"))
                 .withPathParam("realmSlug", equalTo(realmSlug))
-                .withPathParam("charName", equalTo(charName))
+                .withPathParam("charName", equalTo(charNameInUrl))
                 .withHeader("Authorization", equalTo("Bearer fake-user-token")));
     }
 

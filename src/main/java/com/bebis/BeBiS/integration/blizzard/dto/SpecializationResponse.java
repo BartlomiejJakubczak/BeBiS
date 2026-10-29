@@ -6,72 +6,26 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /**
- * Production DTO mapping the WoW Classic Profile Specializations endpoint response.
+ * Production DTO mapping the WoW Classic Era Profile Specializations endpoint response.
+ * Only the fields we read are mapped; the full shape lives in the recordings (src/test/resources/blizzard/specs).
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record SpecializationResponse(
-        @JsonProperty("_links") Links links,
-        @JsonProperty("specializations") List<CharacterSpecialization> specializations,
-        @JsonProperty("character") CharacterReference character
+        // up to two groups (dual spec), and the active one isn't always first
+        @JsonProperty("specialization_groups") List<SpecializationGroup> specializationGroups
 ) {
-    public record Links(
-            @JsonProperty("self") HrefLinkDTO self
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SpecializationGroup(
+            @JsonProperty("is_active") boolean isActive,
+            // absent when no points are spent; trees with 0 points are left out
+            @JsonProperty("specializations") List<Specialization> specializations
     ) {
     }
 
-    public record CharacterSpecialization(
-            @JsonProperty("specialization") SpecializationReference specialization,
-            @JsonProperty("talents") List<TalentDetails> talents,
-            @JsonProperty("points_spent") Integer pointsSpent
-    ) {
-    }
-
-    public record SpecializationReference(
-            @JsonProperty("key") HrefLinkDTO key,
-            @JsonProperty("name") String name,
-            @JsonProperty("id") Long id
-    ) {
-    }
-
-    public record TalentDetails(
-            @JsonProperty("talent") TalentReference talent,
-            @JsonProperty("spell_tooltip") SpellTooltip spellTooltip
-    ) {
-    }
-
-    public record TalentReference(
-            @JsonProperty("key") HrefLinkDTO key,
-            @JsonProperty("name") String name,
-            @JsonProperty("id") Long id
-    ) {
-    }
-
-    public record SpellTooltip(
-            @JsonProperty("spell") SpellReference spell,
-            @JsonProperty("description") String description
-    ) {
-    }
-
-    public record SpellReference(
-            @JsonProperty("key") HrefLinkDTO key,
-            @JsonProperty("name") String name,
-            @JsonProperty("id") Long id
-    ) {
-    }
-
-    public record CharacterReference(
-            @JsonProperty("key") HrefLinkDTO key,
-            @JsonProperty("name") String name,
-            @JsonProperty("id") Long id,
-            @JsonProperty("realm") RealmReference realm
-    ) {
-    }
-
-    public record RealmReference(
-            @JsonProperty("key") HrefLinkDTO key,
-            @JsonProperty("name") String name,
-            @JsonProperty("id") Long id,
-            @JsonProperty("slug") String slug
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Specialization(
+            @JsonProperty("specialization_name") String name, // localized tree name, e.g. "Feral Combat"
+            @JsonProperty("spent_points") int spentPoints
     ) {
     }
 }

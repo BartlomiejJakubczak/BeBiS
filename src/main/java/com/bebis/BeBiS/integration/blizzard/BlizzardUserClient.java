@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.Locale;
+
 @Component
 public final class BlizzardUserClient {
 
@@ -27,14 +29,14 @@ public final class BlizzardUserClient {
 
     public EquipmentResponse getCharacterEquipment(String realmSlug, String characterName) {
         return restClient.get()
-                .uri("/profile/wow/character/" + realmSlug + "/" + characterName + "/equipment" + LOCALE_QUERY_PARAM)
+                .uri("/profile/wow/character/" + realmSlug + "/" + characterName.toLowerCase(Locale.ROOT) + "/equipment" + LOCALE_QUERY_PARAM)
                 .retrieve()
                 .body(EquipmentResponse.class);
     }
 
     public SpecializationResponse getCharacterSpecialization(String realmSlug, String characterName) {
         return restClient.get()
-                .uri("/profile/wow/character/" + realmSlug + "/" + characterName + "/specializations" + LOCALE_QUERY_PARAM)
+                .uri("/profile/wow/character/" + realmSlug + "/" + characterName.toLowerCase(Locale.ROOT) + "/specializations" + LOCALE_QUERY_PARAM)
                 .retrieve()
                 .body(SpecializationResponse.class);
     }

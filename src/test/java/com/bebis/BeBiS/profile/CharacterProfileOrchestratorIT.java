@@ -5,13 +5,13 @@ import com.bebis.BeBiS.equipment.EquipmentResponseBuilder;
 import com.bebis.BeBiS.equipment.domain.Equipment;
 import com.bebis.BeBiS.equipment.domain.EquippedItem;
 import com.bebis.BeBiS.equipment.jpa.EquipmentEntity;
+import com.bebis.BeBiS.integration.blizzard.BlizzardFixtures;
 import com.bebis.BeBiS.integration.blizzard.dto.EquipmentResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.ItemResponse;
 import com.bebis.BeBiS.integration.blizzard.dto.SpecializationResponse;
 import com.bebis.BeBiS.item.ItemResponseBuilder;
 import com.bebis.BeBiS.profile.domain.CharacterInfo;
 import com.bebis.BeBiS.profile.domain.WowCharacter;
-import com.bebis.BeBiS.profile.domain.WowTalents;
 import com.bebis.BeBiS.profile.event.CharacterSelectedEvent;
 import com.bebis.BeBiS.profile.jpa.WowCharacterEntity;
 import jakarta.persistence.EntityManager;
@@ -22,7 +22,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.util.List;
 
-import static com.bebis.BeBiS.profile.domain.WowTalents.Specialization;
+import static com.bebis.BeBiS.profile.domain.WowTalentsBuilder.newWowTalents;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -50,10 +50,7 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
 
         setupWowCharacter(charId, blizzAccountId, realmSlug, charName, wowClass, race);
 
-        SpecializationResponse specResponse = ProfileTestData.generateSpecializationResponse(
-                List.of("Combat", "Assassination", "Subtlety"),
-                List.of(31, 20, 0)
-        );
+        SpecializationResponse specResponse = BlizzardFixtures.loadSpecialization("spent_points_above_10.json");
         when(blizzardUserClient.getCharacterSpecialization(realmSlug, charName)).thenReturn(specResponse);
 
         ItemResponse response = ItemResponseBuilder.newWeaponInstance().build();
@@ -74,13 +71,8 @@ public class CharacterProfileOrchestratorIT extends BaseFullStackTest {
         assertThat(characterFromSelected.race()).isEqualTo(race);
         assertThat(characterFromSelected.wowClass()).isEqualTo(wowClass);
 
-        WowTalents talentsFromSelected = charInfo.talents().get();
-        List<Specialization> expectedSpecs = List.of(
-                new Specialization("COMBAT", 31),
-                new Specialization("ASSASSINATION", 20),
-                new Specialization("SUBTLETY", 0)
-        );
-        assertThat(talentsFromSelected.specs()).isEqualTo(expectedSpecs);
+        assertThat(charInfo.talents())
+                .isEqualTo(newWowTalents().withSpec("COMBAT", 32).withSpec("ASSASSINATION", 12).build());
 
         Equipment equipmentFromSelected = charInfo.equipment();
         EquippedItem equippedItem = equipmentFromSelected.getEquipment().get(Equipment.Slot.MAIN_HAND);
