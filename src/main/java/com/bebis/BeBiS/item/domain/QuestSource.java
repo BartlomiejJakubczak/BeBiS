@@ -44,6 +44,11 @@ public record QuestSource(
     }
 
     @Override
+    public boolean allows(int level) {
+        return level >= minLevel;
+    }
+
+    @Override
     public boolean isRepeatable() {
         return false; // quest rewards are inherently "one-offs"
     }

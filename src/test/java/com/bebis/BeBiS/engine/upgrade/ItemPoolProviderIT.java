@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.bebis.BeBiS.profile.domain.WowCharacter.WowClass.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
@@ -38,6 +39,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     private static final long HORDE_QUEST_REWARD = 900001L;
     private static final long MIRRORED_QUEST_REWARD = 900002L; // rewarded by an alliance and a horde version of a quest
     private static final long WARRIOR_QUEST_REWARD = 900003L;
+    private static final long WHIRLWIND_AXE_QUEST_REWARD = 900005L;
     private static final int ALLIANCE_RACE_MASK = 77; // human, dwarf, night elf, gnome
     private static final int HORDE_RACE_MASK = 178; // orc, undead, tauren, troll
 
@@ -69,20 +71,29 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
                 createEquippableEntity(11L, 50, Item.InventoryType.TRINKET),
                 createEquippableEntity(12L, 50, Item.InventoryType.TRINKET),
                 createEquippableEntity(13L, 50, Item.InventoryType.TRINKET),
-                // no level requirement
-                createArmorEntity(14L, 0, Armor.ArmorType.MAIL),
+                // requires level 1, i.e. none
+                createArmorEntity(14L, 1, Armor.ArmorType.MAIL),
                 // class restricted: tier chest wearable by every plate class, but restricted to warriors
-                createClassRestrictedArmorEntity(15L, 60, Armor.ArmorType.PLATE, WowCharacter.WowClass.WARRIOR),
+                createClassRestrictedArmorEntity(15L, 60, Armor.ArmorType.PLATE, WARRIOR),
                 // quest rewards (leg slot, so the chest suites above stay untouched)
                 createLegsEntity(HORDE_QUEST_REWARD),
                 createLegsEntity(MIRRORED_QUEST_REWARD),
-                createLegsEntity(WARRIOR_QUEST_REWARD)
+                createLegsEntity(WARRIOR_QUEST_REWARD),
+                createWeaponEntity(WHIRLWIND_AXE_QUEST_REWARD, 0, Item.InventoryType.TWO_HAND, Weapon.WeaponType.AXE)
         )));
         // quest_rewards is reference data with no FK to items: ids far above real item ids keep the seed untouched
-        insertQuestReward(HORDE_QUEST_REWARD, 900101L, 0, HORDE_RACE_MASK);
-        insertQuestReward(MIRRORED_QUEST_REWARD, 900102L, 0, ALLIANCE_RACE_MASK);
-        insertQuestReward(MIRRORED_QUEST_REWARD, 900103L, 0, HORDE_RACE_MASK);
-        insertQuestReward(WARRIOR_QUEST_REWARD, 900104L, 1, 0); // class bit 1 = warrior
+        insertQuestReward(HORDE_QUEST_REWARD, 900101L, 60, 0, HORDE_RACE_MASK);
+        insertQuestReward(MIRRORED_QUEST_REWARD, 900102L, 60, 0, ALLIANCE_RACE_MASK);
+        insertQuestReward(MIRRORED_QUEST_REWARD, 900103L, 60, 0, HORDE_RACE_MASK);
+        insertQuestReward(WARRIOR_QUEST_REWARD, 900104L, 60, 1, 0); // class bit 1 = warrior
+        insertQuestReward(WHIRLWIND_AXE_QUEST_REWARD, 900105L, 30, 1, 0); // class bit 1 = warrior
+    }
+
+    @AfterAll
+    void dbTeardown() {
+        // no @Transactional, so manual teardown is needed
+        jdbcTemplate.execute("TRUNCATE TABLE items CASCADE"); // postgre-specific syntax
+        jdbcTemplate.update("DELETE FROM quest_rewards WHERE quest_id >= 900000");
     }
 
     @ParameterizedTest
@@ -99,9 +110,9 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     private static Stream<Arguments> questRaceRestrictionProvider() {
         return Stream.of(
                 // horde-only quest: hidden from alliance; mirrored quests: one of them always fits
-                Arguments.of(WowCharacter.Race.ORC, WowCharacter.WowClass.WARRIOR,
+                Arguments.of(WowCharacter.Race.ORC, WARRIOR,
                         Set.of(HORDE_QUEST_REWARD, MIRRORED_QUEST_REWARD, WARRIOR_QUEST_REWARD)),
-                Arguments.of(WowCharacter.Race.HUMAN, WowCharacter.WowClass.WARRIOR,
+                Arguments.of(WowCharacter.Race.HUMAN, WARRIOR,
                         Set.of(MIRRORED_QUEST_REWARD, WARRIOR_QUEST_REWARD))
         );
     }
@@ -109,7 +120,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldHideQuestRewardFromClassesTheQuestExcludes_EvenWhenTheItemItselfIsNotClassRestricted() {
         // given / when
-        List<Item> result = itemPoolProvider.getItemPool(Set.of(Equipment.Slot.LEGS), new ItemPoolProvider.Query(60, WowCharacter.Race.HUMAN, WowCharacter.WowClass.PALADIN)).items();
+        List<Item> result = itemPoolProvider.getItemPool(Set.of(Equipment.Slot.LEGS), new ItemPoolProvider.Query(60, WowCharacter.Race.HUMAN, PALADIN)).items();
 
         // then
         assertThat(extractIdsFromResult(result)).doesNotContain(WARRIOR_QUEST_REWARD);
@@ -128,23 +139,34 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
 
     private static Stream<Arguments> classRestrictionProvider() {
         return Stream.of(
-                Arguments.of(WowCharacter.WowClass.WARRIOR, true),
-                Arguments.of(WowCharacter.WowClass.PALADIN, false) // plate at 40+, but not a warrior
+                Arguments.of(WARRIOR, true),
+                Arguments.of(PALADIN, false) // plate at 40+, but not a warrior
         );
     }
 
-    @AfterAll
-    void dbTeardown() {
-        // no @Transactional, so manual teardown is needed
-        jdbcTemplate.execute("TRUNCATE TABLE items CASCADE"); // postgre-specific syntax
-        jdbcTemplate.update("DELETE FROM quest_rewards WHERE quest_id >= 900000");
+    @Test
+    void shouldHideQuestReward_BelowItsQuestMinLevel() {
+        // given / when
+        List<Item> result = poolFor(Equipment.Slot.MAIN_HAND, 29, WARRIOR);
+
+        // then
+        assertThat(extractIdsFromResult(result)).doesNotContain(WHIRLWIND_AXE_QUEST_REWARD);
+    }
+
+    @Test
+    void shouldOfferQuestReward_AtItsQuestMinLevel() {
+        // given / when
+        List<Item> result = poolFor(Equipment.Slot.MAIN_HAND, 30, WARRIOR);
+
+        // then
+        assertThat(extractIdsFromResult(result)).contains(WHIRLWIND_AXE_QUEST_REWARD);
     }
 
     @ParameterizedTest
     @MethodSource("slotsToExpectedItemPoolProvider")
     void shouldGetTheSameItemPoolForRingsAndTrinketsNoMatterWhichSlot(Set<Equipment.Slot> slots, Set<Long> expectedIds) {
         slots.forEach(slot -> {
-            List<Item> result = poolFor(slot, 60, WowCharacter.WowClass.WARRIOR);
+            List<Item> result = poolFor(slot, 60, WARRIOR);
             assertThat(extractIdsFromResult(result)).isEqualTo(expectedIds);
         });
     }
@@ -159,7 +181,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldExcludeItemsNotTrainableForAGivenClass() {
         // given / when
-        List<Item> result = poolFor(Equipment.Slot.RANGED, 60, WowCharacter.WowClass.WARRIOR);
+        List<Item> result = poolFor(Equipment.Slot.RANGED, 60, WARRIOR);
 
         // then
         assertThat(extractIdsFromResult(result)).containsExactlyInAnyOrder(5L, 6L);
@@ -168,7 +190,7 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
     @Test
     void shouldExcludeItemWithRequiredLevelHigherThanCharacterLevel() {
         // given
-        WowCharacter.WowClass wowClass = WowCharacter.WowClass.WARRIOR;
+        WowCharacter.WowClass wowClass = WARRIOR;
         int level = 45;
 
         // when
@@ -208,9 +230,9 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
         return itemPoolProvider.getItemPool(Set.of(slot), new ItemPoolProvider.Query(level, race, wowClass)).items();
     }
 
-    private void insertQuestReward(long baseId, long questId, int classMask, int raceMask) {
+    private void insertQuestReward(long baseId, long questId, int questMinLevel, int classMask, int raceMask) {
         jdbcTemplate.update("INSERT INTO quest_rewards (base_id, quest_id, quest_min_level, quest_level, reward_kind, " +
-                "required_classes, required_races) VALUES (?, ?, 1, 60, 'CHOICE', ?, ?)", baseId, questId, classMask, raceMask);
+                "required_classes, required_races) VALUES (?, ?, ?, 60, 'CHOICE', ?, ?)", baseId, questId, questMinLevel, classMask, raceMask);
     }
 
     private Set<Long> extractIdsFromResult(List<Item> result) {
@@ -221,14 +243,14 @@ public class ItemPoolProviderIT extends BaseNonTransactionalFullstackTest {
 
     private static Stream<Arguments> classAndLevelProvider() {
         return Stream.of(
-                Arguments.of(WowCharacter.WowClass.WARRIOR, 39, Set.of(1L, 2L, 14L)),
-                Arguments.of(WowCharacter.WowClass.WARRIOR, 40, Set.of(1L, 2L, 3L, 14L)),
-                Arguments.of(WowCharacter.WowClass.PALADIN, 39, Set.of(1L, 2L, 14L)),
-                Arguments.of(WowCharacter.WowClass.PALADIN, 40, Set.of(1L, 2L, 3L, 14L)),
-                Arguments.of(WowCharacter.WowClass.HUNTER, 39, Set.of(1L)),
-                Arguments.of(WowCharacter.WowClass.HUNTER, 40, Set.of(1L, 2L, 14L)),
-                Arguments.of(WowCharacter.WowClass.SHAMAN, 39, Set.of(1L)),
-                Arguments.of(WowCharacter.WowClass.SHAMAN, 40, Set.of(1L, 2L, 14L))
+                Arguments.of(WARRIOR, 39, Set.of(1L, 2L, 14L)),
+                Arguments.of(WARRIOR, 40, Set.of(1L, 2L, 3L, 14L)),
+                Arguments.of(PALADIN, 39, Set.of(1L, 2L, 14L)),
+                Arguments.of(PALADIN, 40, Set.of(1L, 2L, 3L, 14L)),
+                Arguments.of(HUNTER, 39, Set.of(1L)),
+                Arguments.of(HUNTER, 40, Set.of(1L, 2L, 14L)),
+                Arguments.of(SHAMAN, 39, Set.of(1L)),
+                Arguments.of(SHAMAN, 40, Set.of(1L, 2L, 14L))
         );
     }
 

@@ -40,7 +40,7 @@ class ItemPoolProvider {
                 eligibleItemTypes.eligibleArmor(), eligibleItemTypes.eligibleWeapons(), query.wowClass(), query.level());
 
         List<Item> itemPool = itemQueryService.findAll(criteria).stream()
-                .filter((it) -> isItemEligibleFor(it, query.race(), query.wowClass()))
+                .filter((it) -> isItemEligibleFor(it, query))
                 .toList();
 
         return new ItemPool(itemPool);
@@ -57,7 +57,7 @@ class ItemPoolProvider {
     public record Query(int level, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
     }
 
-    private boolean isItemEligibleFor(Item item, WowCharacter.Race race, WowCharacter.WowClass wowClass) {
-        return item.isObtainableBy(race) && item.isObtainableBy(wowClass) && item.isEquippableBy(wowClass);
+    private boolean isItemEligibleFor(Item item, Query query) {
+        return item.isObtainableBy(query.race()) && item.isObtainableBy(query.wowClass()) && item.isObtainableBy(query.level());
     }
 }

@@ -21,6 +21,11 @@ public record OtherSource() implements Item.Source {
     }
 
     @Override
+    public boolean allows(int level) {
+        return true;
+    }
+
+    @Override
     public boolean isRepeatable() {
         return true;
     }

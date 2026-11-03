@@ -104,6 +104,8 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
 
         boolean allows(WowCharacter.WowClass wowClass);
 
+        boolean allows(int level);
+
         boolean isRepeatable();
     }
 
@@ -125,10 +127,12 @@ public abstract sealed class Item permits Weapon, Armor, EquippableItem {
     }
 
     /**
-     * Whether a character of this class can equip the item, derived directly from item response.
+     * Whether a character of this level can obtain the item. Items can have requiredLevels set to 0 or 1 in the game's world,
+     * in which case the source of the item has to provide information about level requirement (for example, Whirlwind Axe has no level
+     * requirement, but its quest starts at level 30). If there was no source, then requiredLevel was enough at first filtering.
      */
-    public boolean isEquippableBy(WowCharacter.WowClass wowClass) {
-        return metadata.playableClasses().isEmpty() || metadata.playableClasses().contains(wowClass);
+    public boolean isObtainableBy(int level) {
+        return metadata.sources().isEmpty() || metadata.sources().stream().anyMatch(source -> source.allows(level));
     }
 
     /**

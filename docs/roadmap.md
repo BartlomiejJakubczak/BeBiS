@@ -8,27 +8,13 @@ door:
 - [findings.md](findings.md): facts about the Blizzard API, VMaNGOS and our own codebase
 - [ideas.md](ideas.md): parked ideas and features that aren't planned yet
 
-**Recently done:** talents read from the real Classic Era response (every character used to resolve to `CLASS_NONE`),
+**Recently done:** quest rewards gated by their quest's min level, talents read from the real Classic Era response (every character used to resolve to `CLASS_NONE`),
 `d56b9f1` slot ownership moved into the orchestrators, `147d675` engine lookups and pool queries, `03a01f3` quest
 rewards are single-copy.
 
 ## Next (order agreed 2026-10-26)
 
-### 1. Quest rewards ignore the quest's level (3b)
-
-**Problem:** a quest reward usually has no level requirement on the item itself; the requirement is on the quest. The
-pool's SQL only checks the item's `required_level`, so these rewards pass at any level. Example: Whirlwind Axe has
-`required_level` 0, but its quest (1792) needs level 30, so a level-12 warrior is offered it.
-
-**Idea:** gate on the quest, the same way race and class already are: an item with quest sources is obtainable at
-level L when *any* of its quests has `minLevel <= L`. The data is already seeded (`quest_min_level`, mapped to
-`QuestSource.minLevel`). Per decisions.md, filters on sources live in the domain, not in `ItemQueryService`'s SQL.
-
-**Where:** `Item.isObtainableBy`, `ItemPoolProvider.isItemEligibleFor` (its `Query` already carries the level).
-
-**Done when:** `ItemPoolProviderIT` shows a quest reward missing below its quest's min level and present at it.
-
-### 2. Accuracy benchmark v1
+### 1. Accuracy benchmark v1
 
 **Problem:** nothing tells us whether the rankings are any good, so every tuning is blind, and there's no number to
 show for the project.
@@ -37,7 +23,7 @@ show for the project.
 measure top-1 / top-3 hits. Report it as a score with a floor that only goes up, not as pass/fail. Options and blind
 spots: ideas.md → Measuring accuracy.
 
-### 3. One VMaNGOS export session: factions, exclusive quests, equip spells
+### 2. One VMaNGOS export session: factions, exclusive quests, equip spells
 
 **Problem:** two data gaps.
 - **Faction leaks:** 1547 of the 1737 seeded quest rewards have `RequiredRaces = 0` ("any race"), even when only one
@@ -52,13 +38,13 @@ recount the seed: the README says 1738 rows and 169 multi-quest items, but the s
 
 **Where:** `tools/vmangos-export`, a new migration, `QuestSource.allows(race)`.
 
-### 4. Score equip spells, then re-run the benchmark
+### 3. Score equip spells, then re-run the benchmark
 
-**Problem:** the same undervaluation as in 3, now fixable with the exported table.
+**Problem:** the same undervaluation as in 2, now fixable with the exported table.
 
 **Idea:** map flat-stat equip spells to stats when items are mapped, then re-run the benchmark to measure the gain.
 
-### 5. Re-plan
+### 4. Re-plan
 
 Upgrade results aren't consumed by anything yet (no endpoint, no UI), so decide what comes after accuracy.
 
