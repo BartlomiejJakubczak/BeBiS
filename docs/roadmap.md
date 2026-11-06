@@ -8,22 +8,13 @@ door:
 - [findings.md](findings.md): facts about the Blizzard API, VMaNGOS and our own codebase
 - [ideas.md](ideas.md): parked ideas and features that aren't planned yet
 
-**Recently done:** quest rewards gated by their quest's min level, talents read from the real Classic Era response (every character used to resolve to `CLASS_NONE`),
-`d56b9f1` slot ownership moved into the orchestrators, `147d675` engine lookups and pool queries, `03a01f3` quest
-rewards are single-copy.
+**Recently done:** accuracy benchmark v0 ([benchmark.md](benchmark.md), Combat Rogue: 5 hits, 1 tie, 5 misses),
+quest rewards gated by their quest's min level, talents read from the real Classic Era response (every character used
+to resolve to `CLASS_NONE`), `d56b9f1` slot ownership moved into the orchestrators.
 
 ## Next (order agreed 2026-10-26)
 
-### 1. Accuracy benchmark v1
-
-**Problem:** nothing tells us whether the rankings are any good, so every tuning is blind, and there's no number to
-show for the project.
-
-**Idea:** a closed-world benchmark: per spec and slot, put the items of a published pre-raid BiS list into the pool and
-measure top-1 / top-3 hits. Report it as a score with a floor that only goes up, not as pass/fail. Options and blind
-spots: ideas.md → Measuring accuracy.
-
-### 2. One VMaNGOS export session: factions, exclusive quests, equip spells
+### 1. One VMaNGOS export session: factions, exclusive quests, equip spells
 
 **Problem:** two data gaps.
 - **Faction leaks:** 1547 of the 1737 seeded quest rewards have `RequiredRaces = 0` ("any race"), even when only one
@@ -38,13 +29,15 @@ recount the seed: the README says 1738 rows and 169 multi-quest items, but the s
 
 **Where:** `tools/vmangos-export`, a new migration, `QuestSource.allows(race)`.
 
-### 3. Score equip spells, then re-run the benchmark
+### 2. Score equip spells, then re-run the benchmark
 
-**Problem:** the same undervaluation as in 2, now fixable with the exported table.
+**Problem:** the same undervaluation as in 1, now fixable with the exported table. The benchmark shows its size: both
+Devilsaur pieces score ~1 (armor only) and every neck scores 0, though all of them carry attack power and crit.
 
-**Idea:** map flat-stat equip spells to stats when items are mapped, then re-run the benchmark to measure the gain.
+**Idea:** map flat-stat equip spells to stats when items are mapped, then re-run the benchmark, add a row to
+benchmark.md's score history and update `KNOWN_HITS`.
 
-### 4. Re-plan
+### 3. Re-plan
 
 Upgrade results aren't consumed by anything yet (no endpoint, no UI), so decide what comes after accuracy.
 

@@ -16,6 +16,7 @@ import java.io.UncheckedIOException;
 public final class BlizzardFixtures {
 
     // Same defaults as the ObjectMapper behind the app's RestClient (e.g. unknown JSON properties are ignored)
+    // Because we're dealing with Blizzard JSONs here it's important to parse them similarly like in production.
     private static final ObjectMapper BLIZZARD_JSON = Jackson2ObjectMapperBuilder.json().build();
 
     private BlizzardFixtures() {
@@ -23,6 +24,10 @@ public final class BlizzardFixtures {
 
     public static ItemResponse loadItem(String fileName) {
         return load("/blizzard/item/" + fileName, ItemResponse.class);
+    }
+
+    public static ItemResponse loadBenchmarkItem(long id) {
+        return load("/blizzard/item/benchmark/" + id + ".json", ItemResponse.class);
     }
 
     public static SpecializationResponse loadSpecialization(String fileName) {

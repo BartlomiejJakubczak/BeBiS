@@ -1,0 +1,142 @@
+{
+  "spec": "ROGUE_COMBAT",
+  "race": "HUMAN",
+  "level": 60,
+  "source": {
+    "title": "Rogue DPS Pre-Raid Gear - WoW Classic - Icy Veins",
+    "url": "https://www.icy-veins.com/wow-classic/rogue-dps-pre-raid-gear",
+    "updated": "2025-03-08",
+    "read": "2026-11-03",
+    "note": "The benchmark's claim per slot: Icy Veins' 'best' outranks every other candidate. Candidates aren't ranked among themselves. 'best' is Icy Veins' phase 4 pick, the latest pre-raid list. 'alternatives' are its phase 1-3 picks that phase 4 replaced. 'extraCompetitors' are added from elsewhere (see extraCompetitorsSource) and only when no source ranks them at or above the best; disputed items are left out."
+  },
+  "extraCompetitorsSource": {
+    "title": "Rogue DPS Pre-Raid Best in Slot (BiS) Gear Guide - WoW Classic - Wowhead",
+    "url": "https://www.wowhead.com/classic/guide/rogue-dps-pre-raid-best-in-slot-bis-gear-wow-classic",
+    "updated": "2024-11-21",
+    "note": "Labelled Season of Mastery Phase 1, so it's used only for competitors, never for 'best'. Taken: its 'Optional' rows in slots where its 'Best' matches Icy Veins'. Left out as disputed: Pendant of Celerity (22340, a second 'Best' neck) and Precisely Calibrated Boomstick (2100, its 'Best' ranged, where Icy Veins picks Blackcrow). Imperial Jewel (11933) was added by the user."
+  },
+  "slots": {
+    "HEAD": {
+      "best": [
+        22005
+      ],
+      "alternatives": [
+        13404
+      ],
+      "extraCompetitors": [
+        16707,
+        12587
+      ]
+    },
+    "NECK": {
+      "best": [
+        15411
+      ],
+      "alternatives": [],
+      "extraCompetitors": [
+        22150,
+        11933
+      ]
+    },
+    "SHOULDER": {
+      "best": [
+        22008
+      ],
+      "alternatives": [
+        12927
+      ],
+      "extraCompetitors": [
+        16708,
+        12082
+      ]
+    },
+    "BACK": {
+      "best": [
+        13340
+      ],
+      "alternatives": [],
+      "extraCompetitors": [
+        22269,
+        11626
+      ]
+    },
+    "CHEST": {
+      "best": [
+        22009
+      ],
+      "alternatives": [
+        14637
+      ],
+      "extraCompetitors": [
+        16721,
+        15825
+      ]
+    },
+    "WRIST": {
+      "best": [
+        22004
+      ],
+      "alternatives": [
+        16710,
+        13120
+      ],
+      "extraCompetitors": [
+        18375
+      ]
+    },
+    "HANDS": {
+      "best": [
+        15063
+      ],
+      "alternatives": [
+        16712
+      ],
+      "extraCompetitors": [
+        22006
+      ]
+    },
+    "WAIST": {
+      "best": [
+        22002
+      ],
+      "alternatives": [
+        16713,
+        13252
+      ],
+      "extraCompetitors": [
+        18505
+      ]
+    },
+    "LEGS": {
+      "best": [
+        15062
+      ],
+      "alternatives": [
+        16709
+      ],
+      "extraCompetitors": [
+        22007
+      ]
+    },
+    "FEET": {
+      "best": [
+        22003
+      ],
+      "alternatives": [
+        16711,
+        12553
+      ],
+      "extraCompetitors": []
+    },
+    "RANGED": {
+      "best": [
+        12651
+      ],
+      "alternatives": [],
+      "extraCompetitors": [
+        18323,
+        18680
+      ]
+    }
+  }
+}

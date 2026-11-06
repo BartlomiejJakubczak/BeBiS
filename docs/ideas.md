@@ -13,7 +13,8 @@ stated first.
 - Accuracy, cheapest first:
   - **Closed-world benchmark** against published pre-raid BiS lists: per spec and slot, put the listed items in the
     pool and measure top-1 / top-3 hits. Report it as a score with a minimum that only goes up, not as pass/fail.
-    (Planned: roadmap → Next 2.)
+    (Built as v0: [benchmark.md](benchmark.md). It classifies hit / tie / miss against the best rival instead, since
+    top-3 is meaningless in pools of three or four.)
   - **Approval snapshots** of real characters' results, so changes show up as reviewed diffs (catches regressions, not
     accuracy).
   - **Simulation reference**: compare stat weights or rankings with a community sim (Spearman rank correlation).
